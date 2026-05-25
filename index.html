@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEN 2767 Decompositie Bibliotheek</title>
+<style>
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --surface2: #f0efe9;
+    --border: rgba(0,0,0,0.10);
+    --border-strong: rgba(0,0,0,0.20);
+    --text: #1a1a18;
+    --text2: #5a5a56;
+    --text3: #9a9a94;
+    --blue: #185FA5;
+    --blue-light: #e6f1fb;
+    --green: #0F6E56;
+    --green-light: #e1f5ee;
+    --amber: #854F0B;
+    --amber-light: #faeeda;
+    --red: #A32D2D;
+    --red-light: #fcebeb;
+    --purple: #3C3489;
+    --purple-light: #eeedfe;
+    --teal: #085041;
+    --teal-light: #e1f5ee;
+    --radius: 8px;
+    --radius-lg: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a18;
+      --surface: #242422;
+      --surface2: #2e2e2a;
+      --border: rgba(255,255,255,0.10);
+      --border-strong: rgba(255,255,255,0.20);
+      --text: #f0efe9;
+      --text2: #a0a09a;
+      --text3: #606058;
+      --blue-light: #0c447c22;
+      --green-light: #08504122;
+      --amber-light: #63380622;
+      --red-light: #50131322;
+      --purple-light: #26215c22;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; height: 100vh; overflow: hidden; }
+
+  /* ── Layout ── */
+  .app { display: flex; height: 100vh; }
+  .sidebar { width: 300px; min-width: 220px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; }
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+  .detail { width: 280px; background: var(--surface); border-left: 1px solid var(--border); overflow-y: auto; flex-shrink: 0; display: none; }
+  .detail.open { display: block; }
+
+  /* ── Header ── */
+  .header { padding: 12px 14px; border-bottom: 1px solid var(--border); background: var(--surface); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .header-title { font-size: 13px; font-weight: 600; flex: 1; min-width: 120px; color: var(--text); }
+  .header-title span { color: var(--text2); font-weight: 400; }
+
+  /* ── Buttons ── */
+  .btn { padding: 5px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius); font-size: 12px; cursor: pointer; background: var(--surface); color: var(--text); display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; font-family: inherit; transition: background .12s, border-color .12s; }
+  .btn:hover { background: var(--surface2); }
+  .btn.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .btn.primary:hover { background: #134e88; }
+  .btn.danger { background: var(--red-light); color: var(--red); border-color: var(--red); }
+  .btn.danger:hover { background: #f7c1c1; }
+  .btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+  /* ── Sidebar ── */
+  .sidebar-header { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  .sidebar-search { width: 100%; padding: 6px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius); font-size: 12px; background: var(--surface2); color: var(--text); outline: none; font-family: inherit; margin-top: 8px; }
+  .sidebar-search:focus { border-color: var(--blue); }
+  .sidebar-tabs { display: flex; border-bottom: 1px solid var(--border); }
+  .stab { flex: 1; padding: 8px 4px; font-size: 11px; font-weight: 500; text-align: center; cursor: pointer; border: none; background: transparent; color: var(--text2); border-bottom: 2px solid transparent; transition: all .15s; font-family: inherit; }
+  .stab.active { color: var(--blue); border-bottom-color: var(--blue); }
+  .stab:hover:not(.active) { background: var(--surface2); }
+  .lib-list { flex: 1; overflow-y: auto; padding: 6px; }
+  .lib-item {
+    display: flex; align-items: center; gap: 7px; padding: 6px 8px;
+    border-radius: var(--radius); cursor: grab; font-size: 12px;
+    color: var(--text); border: 1px solid transparent;
+    transition: all .1s; margin-bottom: 2px; background: var(--surface2);
+    user-select: none; -webkit-user-select: none;
+  }
+  .lib-item:hover { border-color: var(--border-strong); background: var(--surface); }
+  .lib-item.dragging { opacity: 0.5; }
+  .lib-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .lib-code { font-size: 10px; color: var(--text3); margin-left: auto; font-family: 'SF Mono', 'Fira Code', monospace; background: var(--bg); padding: 1px 5px; border-radius: 20px; white-space: nowrap; border: 1px solid var(--border); flex-shrink: 0; }
+
+  /* ── Tree ── */
+  .canvas { flex: 1; overflow: auto; padding: 16px; }
+  .tree-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; gap: 10px; color: var(--text2); }
+  .tree-empty svg { width: 48px; height: 48px; opacity: .3; }
+  .tree-empty p { font-size: 13px; }
+  .tree-empty small { font-size: 12px; color: var(--text3); text-align: center; }
+
+  .node-block { user-select: none; -webkit-user-select: none; }
+  .node-row { display: flex; align-items: stretch; }
+  .node-indent { display: flex; }
+  .indent-pipe { width: 20px; border-right: 1px solid var(--border); margin-right: 4px; flex-shrink: 0; }
+  .node-body {
+    flex: 1; display: flex; align-items: center; gap: 6px;
+    padding: 5px 8px; border-radius: var(--radius);
+    border: 1px solid transparent; background: var(--surface2);
+    cursor: pointer; min-width: 0; transition: border-color .1s, background .1s;
+    margin-bottom: 2px;
+  }
+  .node-body:hover { border-color: var(--border-strong); }
+  .node-body.selected { border-color: var(--blue); background: var(--blue-light); }
+  .node-body.drag-over { border-color: var(--blue) !important; background: var(--blue-light) !important; outline: 2px dashed var(--blue); outline-offset: -2px; }
+  .node-body.drag-invalid { border-color: var(--red) !important; background: var(--red-light) !important; }
+  .node-toggle { width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text2); cursor: pointer; flex-shrink: 0; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); }
+  .node-toggle:hover { background: var(--surface2); }
+  .node-icon { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .node-label { font-size: 12px; color: var(--text); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .node-code { font-size: 10px; color: var(--text3); font-family: 'SF Mono', 'Fira Code', monospace; flex-shrink: 0; }
+  .node-count { font-size: 10px; background: var(--surface); border: 1px solid var(--border); color: var(--text3); padding: 0 5px; border-radius: 20px; flex-shrink: 0; }
+  .node-actions { display: flex; gap: 2px; opacity: 0; }
+  .node-body:hover .node-actions { opacity: 1; }
+  .nact { width: 20px; height: 20px; border: none; background: transparent; cursor: pointer; color: var(--text2); font-size: 13px; display: flex; align-items: center; justify-content: center; border-radius: 4px; padding: 0; }
+  .nact:hover { background: var(--surface); color: var(--text); }
+  .nact svg { width: 12px; height: 12px; }
+  .node-children { margin-top: 0; }
+
+  /* ── Detail Panel ── */
+  .dp-header { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .dp-title { font-size: 13px; font-weight: 600; }
+  .dp-body { padding: 14px; }
+  .dp-field { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .dp-field:last-child { border-bottom: none; }
+  .dp-label { font-size: 11px; color: var(--text3); margin-bottom: 3px; text-transform: uppercase; letter-spacing: .5px; }
+  .dp-val { font-size: 12px; color: var(--text); line-height: 1.5; }
+  .type-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+  .dp-actions { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; }
+
+  /* ── Modal ── */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; width: 380px; max-width: 95vw; box-shadow: var(--shadow-md); }
+  .modal h3 { font-size: 14px; font-weight: 600; margin-bottom: 14px; }
+  .form-row { margin-bottom: 10px; }
+  .form-row label { font-size: 12px; color: var(--text2); display: block; margin-bottom: 4px; }
+  .form-row input, .form-row select, .form-row textarea {
+    width: 100%; padding: 7px 10px; border: 1px solid var(--border-strong);
+    border-radius: var(--radius); font-size: 12px; background: var(--surface2);
+    color: var(--text); outline: none; font-family: inherit;
+  }
+  .form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color: var(--blue); }
+  .modal-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+
+  /* ── Toast ── */
+  .toast { position: fixed; bottom: 20px; right: 20px; background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: var(--radius); font-size: 12px; z-index: 9999; box-shadow: var(--shadow-md); opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 280px; }
+  .toast.show { opacity: 1; }
+
+  /* ── Type colors ── */
+  .c-portfolio { background: #534AB7; }
+  .c-complex   { background: #185FA5; }
+  .c-bo        { background: #378ADD; }
+  .c-el        { background: #1D9E75; }
+  .c-bd        { background: #BA7517; }
+  .c-gb        { background: #E24B4A; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- SIDEBAR: Library -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" style="width:16px;height:16px"><rect x="2" y="3" width="16" height="3" rx="1"/><rect x="2" y="8.5" width="16" height="3" rx="1"/><rect x="2" y="14" width="10" height="3" rx="1"/></svg>
+        NEN 2767 Bibliotheek
+      </div>
+      <input class="sidebar-search" id="libSearch" type="text" placeholder="Zoeken op naam of code...">
+    </div>
+    <div class="sidebar-tabs">
+      <button class="stab active" id="tab-bo" onclick="switchTab('bo')">Objecten</button>
+      <button class="stab" id="tab-el" onclick="switchTab('el')">Elementen</button>
+      <button class="stab" id="tab-bd" onclick="switchTab('bd')">Bouwdelen</button>
+      <button class="stab" id="tab-gb" onclick="switchTab('gb')">Gebreken</button>
+    </div>
+    <div class="lib-list" id="libList"></div>
+  </div>
+
+  <!-- MAIN: Tree -->
+  <div class="main">
+    <div class="header">
+      <span class="header-title">Decompositie Bibliotheek <span>NEN 2767</span></span>
+      <button class="btn primary" onclick="openAddModal('portfolio', null)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v12M2 8h12"/></svg>
+        Nieuw Areaal
+      </button>
+      <button class="btn" onclick="expandAll()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 5l5 5 5-5"/><path d="M3 9l5 5 5-5"/></svg>
+        Uitvouwen
+      </button>
+      <button class="btn" onclick="collapseAll()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 11l5-5 5 5"/><path d="M3 7l5-5 5 5"/></svg>
+        Invouwen
+      </button>
+      <button class="btn" onclick="exportJSON()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M3 12h10"/></svg>
+        JSON
+      </button>
+      <button class="btn" onclick="exportExcel()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1"/><path d="M5 6l2 2-2 2M9 10h2"/></svg>
+        Excel
+      </button>
+      <button class="btn" onclick="importJSON()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 10V2M5 5l3-3 3 3"/><path d="M3 12h10"/></svg>
+        Importeer
+      </button>
+    </div>
+    <div class="canvas" id="canvas">
+      <div id="treeRoot"></div>
+    </div>
+  </div>
+
+  <!-- DETAIL PANEL -->
+  <div class="detail" id="detailPanel">
+    <div class="dp-header">
+      <span class="dp-title" id="dpTitle">Details</span>
+      <button class="btn" onclick="closeDetail()" style="padding:3px 8px;font-size:11px">✕</button>
+    </div>
+    <div class="dp-body" id="dpBody"></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  DATA — NEN 2767 Beheerobjecten, Elementen, Bouwdelen, Gebreken
+// ═══════════════════════════════════════════════════════════
+const LIB = {
+  bo: [
+    {n:'Aanleginrichting',c:'AA',d:'Waterbouwkundige constructie voor het afmeren van veerboten'},
+    {n:'Aquaduct',c:'AB',d:'Kunstwerk waarmee een watergang over een weg of terrein wordt geleid'},
+    {n:'Beheerobject Overstijgende Voorziening',c:'CC',d:'Elementen aanwezig ten behoeve van meerdere objecten'},
+    {n:'Beluchtingstank',c:'CX',d:'Tanks voor aerobe zuivering van influent'},
+    {n:'Bezinkbassin',c:'CS',d:'Bassins waarin deeltjes bezinken en worden afgevoerd'},
+    {n:'Bosgebied',c:'AE',d:'Begroeid terreindeel met kruiden, struiken en bomen'},
+    {n:'Brug (beweegbaar)',c:'AF',d:'Beweegbare verbinding voor verkeer over waterwegen'},
+    {n:'Brug (vast)',c:'AG',d:'Vaste verbinding voor verkeer over waterwegen'},
+    {n:'Bunker',c:'CF',d:'Zwaar versterkt militair verdedigingswerk'},
+    {n:'Coupure',c:'AI',d:'Onderbreking in een waterkering voor doorvoer van weg of spoorweg'},
+    {n:'Dam',c:'AJ',d:'Constructie om water te keren, beheersen of verdelen'},
+    {n:'Dijk',c:'AK',d:'Grondlichaam dat het land beschermt tegen overstroming'},
+    {n:'Drinkwaterinlaat',c:'AL',d:'Constructie die de hoeveelheid drinkwater regelt'},
+    {n:'Duiker',c:'AM',d:'Waterdoorgang onder een weg of dijk'},
+    {n:'Duingebied',c:'AN',d:'Gebieden met heuvels van fijn zand langs de kust'},
+    {n:'Ecoduct',c:'AO',d:'Vaste verbinding voor passages van dieren over een weg'},
+    {n:'Faunatunnel',c:'AP',d:'Tunnel voor kleine tot middelgrote dieren'},
+    {n:'Gemaal',c:'AR',d:'Kunstwerk dat water transporteert door verpomping'},
+    {n:'Gistingstank',c:'CV',d:'Tanks voor vergisting van slib'},
+    {n:'Grondkering',c:'AS',d:'Kerende constructie die grondlichaam op zijn plaats houdt'},
+    {n:'Haven',c:'AT',d:'Veilige ligplaats voor schepen'},
+    {n:'Hevel',c:'CH',d:'Duiker met gebogen buisconstructie'},
+    {n:'IBA-systeem',c:'DC',d:'Individuele Behandeling van Afvalwater'},
+    {n:'Infragebonden gebouw',c:'AQ',d:'Bouwwerk ter ondersteuning van infrastructureel object'},
+    {n:'Kabel en leiding',c:'AV',d:'Stelsel van kabels en leidingen'},
+    {n:'Kade',c:'AW',d:'Beschoeide constructies langs de oever'},
+    {n:'Kanaal',c:'AX',d:'Gegraven grote waterloop voor scheepvaart'},
+    {n:'Keersluis',c:'DD',d:'Constructie ter bescherming bij hoogwater'},
+    {n:'Landbouwgebied',c:'AY',d:'Gebied voor akkerbouw, veeteelt en tuinbouw'},
+    {n:'Meer',c:'AZ',d:'Watervlakte met stilstaand landoppervlaktewater'},
+    {n:'Natuurgebied',c:'BA',d:'Beschermde terreinen met unieke flora en fauna'},
+    {n:'Onderdoorgang',c:'BB',d:'Korte verbinding voor wegverkeer onder een weg'},
+    {n:'Ontvangst- en verdeelwerk',c:'CT',d:'Gebouw voor ontvangst van slib of afvalwaterstroom'},
+    {n:'Open tunnelbak',c:'BD',d:'Open constructie met wanden en vloer'},
+    {n:'Opslagtank',c:'CW',d:'Tanks voor tijdelijke opslag van tussenproducten'},
+    {n:'Overkluizing',c:'BE',d:'Constructie onder weg om kabels te beschermen'},
+    {n:'Park',c:'BG',d:'Openbaar terrein met recreatieve of natuurfunctie'},
+    {n:'Persleiding',c:'DB',d:'Leiding voor transport afvalwater onder druk'},
+    {n:'Procesbassin',c:'CL',d:'Bassins voor zuivering van influent'},
+    {n:'Recreatief gebied',c:'CD',d:'Terrein voor ontspanning en recreatie'},
+    {n:'Riolering',c:'BH',d:'Stelsel voor inzameling en transport van afvalwater'},
+    {n:'Rivier',c:'BI',d:'Brede natuurlijke waterloop'},
+    {n:'Schutsluis',c:'BK',d:'Kunstwerk waarmee schepen waterstandsverschil overbruggen'},
+    {n:'Sifon',c:'CG',d:'Kunstwerk om een rivier onder een andere waterloop door te leiden'},
+    {n:'Spoorweg',c:'BL',d:'Gebaande weg voor verkeer over rails'},
+    {n:'Sport- en spelvoorziening',c:'BM',d:'Terrein voor sportactiviteiten'},
+    {n:'Spuisluis',c:'BN',d:'Uitwateringssluis voor gereguleerde waterafvoer'},
+    {n:'Stormvloedkering',c:'BO',d:'Constructie tegen instroom bij stormvloed'},
+    {n:'Stuw',c:'BP',d:'Constructie die water opstuwt'},
+    {n:'Terrein',c:'BQ',d:'Door landgebruik gekarakteriseerd stuk grond'},
+    {n:'Tunnel',c:'BR',d:'Kunstmatige koker onder maaiveldniveau'},
+    {n:'Uiterwaard',c:'BS',d:'Strook grond langs rivier tussen zomerdijk en winterdijk'},
+    {n:'Verkeerscentrale',c:'BU',d:'Gebouw voor op afstand bedienen van installaties'},
+    {n:'Verzorgingsplaats',c:'BV',d:'Terrein langs de weg voor rust, eten of tanken'},
+    {n:'Viaduct',c:'BW',d:'Kunstwerk dat een vaste overbrugging vormt'},
+    {n:'Waterbuffer',c:'AH',d:'Gebied voor het bergen van water'},
+    {n:'Waterreguleringswerk',c:'BZ',d:'Overlaat of inlaat voor vrije afvoer van water'},
+    {n:'Weg',c:'CA',d:'Gebaand gedeelte geschikt voor wegverkeer'},
+    {n:'Windmolen',c:'DA',d:'Molen die windenergie omzet in elektrische energie'},
+    {n:'Zandfilterbassin',c:'CY',d:'Bassins voor extra zuivering door een zandbed'},
+    {n:'Zee',c:'CB',d:'Mariene wateren inclusief zeebodem'}
+  ],
+  el: [
+    {n:'Aalgoot',c:'424',g:'Kabels en leidingen',f:'water inzamelen en afvoeren'},
+    {n:'Aandrijving (elektrohydraulisch)',c:'101',g:'Aandrijfsystemen',f:'beweging aandrijven'},
+    {n:'Aandrijving (elektromechanisch)',c:'102',g:'Aandrijfsystemen',f:'beweging aandrijven'},
+    {n:'Aandrijving (mechanisch)',c:'103',g:'Aandrijfsystemen',f:'beweging aandrijven'},
+    {n:'Aarding- en bliksembeveiligingsinstallatie',c:'105',g:'Energievoorzieningen',f:'energie leveren en beveiligen'},
+    {n:'Afmeervoorziening',c:'106',g:'Scheepvaartvoorzieningen',f:'scheepvaart faciliteren'},
+    {n:'Afscheiderinstallatie (dynamisch)',c:'377',g:'Kabels en leidingen',f:'water inzamelen en afvoeren'},
+    {n:'Afscheiderinstallatie (statisch)',c:'359',g:'Kabels en leidingen',f:'water inzamelen en afvoeren'},
+    {n:'Afsluitboominstallatie',c:'107',g:'Voorzieningen derden',f:'terrein inrichten'},
+    {n:'Bedienings- en besturingsinstallatie',c:'112',g:'Bediening en besturing',f:'installatie bedienen'},
+    {n:'Begroeid terreindeel',c:'418',g:'Voorzieningen derden',f:'terrein inrichten'},
+    {n:'Beluchtingsinstallatie',c:'378',g:'Ventilatiesystemen',f:'lucht verversen'},
+    {n:'Bergbezinkbassin',c:'356',g:'Kabels en leidingen',f:'water inzamelen en afvoeren'},
+    {n:'Berm',c:'114',g:'Verkeersvoorzieningen',f:'wegverkeer faciliteren'},
+    {n:'Bodembescherming',c:'117',g:'Gebouwinstallaties',f:'water keren of afvoeren'},
+    {n:'Boom',c:'276',g:'Voorzieningen derden',f:'terrein inrichten'},
+    {n:'Bovenbouwconstructie',c:'118',g:'Gebouwinstallaties',f:'constructieve functie'},
+    {n:'Brandblusinstallatie',c:'119',g:'Brandblussystemen',f:'brand blussen'},
+    {n:'Brandmeld- en ontruimingsinstallatie (BMI)',c:'120',g:'Meet- en detectiesystemen',f:'detecteren en melden'},
+    {n:'CCTV-installatie',c:'122',g:'Waarnemingssystemen',f:'beeld waarnemen'},
+    {n:'Compressorinstallatie',c:'123',g:'Persluchtsystemen',f:'perslucht leveren'},
+    {n:'Doorlaatkoker',c:'126',g:'Kabels en leidingen',f:'water keren of afvoeren'},
+    {n:'Drainage',c:'127',g:'Kabels en leidingen',f:'water inzamelen en afvoeren'},
+    {n:'Duin',c:'128',g:'Gebouwinstallaties',f:'water keren of afvoeren'},
+    {n:'Duurzame energiebron',c:'129',g:'Energievoorzieningen',f:'energie leveren'},
+    {n:'Fundering',c:'133',g:'Gebouwinstallaties',f:'constructieve functie'},
+    {n:'Gasdetectie-installatie (LEL)',c:'134',g:'Meet- en detectiesystemen',f:'detecteren en melden'},
+    {n:'Geleideconstructie',c:'136',g:'Verkeersvoorzieningen',f:'wegverkeer faciliteren'},
+    {n:'Gestrekte oever (natuurvriendelijk)',c:'138',g:'Gebouwinstallaties',f:'water keren of afvoeren'},
+    {n:'Gestrekte oever (talud)',c:'139',g:'Gebouwinstallaties',f:'water keren of afvoeren'},
+    {n:'Gladheidsmeldsysteem',c:'140',g:'Meet- en detectiesystemen',f:'detecteren en melden'},
+    {n:'Grasvegetatie',c:'341',g:'Voorzieningen derden',f:'terrein inrichten'},
+    {n:'Haag',c:'292',g:'Voorzieningen derden',f:'terrein inrichten'},
+    {n:'Heftoren',c:'143',g:'Aandrijfsystemen',f:'beweging aandrijven'},
+    {n:'Hemelwaterafvoer (HWA)',c:'144',g:'Kabels en leidingen',f:'water inzamelen en afvoeren'},
+    {n:'Hijs- en hefinstallatie',c:'146',g:'Aandrijfsystemen',f:'beweging aandrijven'},
+    {n:'Hoofddraagconstructie',c:'147',g:'Gebouwinstallaties',f:'constructieve functie'},
+    {n:'Hoogspanningsinstallatie',c:'149',g:'Energievoorzieningen',f:'energie leveren'},
+    {n:'Hoogtedetectie-installatie',c:'150',g:'Meet- en detectiesystemen',f:'detecteren en melden'},
+    {n:'Infiltratievoorziening',c:'296',g:'Kabels en leidingen',f:'water inzamelen en afvoeren'},
+    {n:'Inspectiewagen',c:'152',g:'Onderhoudsvoorzieningen',f:'onderhoud mogelijk maken'},
+    {n:'Intercominstallatie',c:'153',g:'Communicatiesystemen',f:'communicatie mogelijk maken'},
+    {n:'Kabel',c:'113',g:'Kabels en leidingen',f:'energie transporteren'},
+    {n:'Kabeldraagconstructie',c:'156',g:'Kabels en leidingen',f:'energie transporteren'},
+    {n:'Kerende constructie',c:'157',g:'Gebouwinstallaties',f:'constructieve functie'},
+    {n:'Keringschuif',c:'205',g:'Gebouwinstallaties',f:'constructieve functie'},
+    {n:'Klepconstructie',c:'158',g:'Gebouwinstallaties',f:'constructieve functie'},
+    {n:'Klimaatinstallatie',c:'337',g:'Klimaatbeheersingen',f:'klimaat beheersen'},
+    {n:'Krib',c:'159',g:'Gebouwinstallaties',f:'water keren of afvoeren'},
+    {n:'Kruin',c:'259',g:'Gebouwinstallaties',f:'water keren of afvoeren'},
+    {n:'Laagspanningsinstallatie',c:'162',g:'Energievoorzieningen',f:'energie leveren'},
+    {n:'Leiding',c:'163',g:'Kabels en leidingen',f:'media transporteren'},
+    {n:'Lift-installatie',c:'165',g:'Aandrijfsystemen',f:'beweging aandrijven'},
+    {n:'Loopbrug',c:'166',g:'Onderhoudsvoorzieningen',f:'onderhoud mogelijk maken'},
+    {n:'Mantelbuis',c:'167',g:'Kabels en leidingen',f:'media transporteren'},
+    {n:'Marifooninstallatie',c:'168',g:'Scheepvaartvoorzieningen',f:'scheepvaart faciliteren'},
+    {n:'Meetinstallatie',c:'374',g:'Besturingsinstallaties',f:'procesgegevens verwerken'},
+    {n:'Moerasvegetatie',c:'304',g:'Voorzieningen derden',f:'terrein inrichten'},
+    {n:'Nautofooninstallatie',c:'170',g:'Scheepvaartvoorzieningen',f:'scheepvaart faciliteren'},
+    {n:'Noodstroominstallatie (roterend)',c:'171',g:'Energievoorzieningen',f:'energie leveren'},
+    {n:'Noodstroominstallatie (statisch)',c:'172',g:'Energievoorzieningen',f:'energie leveren'},
+    {n:'Objectverlichting',c:'173',g:'Verlichtingsinstallaties',f:'object verlichten'},
+    {n:'Oeverbescherming',c:'174',g:'Gebouwinstallaties',f:'water keren of afvoeren'},
+    {n:'Omroepinstallatie',c:'175',g:'Communicatiesystemen',f:'communicatie mogelijk maken'},
+    {n:'Onderbouw',c:'176',g:'Gebouwinstallaties',f:'constructieve functie'},
+    {n:'Onderhoudsvoorziening',c:'178',g:'Onderhoudsvoorzieningen',f:'onderhoud mogelijk maken'},
+    {n:'Openbare verlichting (OV)',c:'179',g:'Verlichtingsinstallaties',f:'ruimte verlichten'},
+    {n:'Oplegging',c:'180',g:'Gebouwinstallaties',f:'constructieve functie'},
+    {n:'Opstal',c:'181',g:'Gebouwinstallaties',f:'ruimte bieden'},
+    {n:'Overgangsconstructie',c:'183',g:'Gebouwinstallaties',f:'constructieve functie'},
+    {n:'Persinstallatie',c:'383',g:'Pompinstallaties',f:'water verpompen'},
+    {n:'Pompinstallatie',c:'186',g:'Pompinstallaties',f:'water verpompen'},
+    {n:'Pompkelder',c:'187',g:'Pompinstallaties',f:'water verpompen'},
+    {n:'Put',c:'354',g:'Kabels en leidingen',f:'water inzamelen en afvoeren'},
+    {n:'Radarinstallatie',c:'189',g:'Meet- en detectiesystemen',f:'detecteren en melden'},
+    {n:'Remming- en geleidewerk',c:'190',g:'Scheepvaartvoorzieningen',f:'scheepvaart faciliteren'},
+    {n:'Roltrapinstallatie',c:'192',g:'Aandrijfsystemen',f:'beweging aandrijven'},
+    {n:'Sanitaire installatie',c:'394',g:'Voorzieningen derden',f:'voorziening leveren'},
+    {n:'Scheepvaartdetectie-installatie',c:'194',g:'Scheepvaartvoorzieningen',f:'scheepvaart faciliteren'},
+    {n:'Scheepverkeersbeseining',c:'195',g:'Scheepvaartvoorzieningen',f:'scheepvaart faciliteren'},
+    {n:'Schuifconstructie',c:'196',g:'Gebouwinstallaties',f:'constructieve functie'},
+    {n:'Sluisdeur (hef, punt, rol)',c:'198',g:'Scheepvaartvoorzieningen',f:'scheepvaart faciliteren'},
+    {n:'Sluishoofd',c:'199',g:'Scheepvaartvoorzieningen',f:'scheepvaart faciliteren'},
+    {n:'Sluiskolk',c:'200',g:'Scheepvaartvoorzieningen',f:'scheepvaart faciliteren'},
+    {n:'Sluismarkering',c:'398',g:'Scheepvaartvoorzieningen',f:'scheepvaart faciliteren'},
+    {n:'Speeltoestel',c:'345',g:'Gebouwinstallaties',f:'terrein inrichten'},
+    {n:'Sportveld',c:'344',g:'Voorzieningen derden',f:'terrein inrichten'},
+    {n:'Steiger',c:'201',g:'Scheepvaartvoorzieningen',f:'scheepvaart faciliteren'},
+    {n:'Steunpunt',c:'202',g:'Gebouwinstallaties',f:'constructieve functie'},
+    {n:'Strandhoofd',c:'203',g:'Gebouwinstallaties',f:'water keren of afvoeren'},
+    {n:'Strekdam',c:'204',g:'Gebouwinstallaties',f:'water keren of afvoeren'},
+    {n:'Talud',c:'272',g:'Gebouwinstallaties',f:'water keren of afvoeren'},
+    {n:'Telefooninstallatie',c:'206',g:'Communicatiesystemen',f:'communicatie mogelijk maken'},
+    {n:'Telemetrie-installatie',c:'207',g:'Besturingsinstallaties',f:'procesgegevens verwerken'},
+    {n:'Terreinmeubilair',c:'319',g:'Gebouwinstallaties',f:'terrein inrichten'},
+    {n:'Toegangscontrole-installatie',c:'400',g:'Bediening en besturing',f:'installatie bedienen'},
+    {n:'Tracing',c:'210',g:'Kabels en leidingen',f:'energie transporteren'},
+    {n:'Transmissie-installatie',c:'124',g:'Besturingsinstallaties',f:'procesgegevens verwerken'},
+    {n:'Tunnelbuis',c:'212',g:'Gebouwinstallaties',f:'constructieve functie'},
+    {n:'Uithouder',c:'215',g:'Verkeersvoorzieningen',f:'wegverkeer faciliteren'},
+    {n:'Uitlaatvoorziening',c:'357',g:'Gebouwinstallaties',f:'water keren of afvoeren'},
+    {n:'Vaarwegmarkering',c:'216',g:'Verkeersvoorzieningen',f:'wegverkeer faciliteren'},
+    {n:'Valbeveiliging',c:'417',g:'Onderhoudsvoorzieningen',f:'onderhoud mogelijk maken'},
+    {n:'Vangconstructie',c:'217',g:'Gebouwinstallaties',f:'object ondersteunen'},
+    {n:'Ventilatie-installatie',c:'213',g:'Gebouwinstallaties',f:'water keren of afvoeren'},
+    {n:'Verankering',c:'218',g:'Gebouwinstallaties',f:'constructieve functie'},
+    {n:'Verharding wegtype 1 (hoofdwegennet)',c:'219',g:'Verkeersvoorzieningen',f:'wegverkeer faciliteren'},
+    {n:'Verharding wegtype 2 (zwaarbelaste weg)',c:'220',g:'Verkeersvoorzieningen',f:'wegverkeer faciliteren'},
+    {n:'Verharding wegtype 3 (gemiddeld belaste weg)',c:'221',g:'Verkeersvoorzieningen',f:'wegverkeer faciliteren'},
+    {n:'Verharding wegtype 4 (licht belast)',c:'222',g:'Verkeersvoorzieningen',f:'wegverkeer faciliteren'},
+    {n:'Verharding wegtype 5 (weg in woongebied)',c:'223',g:'Verkeersvoorzieningen',f:'wegverkeer faciliteren'},
+    {n:'Verharding wegtype 6 (weg in verblijfsgebied)',c:'224',g:'Verkeersvoorzieningen',f:'wegverkeer faciliteren'},
+    {n:'Verharding wegtype 7 (fietspaden)',c:'225',g:'Verkeersvoorzieningen',f:'wegverkeer faciliteren'},
+    {n:'Verkeersdetectie-installatie',c:'226',g:'Verkeerssystemen',f:'verkeer regelen'},
+    {n:'Verkeersregelinstallatie (VRI)',c:'227',g:'Verkeerssystemen',f:'verkeer regelen'},
+    {n:'Vijzelinstallatie',c:'230',g:'Aandrijfsystemen',f:'beweging aandrijven'},
+    {n:'Vispassage',c:'266',g:'Gebouwinstallaties',f:'water keren of afvoeren'},
+    {n:'Vluchtweginstallatie',c:'232',g:'Verlichtingsinstallaties',f:'ruimte verlichten'},
+    {n:'Voegovergang',c:'233',g:'Gebouwinstallaties',f:'constructieve functie'},
+    {n:'Voorland',c:'256',g:'Gebouwinstallaties',f:'water keren of afvoeren'},
+    {n:'Wandconstructie',c:'388',g:'Gebouwinstallaties',f:'constructieve functie'},
+    {n:'Waterlichaam (oppervlaktewater)',c:'421',g:'Gebouwinstallaties',f:'water keren of afvoeren'},
+    {n:'Wegmarkering',c:'238',g:'Verkeersvoorzieningen',f:'wegverkeer faciliteren'},
+    {n:'Zinker',c:'242',g:'Kabels en leidingen',f:'media transporteren'},
+    {n:'Zonweringsinstallatie',c:'401',g:'Klimaatbeheersingen',f:'klimaat beheersen'}
+  ],
+  bd: [
+    {n:'Aandrijving',c:'1003'},{n:'Aanslag',c:'1010'},{n:'Aansluitleiding',c:'1013'},
+    {n:'Afsluiter',c:'1034'},{n:'Afvoer',c:'1719'},{n:'Anker',c:'1037'},
+    {n:'Armatuur',c:'1042'},{n:'Asfaltverharding',c:'1044'},{n:'Balk',c:'1051'},
+    {n:'Bekleding',c:'2206'},{n:'Belijning',c:'1736'},{n:'Beschermkap',c:'1988'},
+    {n:'Beschermlaag',c:'2073'},{n:'Beschoeiing',c:'1068'},{n:'Betonverharding',c:'1070'},
+    {n:'Blokkenmuur',c:'1075'},{n:'Bodem',c:'1077'},{n:'Bodembescherming',c:'1086'},
+    {n:'Bodemstabilisatie',c:'1087'},{n:'Bolder',c:'1091'},{n:'Boog',c:'1093'},
+    {n:'Bordes',c:'1095'},{n:'Borstwering',c:'2039'},{n:'Buisleiding',c:'1331'},
+    {n:'Camera (beweegbaar)',c:'2080'},{n:'Camera (vast)',c:'2079'},{n:'Cilinder',c:'1119'},
+    {n:'Contragewicht',c:'1131'},{n:'Dak',c:'1132'},{n:'Damwand',c:'1133'},
+    {n:'Dek',c:'1140'},{n:'Deklaag (dicht)',c:'2173'},{n:'Deklaag (open)',c:'2174'},
+    {n:'Deksel',c:'1759'},{n:'Detector',c:'1146'},{n:'Deur',c:'1148'},
+    {n:'Dilatatievoeg',c:'1158'},{n:'Drempel',c:'1168'},{n:'Droogzetvoorziening',c:'1987'},
+    {n:'Dwarsdrager',c:'1179'},{n:'Elektromotor',c:'1182'},{n:'Elementenverharding',c:'1184'},
+    {n:'Energiekabel',c:'1185'},{n:'Filterconstructie',c:'1191'},{n:'Folie',c:'1201'},
+    {n:'Frame',c:'1203'},{n:'Fundatie',c:'1204'},{n:'Funderingslaag (gebonden)',c:'2176'},
+    {n:'Funderingslaag (ongebonden)',c:'2177'},{n:'Generator',c:'1219'},{n:'Geotextiel',c:'1220'},
+    {n:'Goot',c:'1225'},{n:'Gording',c:'1226'},{n:'Grendel',c:'1227'},
+    {n:'Hoofddraagconstructie',c:'1991'},{n:'Hydraulisch aggregaat',c:'1260'},
+    {n:'Keerelement',c:'1295'},{n:'Keermuur',c:'1296'},{n:'Kesp',c:'1297'},
+    {n:'Ketting',c:'1300'},{n:'Klep',c:'1304'},{n:'Kolom',c:'1679'},
+    {n:'Kolk',c:'1314'},{n:'Kozijn',c:'2149'},{n:'Ladder',c:'1324'},
+    {n:'Landhoofd',c:'1326'},{n:'Langsligger',c:'1328'},{n:'Leuning',c:'2192'},
+    {n:'Mast',c:'1358'},{n:'Meerpaal',c:'1361'},{n:'Meetsysteem',c:'1363'},
+    {n:'Membraan',c:'2104'},{n:'Mixer',c:'2106'},{n:'Noodstop',c:'1377'},
+    {n:'Onderbouw',c:'1387'},{n:'Ondergrond',c:'2178'},{n:'Onderlaag',c:'2175'},
+    {n:'Ontvangbed',c:'1395'},{n:'Open buispalen',c:'1399'},{n:'Ophoging',c:'1402'},
+    {n:'Oplegging',c:'1404'},{n:'Opsluitband',c:'1408'},{n:'Overgangsplaat',c:'1420'},
+    {n:'Paal',c:'1423'},{n:'Peilschaal',c:'1425'},{n:'Pijler',c:'1430'},
+    {n:'Plafond',c:'1563'},{n:'Randprofiel',c:'1457'},{n:'Reling',c:'1334'},
+    {n:'Rooster',c:'1473'},{n:'Schoor',c:'1482'},{n:'Schotbalk',c:'1483'},
+    {n:'Schotbalksponning',c:'1484'},{n:'Schuif',c:'1486'},{n:'Sensor',c:'1490'},
+    {n:'Signaalgevers',c:'1492'},{n:'Sloof',c:'1496'},{n:'Smeersysteem',c:'1497'},
+    {n:'Staalkabel',c:'1504'},{n:'Startmotor',c:'1506'},{n:'Steunpunt',c:'1508'},
+    {n:'Stortebed',c:'1510'},{n:'Stroombreker',c:'1514'},{n:'Stuwelement',c:'1515'},
+    {n:'Takel',c:'1516'},{n:'Tandwiel',c:'1518'},{n:'Tank',c:'1520'},
+    {n:'Transformator',c:'1549'},{n:'Trap',c:'1552'},{n:'Trekduwstang',c:'1556'},
+    {n:'Trekpalen',c:'1557'},{n:'Tuidraad',c:'1559'},{n:'Tussenlaag',c:'2179'},
+    {n:'Uitstroomopening',c:'1569'},{n:'Veiligheidsventiel',c:'1576'},
+    {n:'Ventilator',c:'1578'},{n:'Verankering',c:'1580'},{n:'Verkeersbord',c:'1586'},
+    {n:'Vijzel',c:'1601'},{n:'Vijzelgoot',c:'1602'},{n:'Vistrap',c:'1930'},
+    {n:'Vleugelwand',c:'1604'},{n:'Vloer',c:'1605'},{n:'Vuilvangrooster',c:'1614'},
+    {n:'Wand',c:'1619'},{n:'Zandvang',c:'1639'},{n:'Zonnepaneel',c:'1651'}
+  ],
+  gb: [
+    {n:'Aangroei',c:'G-181',s:'Tekortkoming',e:'gering'},
+    {n:'Aanhechtingsmankement',c:'G-119',s:'Conditioneel',e:'ernstig'},
+    {n:'Aansluiting, defect',c:'G-198',s:'Conditioneel',e:'serieus'},
+    {n:'Aantasting (kritisch)',c:'G-120',s:'Conditioneel',e:'ernstig'},
+    {n:'Afbrokkelen',c:'G-028',s:'Conditioneel',e:'ernstig'},
+    {n:'Afdichting, defect',c:'G-001',s:'Conditioneel',e:'ernstig'},
+    {n:'Afsterving',c:'G-003',s:'Conditioneel',e:'ernstig'},
+    {n:'Afzetting aangehecht',c:'G-168',s:'Tekortkoming',e:'gering'},
+    {n:'Bedekkingsgraad',c:'G-206',s:'Conditioneel',e:'serieus'},
+    {n:'Beschermingsgraad onvoldoende',c:'G-005',s:'Conditioneel',e:'ernstig'},
+    {n:'Bevestiging, defect',c:'G-199',s:'Conditioneel',e:'ernstig'},
+    {n:'Bevestiging, ontbreekt',c:'G-033',s:'Conditioneel',e:'ernstig'},
+    {n:'Breuk',c:'G-006',s:'Conditioneel',e:'ernstig'},
+    {n:'Breuk/instorting riool',c:'G-157',s:'Conditioneel',e:'ernstig'},
+    {n:'Capaciteit verminderd',c:'G-107',s:'Conditioneel',e:'serieus'},
+    {n:'Corrosie, uniform',c:'G-037',s:'Conditioneel',e:'serieus'},
+    {n:'Deformatie, kritiek',c:'G-007',s:'Conditioneel',e:'ernstig'},
+    {n:'Deformatie, niet kritiek',c:'G-182',s:'Conditioneel',e:'serieus'},
+    {n:'Delaminatie',c:'G-192',s:'Conditioneel',e:'ernstig'},
+    {n:'Desintegratie',c:'G-194',s:'Conditioneel',e:'serieus'},
+    {n:'Erosie',c:'G-040',s:'Conditioneel',e:'ernstig'},
+    {n:'Functie, afwezig',c:'G-010',s:'Conditioneel',e:'ernstig'},
+    {n:'Gaten/holtes',c:'G-126',s:'Conditioneel',e:'ernstig'},
+    {n:'Graffiti',c:'G-100',s:'Tekortkoming',e:'gering'},
+    {n:'Grondindringing',c:'G-170',s:'Conditioneel',e:'serieus'},
+    {n:'Houtrot',c:'G-011',s:'Conditioneel',e:'serieus'},
+    {n:'Infiltratie',c:'G-172',s:'Conditioneel',e:'ernstig'},
+    {n:'Insectenvraat (kritisch)',c:'G-144',s:'Conditioneel',e:'ernstig'},
+    {n:'Kieren',c:'G-131',s:'Conditioneel',e:'ernstig'},
+    {n:'Krassen',c:'G-072',s:'Conditioneel',e:'serieus'},
+    {n:'Kwelplek',c:'G-043',s:'Conditioneel',e:'serieus'},
+    {n:'Langsonvlakheid',c:'G-044',s:'Conditioneel',e:'ernstig'},
+    {n:'Losliggend',c:'G-135',s:'Conditioneel',e:'ernstig'},
+    {n:'Markering, onjuist',c:'G-101',s:'Tekortkoming',e:'ernstig'},
+    {n:'Oeverafslag',c:'G-030',s:'Conditioneel',e:'ernstig'},
+    {n:'Omgevallen',c:'G-228',s:'Conditioneel',e:'ernstig'},
+    {n:'Oneffenheden',c:'G-047',s:'Conditioneel',e:'ernstig'},
+    {n:'Onkruidgroei',c:'G-074',s:'Tekortkoming',e:'serieus'},
+    {n:'Ontgronding',c:'G-049',s:'Conditioneel',e:'serieus'},
+    {n:'Onthechting',c:'G-191',s:'Conditioneel',e:'ernstig'},
+    {n:'Opbolling',c:'G-051',s:'Conditioneel',e:'serieus'},
+    {n:'Oppervlakteschade',c:'G-160',s:'Conditioneel',e:'serieus'},
+    {n:'Putcorrosie',c:'G-017',s:'Conditioneel',e:'ernstig'},
+    {n:'Rafeling',c:'G-055',s:'Conditioneel',e:'ernstig'},
+    {n:'Randschade',c:'G-117',s:'Conditioneel',e:'serieus'},
+    {n:'Scheefstand',c:'G-106',s:'Tekortkoming',e:'gering'},
+    {n:'Scheur, constructief',c:'G-018',s:'Conditioneel',e:'ernstig'},
+    {n:'Scheur, niet constructief',c:'G-056',s:'Conditioneel',e:'serieus'},
+    {n:'Slijtage, mechanisch',c:'G-197',s:'Conditioneel',e:'serieus'},
+    {n:'Spleetcorrosie',c:'G-019',s:'Conditioneel',e:'ernstig'},
+    {n:'Spoorvorming',c:'G-058',s:'Tekortkoming',e:'serieus'},
+    {n:'Stroefheid',c:'G-059',s:'Conditioneel',e:'ernstig'},
+    {n:'Uitspoeling',c:'G-020',s:'Conditioneel',e:'ernstig'},
+    {n:'Verankering, defect',c:'G-022',s:'Conditioneel',e:'ernstig'},
+    {n:'Verdroging',c:'G-078',s:'Tekortkoming',e:'ernstig'},
+    {n:'Verdwenen',c:'G-229',s:'Conditioneel',e:'ernstig'},
+    {n:'Vergrassing',c:'G-079',s:'Tekortkoming',e:'ernstig'},
+    {n:'Vervorming',c:'G-193',s:'Conditioneel',e:'ernstig'},
+    {n:'Vervuiling',c:'G-104',s:'Tekortkoming',e:'gering'},
+    {n:'Verweking',c:'G-063',s:'Conditioneel',e:'ernstig'},
+    {n:'Verwering',c:'G-110',s:'Conditioneel',e:'serieus'},
+    {n:'Verzakking',c:'G-025',s:'Conditioneel',e:'ernstig'},
+    {n:'Verzanding',c:'G-111',s:'Conditioneel',e:'serieus'},
+    {n:'Voegvulling, defect',c:'G-112',s:'Tekortkoming',e:'gering'},
+    {n:'Wapeningscorrosie',c:'G-026',s:'Conditioneel',e:'ernstig'},
+    {n:'Wellen (zandmeevoerend)',c:'G-027',s:'Conditioneel',e:'ernstig'},
+    {n:'Windworp',c:'G-222',s:'Conditioneel',e:'ernstig'},
+    {n:'Wortelingroei',c:'G-167',s:'Conditioneel',e:'gering'},
+    {n:'Wurgwortels',c:'G-156',s:'Conditioneel',e:'serieus'},
+    {n:'Zetting',c:'G-086',s:'Conditioneel',e:'gering'},
+    {n:'Ziekte, kritisch',c:'G-151',s:'Conditioneel',e:'ernstig'},
+    {n:'Ziekte, niet kritisch',c:'G-152',s:'Tekortkoming',e:'serieus'}
+  ]
+};
+
+// ═══════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════
+let tree = [], idCounter = 1, activeTab = 'bo', selectedId = null, collapsed = {};
+let dragLibItem = null;   // dragging FROM library
+let dragNodeId  = null;   // dragging a tree node
+
+const VALID_CHILDREN = {
+  portfolio: ['complex'],
+  complex:   ['bo'],
+  bo:        ['el'],
+  el:        ['bd'],
+  bd:        ['gb'],
+  gb:        []
+};
+
+const TYPE_LABEL = { portfolio:'Areaal Portefeuille', complex:'Complex', bo:'Beheerobject', el:'Element', bd:'Bouwdeel', gb:'Gebrek' };
+const TYPE_COLOR = { portfolio:'#534AB7', complex:'#185FA5', bo:'#378ADD', el:'#1D9E75', bd:'#BA7517', gb:'#E24B4A' };
+
+function mkId(){ return 'n' + (idCounter++); }
+
+function findNode(id, nodes = tree) {
+  for (const n of nodes) {
+    if (n.id === id) return n;
+    if (n.children) { const r = findNode(id, n.children); if (r) return r; }
+  }
+  return null;
+}
+
+function findParent(id, nodes = tree, parent = null) {
+  for (const n of nodes) {
+    if (n.id === id) return parent;
+    if (n.children) { const r = findParent(id, n.children, n); if (r) return r; }
+  }
+  return null;
+}
+
+function countDescendants(node) {
+  let t = (node.children || []).length;
+  (node.children || []).forEach(c => { t += countDescendants(c); });
+  return t;
+}
+
+function getLibItem(type, name) {
+  return LIB[type]?.find(i => i.n === name) || {};
+}
+
+// ═══════════════════════════════════════════════════════════
+//  LIBRARY PANEL
+// ═══════════════════════════════════════════════════════════
+function switchTab(tab) {
+  activeTab = tab;
+  ['bo','el','bd','gb'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+  });
+  renderLibrary();
+}
+
+function renderLibrary() {
+  const q = (document.getElementById('libSearch').value || '').toLowerCase();
+  const items = LIB[activeTab].filter(i =>
+    !q || i.n.toLowerCase().includes(q) || (i.c && i.c.toLowerCase().includes(q))
+  );
+  const colorMap = { bo:'#378ADD', el:'#1D9E75', bd:'#BA7517', gb:'#E24B4A' };
+  const color = colorMap[activeTab];
+  const list = document.getElementById('libList');
+  if (!items.length) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;font-size:12px;color:var(--text3)">Geen resultaten</div>';
+    return;
+  }
+  list.innerHTML = items.map(i => `
+    <div class="lib-item"
+      draggable="true"
+      data-type="${activeTab}"
+      data-name="${escHtml(i.n)}"
+      title="${escHtml(i.d || i.f || i.n)}"
+      ondblclick="quickInsert('${activeTab}','${escJs(i.n)}')">
+      <span class="lib-dot" style="background:${color}"></span>
+      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(i.n)}</span>
+      <span class="lib-code">${escHtml(i.c)}</span>
+    </div>`).join('');
+
+  // Attach drag events
+  list.querySelectorAll('.lib-item').forEach(el => {
+    el.addEventListener('dragstart', e => {
+      dragLibItem = { type: e.currentTarget.dataset.type, name: e.currentTarget.dataset.name };
+      e.dataTransfer.effectAllowed = 'copy';
+      e.dataTransfer.setData('text/plain', JSON.stringify(dragLibItem));
+      e.currentTarget.classList.add('dragging');
+    });
+    el.addEventListener('dragend', e => {
+      e.currentTarget.classList.remove('dragging');
+      dragLibItem = null;
+    });
+  });
+}
+
+// Quick insert on double-click: find best parent in current tree
+function quickInsert(type, name) {
+  if (!tree.length) {
+    toast('Maak eerst een Areaal Portefeuille aan via "+ Nieuw Areaal"');
+    return;
+  }
+  const parent = findBestParent(type);
+  if (!parent) {
+    toast('Geen geschikte locatie gevonden. Voeg eerst een ' + TYPE_LABEL[VALID_CHILDREN_REVERSED[type]] + ' toe.');
+    return;
+  }
+  const data = getLibItem(type, name);
+  addChildToNode(parent, { id: mkId(), type, label: name, code: data.c || '', children: [] });
+  collapsed[parent.id] = false;
+  renderTree();
+  toast(name + ' toegevoegd aan ' + parent.label);
+}
+
+const VALID_CHILDREN_REVERSED = { complex:'portfolio', bo:'complex', el:'bo', bd:'el', gb:'bd' };
+
+function findBestParent(childType) {
+  const parentType = VALID_CHILDREN_REVERSED[childType];
+  if (!parentType) return null;
+  return findFirstOfType(parentType);
+}
+
+function findFirstOfType(type, nodes = tree) {
+  for (const n of nodes) {
+    if (n.type === type) return n;
+    if (n.children) { const r = findFirstOfType(type, n.children); if (r) return r; }
+  }
+  return null;
+}
+
+function addChildToNode(parent, child) {
+  if (!parent.children) parent.children = [];
+  parent.children.push(child);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TREE RENDERING
+// ═══════════════════════════════════════════════════════════
+function renderTree() {
+  const root = document.getElementById('treeRoot');
+  if (!tree.length) {
+    root.innerHTML = `
+      <div class="tree-empty">
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="16" y="4" width="16" height="10" rx="2"/>
+          <rect x="4" y="34" width="16" height="10" rx="2"/>
+          <rect x="28" y="34" width="16" height="10" rx="2"/>
+          <path d="M24 14v6M12 34v-8a4 4 0 014-4h16a4 4 0 014 4v8"/>
+        </svg>
+        <p>Nog geen decompositie</p>
+        <small>Klik op "+ Nieuw Areaal" om te starten<br>of dubbelklik op items in de bibliotheek</small>
+      </div>`;
+    return;
+  }
+  root.innerHTML = tree.map(n => renderNodeHTML(n, 0)).join('');
+  attachNodeEvents();
+}
+
+function renderNodeHTML(node, depth) {
+  const hasChildren = node.children && node.children.length > 0;
+  const isCollapsed = collapsed[node.id];
+  const color = TYPE_COLOR[node.type] || '#888';
+  const indent = Array.from({length: depth}, () =>
+    '<div class="indent-pipe"></div>'
+  ).join('');
+
+  return `
+<div class="node-block" id="block-${node.id}" data-id="${node.id}" data-type="${node.type}">
+  <div class="node-row">
+    <div class="node-indent">${indent}</div>
+    <div class="node-body ${selectedId === node.id ? 'selected' : ''}"
+         id="nbody-${node.id}"
+         data-id="${node.id}"
+         data-type="${node.type}">
+      ${hasChildren
+        ? `<span class="node-toggle" data-toggle="${node.id}">${isCollapsed ? '+' : '−'}</span>`
+        : `<span style="width:16px;flex-shrink:0"></span>`
+      }
+      <span class="node-icon" style="background:${color}"></span>
+      <span class="node-label" title="${escHtml(node.label)}">${escHtml(node.label)}</span>
+      ${node.code ? `<span class="node-code">${escHtml(node.code)}</span>` : ''}
+      ${hasChildren ? `<span class="node-count">${node.children.length}</span>` : ''}
+      <span class="node-actions">
+        ${VALID_CHILDREN[node.type].length > 0 ? `
+          <button class="nact" data-action="add" data-id="${node.id}" title="Kind toevoegen">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v12M2 8h12"/></svg>
+          </button>` : ''}
+        <button class="nact" data-action="rename" data-id="${node.id}" title="Naam wijzigen">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 2l3 3-8 8H3v-3l8-8z"/></svg>
+        </button>
+        <button class="nact" data-action="delete" data-id="${node.id}" title="Verwijderen">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M6 4V2h4v2M5 4l1 9h4l1-9"/></svg>
+        </button>
+      </span>
+    </div>
+  </div>
+  ${hasChildren && !isCollapsed
+    ? `<div class="node-children">${node.children.map(c => renderNodeHTML(c, depth + 1)).join('')}</div>`
+    : ''}
+</div>`;
+}
+
+function attachNodeEvents() {
+  // Toggle
+  document.querySelectorAll('[data-toggle]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = el.dataset.toggle;
+      collapsed[id] = !collapsed[id];
+      renderTree();
+    });
+  });
+
+  // Select / detail
+  document.querySelectorAll('.node-body').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target.closest('[data-action]') || e.target.closest('[data-toggle]')) return;
+      showDetail(el.dataset.id);
+    });
+  });
+
+  // Action buttons
+  document.querySelectorAll('[data-action]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = el.dataset.id;
+      const action = el.dataset.action;
+      if (action === 'add')    openAddChildModal(id);
+      if (action === 'rename') openRenameModal(id);
+      if (action === 'delete') deleteNode(id);
+    });
+  });
+
+  // ── DRAG & DROP: tree nodes onto other tree nodes ──
+  document.querySelectorAll('.node-body').forEach(el => {
+    el.setAttribute('draggable', 'true');
+
+    el.addEventListener('dragstart', e => {
+      dragNodeId = el.dataset.id;
+      dragLibItem = null;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', 'node:' + dragNodeId);
+      setTimeout(() => el.classList.add('dragging'), 0);
+    });
+
+    el.addEventListener('dragend', () => {
+      document.querySelectorAll('.node-body.dragging').forEach(x => x.classList.remove('dragging'));
+      document.querySelectorAll('.node-body.drag-over, .node-body.drag-invalid').forEach(x => {
+        x.classList.remove('drag-over', 'drag-invalid');
+      });
+      dragNodeId = null;
+    });
+
+    el.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      const targetId = el.dataset.id;
+      const targetType = el.dataset.type;
+      document.querySelectorAll('.node-body.drag-over, .node-body.drag-invalid').forEach(x => {
+        x.classList.remove('drag-over', 'drag-invalid');
+      });
+
+      if (dragLibItem) {
+        const allowed = VALID_CHILDREN[targetType] || [];
+        el.classList.add(allowed.includes(dragLibItem.type) ? 'drag-over' : 'drag-invalid');
+      } else if (dragNodeId && dragNodeId !== targetId) {
+        const node = findNode(dragNodeId);
+        const allowed = VALID_CHILDREN[targetType] || [];
+        el.classList.add(allowed.includes(node?.type) ? 'drag-over' : 'drag-invalid');
+      }
+    });
+
+    el.addEventListener('dragleave', e => {
+      if (!el.contains(e.relatedTarget)) {
+        el.classList.remove('drag-over', 'drag-invalid');
+      }
+    });
+
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      el.classList.remove('drag-over', 'drag-invalid');
+      const targetId = el.dataset.id;
+      const targetNode = findNode(targetId);
+      if (!targetNode) return;
+
+      if (dragLibItem) {
+        // Drop FROM library
+        const { type, name } = dragLibItem;
+        const allowed = VALID_CHILDREN[targetNode.type] || [];
+        if (!allowed.includes(type)) {
+          toast('⚠ Kan ' + TYPE_LABEL[type] + ' niet toevoegen aan ' + TYPE_LABEL[targetNode.type]);
+          return;
+        }
+        const data = getLibItem(type, name);
+        addChildToNode(targetNode, { id: mkId(), type, label: name, code: data.c || '', children: [] });
+        collapsed[targetId] = false;
+        renderTree();
+        toast(name + ' toegevoegd');
+      } else if (dragNodeId && dragNodeId !== targetId) {
+        // Drop tree node onto tree node
+        const node = findNode(dragNodeId);
+        if (!node) return;
+        const allowed = VALID_CHILDREN[targetNode.type] || [];
+        if (!allowed.includes(node.type)) {
+          toast('⚠ Kan ' + TYPE_LABEL[node.type] + ' niet verplaatsen naar ' + TYPE_LABEL[targetNode.type]);
+          return;
+        }
+        // Remove from old parent
+        const oldParent = findParent(dragNodeId);
+        if (oldParent) oldParent.children = oldParent.children.filter(c => c.id !== dragNodeId);
+        else tree = tree.filter(n => n.id !== dragNodeId);
+        // Add to new parent
+        addChildToNode(targetNode, node);
+        collapsed[targetId] = false;
+        renderTree();
+        toast(node.label + ' verplaatst naar ' + targetNode.label);
+      }
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TREE ACTIONS
+// ═══════════════════════════════════════════════════════════
+function expandAll() {
+  function walk(nodes) { nodes.forEach(n => { collapsed[n.id] = false; if (n.children) walk(n.children); }); }
+  walk(tree); renderTree();
+}
+function collapseAll() {
+  function walk(nodes) { nodes.forEach(n => { if (n.children?.length) collapsed[n.id] = true; if (n.children) walk(n.children); }); }
+  walk(tree); renderTree();
+}
+
+function deleteNode(id) {
+  if (!confirm('Verwijder dit item en alle onderliggende items?')) return;
+  const parent = findParent(id);
+  if (parent) parent.children = parent.children.filter(c => c.id !== id);
+  else tree = tree.filter(n => n.id !== id);
+  if (selectedId === id) closeDetail();
+  renderTree();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DETAIL PANEL
+// ═══════════════════════════════════════════════════════════
+function showDetail(id) {
+  const node = findNode(id);
+  if (!node) return;
+  selectedId = id;
+  const panel = document.getElementById('detailPanel');
+  panel.classList.add('open');
+  const color = TYPE_COLOR[node.type];
+  const lib = getLibItem(node.type, node.label);
+  document.getElementById('dpTitle').textContent = TYPE_LABEL[node.type];
+  const ernst = lib.e ? `<div class="dp-field"><div class="dp-label">Ernst</div><div class="dp-val">${lib.e}</div></div>` : '';
+  const soort = lib.s ? `<div class="dp-field"><div class="dp-label">Soort gebrek</div><div class="dp-val">${lib.s}</div></div>` : '';
+  document.getElementById('dpBody').innerHTML = `
+    <div class="dp-field">
+      <div class="dp-label">Naam</div>
+      <div class="dp-val" style="font-weight:500">${escHtml(node.label)}</div>
+    </div>
+    <div class="dp-field">
+      <div class="dp-label">Type</div>
+      <div class="dp-val">
+        <span class="type-badge" style="background:${color}22;color:${color}">
+          <span style="width:6px;height:6px;border-radius:50%;background:${color};display:inline-block"></span>
+          ${TYPE_LABEL[node.type]}
+        </span>
+      </div>
+    </div>
+    ${node.code ? `<div class="dp-field"><div class="dp-label">NEN code</div><div class="dp-val" style="font-family:monospace">${escHtml(node.code)}</div></div>` : ''}
+    ${lib.d ? `<div class="dp-field"><div class="dp-label">Definitie</div><div class="dp-val" style="font-size:12px;line-height:1.6">${escHtml(lib.d)}</div></div>` : ''}
+    ${lib.g ? `<div class="dp-field"><div class="dp-label">Elementengroep</div><div class="dp-val">${escHtml(lib.g)}</div></div>` : ''}
+    ${lib.f ? `<div class="dp-field"><div class="dp-label">Functie</div><div class="dp-val">${escHtml(lib.f)}</div></div>` : ''}
+    ${ernst}${soort}
+    <div class="dp-field">
+      <div class="dp-label">Onderliggende items</div>
+      <div class="dp-val">${countDescendants(node)}</div>
+    </div>
+    <div class="dp-actions">
+      ${VALID_CHILDREN[node.type].length > 0
+        ? `<button class="btn" onclick="openAddChildModal('${id}')">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v12M2 8h12"/></svg>
+            Kind toevoegen
+           </button>` : ''}
+      <button class="btn" onclick="openRenameModal('${id}')">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 2l3 3-8 8H3v-3l8-8z"/></svg>
+        Naam wijzigen
+      </button>
+      <button class="btn danger" onclick="deleteNode('${id}')">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M6 4V2h4v2M5 4l1 9h4l1-9"/></svg>
+        Verwijderen
+      </button>
+    </div>`;
+  renderTree();
+}
+
+function closeDetail() {
+  selectedId = null;
+  document.getElementById('detailPanel').classList.remove('open');
+  renderTree();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MODALS
+// ═══════════════════════════════════════════════════════════
+function openAddModal(type, parentId) {
+  const box = document.getElementById('modalBox');
+  box.innerHTML = `
+    <h3>Nieuw ${TYPE_LABEL[type]}</h3>
+    <div class="form-row">
+      <label>Naam *</label>
+      <input id="mName" type="text" placeholder="${type==='portfolio'?'bijv. Waterschap AGV':type==='complex'?'bijv. Polder Groot-Mijdrecht':'Naam'}">
+    </div>
+    <div class="form-row">
+      <label>Code</label>
+      <input id="mCode" type="text" placeholder="bijv. P01">
+    </div>
+    <div class="form-row">
+      <label>Omschrijving</label>
+      <textarea id="mDesc" rows="2" placeholder="Optioneel"></textarea>
+    </div>
+    <div class="modal-btns">
+      <button class="btn" onclick="closeModal()">Annuleren</button>
+      <button class="btn primary" onclick="doAdd('${type}','${parentId||''}')">Toevoegen</button>
+    </div>`;
+  document.getElementById('modalOverlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('mName')?.focus(), 50);
+}
+
+function openAddChildModal(parentId) {
+  const parent = findNode(parentId);
+  if (!parent) return;
+  const childTypes = VALID_CHILDREN[parent.type];
+  if (!childTypes.length) { toast('Gebreken kunnen geen kinderen hebben'); return; }
+  openAddModal(childTypes[0], parentId);
+}
+
+function openRenameModal(id) {
+  const node = findNode(id);
+  if (!node) return;
+  const box = document.getElementById('modalBox');
+  box.innerHTML = `
+    <h3>Naam wijzigen</h3>
+    <div class="form-row">
+      <label>Naam</label>
+      <input id="rName" type="text" value="${escHtml(node.label)}">
+    </div>
+    <div class="form-row">
+      <label>Code</label>
+      <input id="rCode" type="text" value="${escHtml(node.code||'')}">
+    </div>
+    <div class="modal-btns">
+      <button class="btn" onclick="closeModal()">Annuleren</button>
+      <button class="btn primary" onclick="doRename('${id}')">Opslaan</button>
+    </div>`;
+  document.getElementById('modalOverlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('rName')?.focus(), 50);
+}
+
+function doAdd(type, parentId) {
+  const name = document.getElementById('mName')?.value?.trim();
+  if (!name) { toast('Vul een naam in'); return; }
+  const code = document.getElementById('mCode')?.value?.trim() || '';
+  const node = { id: mkId(), type, label: name, code, children: [] };
+  if (parentId) {
+    const p = findNode(parentId);
+    if (p) { addChildToNode(p, node); collapsed[parentId] = false; }
+  } else {
+    tree.push(node);
+  }
+  closeModal();
+  renderTree();
+  toast(name + ' toegevoegd');
+}
+
+function doRename(id) {
+  const node = findNode(id);
+  if (!node) return;
+  const name = document.getElementById('rName')?.value?.trim();
+  if (name) node.label = name;
+  node.code = document.getElementById('rCode')?.value?.trim() || node.code;
+  closeModal();
+  if (selectedId === id) showDetail(id);
+  else renderTree();
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  EXPORT / IMPORT
+// ═══════════════════════════════════════════════════════════
+function exportJSON() {
+  const data = JSON.stringify({ version: '1.0', created: new Date().toISOString(), source: 'NEN 2767 Decompositie Bibliotheek', tree }, null, 2);
+  downloadFile('NEN2767_decompositie.json', data, 'application/json');
+  toast('JSON geëxporteerd');
+}
+
+function exportExcel() {
+  // Build CSV that Excel can open
+  const rows = [['Niveau','Type','Naam','Code','Pad']];
+  function walk(node, path, level) {
+    const p = path ? path + ' > ' + node.label : node.label;
+    rows.push([level, TYPE_LABEL[node.type], node.label, node.code || '', path || '(root)']);
+    (node.children || []).forEach(c => walk(c, p, level + 1));
+  }
+  tree.forEach(n => walk(n, '', 0));
+  const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+  downloadFile('NEN2767_decompositie.csv', '\uFEFF' + csv, 'text/csv;charset=utf-8');
+  toast('Excel/CSV geëxporteerd — open in Excel');
+}
+
+function importJSON() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = '.json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (data.tree) { tree = data.tree; renderTree(); toast('Import geslaagd!'); }
+        else toast('Ongeldig bestandsformaat');
+      } catch (err) { toast('Fout bij importeren: ' + err.message); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function downloadFile(name, content, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════════
+function toast(msg, duration = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escJs(s) {
+  return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+}
+
+// ═══════════════════════════════════════════════════════════
+//  KEYBOARD SHORTCUTS
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModal(); closeDetail(); }
+  if ((e.metaKey || e.ctrlKey) && e.key === 'e') { e.preventDefault(); exportJSON(); }
+});
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+document.getElementById('libSearch').addEventListener('input', renderLibrary);
+renderLibrary();
+renderTree();
+
+// Also allow dropping library items onto the canvas background (root level not supported for non-portfolio)
+document.getElementById('canvas').addEventListener('dragover', e => e.preventDefault());
+document.getElementById('canvas').addEventListener('drop', e => {
+  e.preventDefault();
+  if (dragLibItem && dragLibItem.type === 'portfolio') {
+    openAddModal('portfolio', null);
+  }
+});
+</script>
+</body>
+</html>
