@@ -245,7 +245,7 @@ function renderLib(){
       e.dataTransfer.setData('text/plain',JSON.stringify(dragLib));
       setTimeout(()=>e.currentTarget.classList.add('dragging'),0);
     });
-    el.addEventListener('dragend',e=>{e.currentTarget.classList.remove('dragging');dragLib=null});
+    el.addEventListener('dragend',e=>{e.currentTarget.classList.remove('dragging');setTimeout(()=>{dragLib=null;},0);});
     el.addEventListener('dblclick',e=>quickInsert(activeTab,e.currentTarget.dataset.name,isAuto));
   });
 }
@@ -330,9 +330,14 @@ function attachEvents(){
   // Drag tree nodes
   document.querySelectorAll('.node-body').forEach(el=>{
     el.setAttribute('draggable','true');
-    el.addEventListener('dragstart',e=>{dragNid=el.dataset.id;dragLib=null;e.dataTransfer.effectAllowed='move';setTimeout(()=>el.classList.add('dragging'),0)});
+    el.addEventListener('dragstart',e=>{
+      // Don't start a node drag if a library item drag is already in progress
+      if(dragLib){e.preventDefault();e.stopPropagation();return;}
+      dragNid=el.dataset.id;dragLib=null;e.dataTransfer.effectAllowed='move';setTimeout(()=>el.classList.add('dragging'),0);
+    });
     el.addEventListener('dragend',()=>{document.querySelectorAll('.node-body.dragging,.node-body.dov,.node-body.dinv').forEach(x=>x.classList.remove('dragging','dov','dinv'));dragNid=null});
     el.addEventListener('dragover',e=>{
+      if(dragLib) e.dataTransfer.dropEffect='copy'; else e.dataTransfer.dropEffect='move';
       e.preventDefault();e.stopPropagation();
       document.querySelectorAll('.node-body.dov,.node-body.dinv').forEach(x=>x.classList.remove('dov','dinv'));
       const tt=el.dataset.type;
