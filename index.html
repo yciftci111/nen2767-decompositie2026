@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>NEN 2767 — Decompositie Bibliotheek</title>
 <script src="mapping.js"></script>
+<!-- Leaflet CSS/JS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
 :root{
   --bg:#f4f3ef;--sur:#fff;--sur2:#eeede8;--bdr:rgba(0,0,0,.10);--bdr2:rgba(0,0,0,.18);
@@ -32,6 +35,7 @@ body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--
 .tbtn{padding:4px 10px;border:1px solid rgba(255,255,255,.3);border-radius:var(--r);font-size:11px;cursor:pointer;background:rgba(255,255,255,.1);color:#fff;font-family:inherit;transition:background .12s;white-space:nowrap}
 .tbtn:hover{background:rgba(255,255,255,.22)}
 .tbtn.accent{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.5);font-weight:600}
+.tbtn.map-on{background:rgba(255,255,255,.3);border-color:#fff}
 
 /* LAYOUT */
 .workspace{flex:1;display:flex;overflow:hidden}
@@ -39,21 +43,26 @@ body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--
 /* SIDEBAR */
 .sidebar{width:272px;min-width:200px;background:var(--sur);border-right:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
 .sb-head{padding:10px 12px 8px;border-bottom:1px solid var(--bdr)}
-.sb-title{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:7px}
+.sb-brand{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:7px}
 .sb-search{width:100%;padding:5px 9px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:12px;background:var(--sur2);color:var(--tx);outline:none;font-family:inherit}
 .sb-search:focus{border-color:var(--blue)}
-.sb-tabs{display:flex;border-bottom:1px solid var(--bdr)}
-.sbtab{flex:1;padding:6px 2px;font-size:10px;font-weight:600;text-align:center;cursor:pointer;border:none;background:transparent;color:var(--tx2);border-bottom:2px solid transparent;font-family:inherit;transition:color .1s}
-.sbtab.on{color:var(--blue);border-bottom-color:var(--blue)}
+/* Icon tabs */
+.sb-tabs{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-bottom:1px solid var(--bdr)}
+.sbtab{padding:7px 4px 5px;border:none;background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;border-bottom:2px solid transparent;transition:all .1s;font-family:inherit}
 .sbtab:hover:not(.on){background:var(--sur2)}
+.sbtab.on{border-bottom-color:var(--blue)}
+.sbtab-icon{font-size:18px;line-height:1}
+.sbtab-label{font-size:9px;font-weight:700;color:var(--tx2);letter-spacing:.3px}
+.sbtab-count{font-size:9px;color:var(--tx3)}
+.sbtab.on .sbtab-label{color:var(--blue)}
 .sb-count{font-size:10px;color:var(--tx3);padding:4px 12px;border-bottom:1px solid var(--bdr)}
 .sb-list{flex:1;overflow-y:auto;padding:5px}
 
 /* LIB ITEMS */
-.lib-item{display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:var(--r);cursor:grab;font-size:12px;border:1px solid transparent;margin-bottom:2px;background:var(--sur2);user-select:none;transition:border-color .1s,background .1s}
+.lib-item{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:var(--r);cursor:grab;font-size:12px;border:1px solid transparent;margin-bottom:2px;background:var(--sur2);user-select:none;transition:border-color .1s,background .1s}
 .lib-item:hover{border-color:var(--bdr2);background:var(--sur)}
 .lib-item.dragging{opacity:.35}
-.lib-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.lib-icon{font-size:15px;flex-shrink:0;width:22px;text-align:center}
 .lib-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lib-code{font-size:10px;color:var(--tx3);font-family:monospace;background:var(--bg);padding:1px 5px;border-radius:20px;border:1px solid var(--bdr);flex-shrink:0}
 
@@ -67,11 +76,16 @@ body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--
 .btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
 .btn.primary:hover{background:var(--blue-d)}
 .btn.danger{color:var(--red);border-color:var(--red);background:var(--red-l)}
+.btn.map-btn{background:var(--blue-l);color:var(--blue);border-color:rgba(26,95,168,.3)}
+.btn.map-btn.active{background:var(--blue);color:#fff}
 .canvas{flex:1;overflow:auto;padding:14px}
+
+/* MAP */
+#mapView{flex:1;display:none}
+#mapView.show{display:block}
 
 /* EMPTY */
 .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:10px;color:var(--tx2);text-align:center}
-.empty-icon{font-size:48px;opacity:.15}
 
 /* TREE */
 .node-block{user-select:none}
@@ -85,6 +99,7 @@ body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--
 .node-body.drop-no{border-color:var(--red)!important;background:var(--red-l)!important}
 .node-tog{width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--tx2);border:1px solid var(--bdr);border-radius:3px;background:var(--sur);flex-shrink:0;cursor:pointer;font-family:monospace}
 .node-tog:hover{background:var(--sur2)}
+.node-icon{font-size:14px;flex-shrink:0}
 .node-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .node-label{font-size:12px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .node-wcode{font-size:10px;color:var(--blue);font-family:monospace;flex-shrink:0;background:var(--blue-l);padding:1px 5px;border-radius:20px;border:1px solid rgba(26,95,168,.2)}
@@ -99,32 +114,42 @@ body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--
 .na:hover{background:var(--sur);color:var(--tx)}
 
 /* DETAIL PANEL */
-.detail{width:288px;background:var(--sur);border-left:1px solid var(--bdr);overflow-y:auto;flex-shrink:0;display:none;flex-direction:column}
+.detail{width:292px;background:var(--sur);border-left:1px solid var(--bdr);overflow-y:auto;flex-shrink:0;display:none;flex-direction:column}
 .detail.open{display:flex}
 .dp-head{padding:10px 13px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:8px}
 .dp-type-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;color:#fff;flex-shrink:0}
 .dp-title{font-size:12px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dp-body{padding:0;overflow-y:auto;flex:1}
+.dp-body{overflow-y:auto;flex:1}
 .dp-section{padding:10px 13px;border-bottom:1px solid var(--bdr)}
 .dp-section:last-child{border-bottom:none}
-.dp-section-title{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+.dp-section-title{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;display:flex;align-items:center;gap:5px}
 .dp-field{margin-bottom:7px}
 .dp-field:last-child{margin-bottom:0}
-.dp-label{font-size:10px;color:var(--tx3);margin-bottom:2px;letter-spacing:.3px}
-.dp-value{font-size:12px;line-height:1.5;color:var(--tx)}
+.dp-label{font-size:10px;color:var(--tx3);margin-bottom:2px}
+.dp-value{font-size:12px;line-height:1.5}
 .dp-value.mono{font-family:monospace;font-size:11px}
 .dp-value.muted{color:var(--tx2);font-size:11px}
-.dp-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:600}
-.dp-tag.belang-gering{background:#e8f4ec;color:#0e6e50;border:1px solid #0e6e5044}
-.dp-tag.belang-serieus{background:#fdf0d8;color:#b87200;border:1px solid #b8720044}
-.dp-tag.belang-ernstig{background:#fbeaea;color:#a02828;border:1px solid #a0282844}
+.dp-tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.belang-gering{background:#e8f4ec;color:#0e6e50;border:1px solid #0e6e5044}
+.belang-serieus{background:#fdf0d8;color:#b87200;border:1px solid #b8720044}
+.belang-ernstig{background:#fbeaea;color:#a02828;border:1px solid #a0282844}
 
-/* Werkcode input in detail */
-.wcode-input{width:100%;padding:5px 9px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:12px;font-family:monospace;background:var(--sur2);color:var(--blue);outline:none}
-.wcode-input:focus{border-color:var(--blue);background:var(--blue-l)}
-.wcode-input::placeholder{color:var(--tx3);font-family:-apple-system,'Segoe UI',system-ui,sans-serif;font-style:italic}
-.wcode-save{margin-top:5px;width:100%;padding:5px;border:1px solid var(--blue);border-radius:var(--r);font-size:11px;cursor:pointer;background:var(--blue);color:#fff;font-family:inherit;display:none}
-.wcode-input:focus ~ .wcode-save{display:block}
+/* Input fields in detail */
+.dp-input{width:100%;padding:5px 9px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:12px;background:var(--sur2);color:var(--tx);outline:none;font-family:inherit;margin-bottom:4px}
+.dp-input:focus{border-color:var(--blue)}
+.dp-input.mono{font-family:monospace;color:var(--blue)}
+.dp-input.mono::placeholder{font-family:-apple-system,system-ui,sans-serif;color:var(--tx3);font-style:italic}
+.dp-save-row{display:flex;gap:5px;margin-top:2px}
+.dp-save-row .btn{flex:1;justify-content:center;font-size:11px}
+
+/* Leaflet marker */
+.bo-marker{background:var(--blue);border:2px solid #fff;border-radius:50% 50% 50% 0;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,.3);transform:rotate(-45deg)}
+.bo-marker-inner{transform:rotate(45deg)}
+.leaflet-popup-content{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;font-size:12px;min-width:160px}
+.popup-title{font-weight:700;font-size:13px;margin-bottom:4px}
+.popup-code{font-family:monospace;font-size:10px;color:#666;margin-bottom:4px}
+.popup-addr{font-size:11px;color:#555;margin-bottom:4px}
+.popup-wcode{font-size:11px;color:var(--blue);font-family:monospace}
 
 /* FILTER DIALOG */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000}
@@ -140,7 +165,7 @@ body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--
 .fopt-sub{font-size:11px;color:var(--tx2);margin-top:1px}
 
 /* MODAL */
-.mbox{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rl);padding:18px;width:400px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.mbox{background:var(--sur);border-radius:var(--rl);padding:18px;width:400px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.18)}
 .mbox h3{font-size:14px;font-weight:600;margin-bottom:14px}
 .form-row{margin-bottom:9px}
 .form-row label{font-size:11px;color:var(--tx2);display:block;margin-bottom:3px}
@@ -167,6 +192,7 @@ body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--
     <button class="tbtn" onclick="document.getElementById('loadFile').click()">📂 Laden</button>
     <input type="file" id="loadFile" accept=".json" style="display:none" onchange="loadJSON(this)">
     <button class="tbtn" onclick="exportCSV()">⬇ CSV</button>
+    <button class="tbtn map-on" id="mapToggleBtn" onclick="toggleMap()">🗺 Kaart</button>
     <button class="tbtn accent" onclick="clearAll()">🗑 Leegmaken</button>
   </div>
 </div>
@@ -176,14 +202,30 @@ body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--
   <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sb-head">
-      <div class="sb-title">NEN 2767 Bibliotheek</div>
+      <div class="sb-brand">NEN 2767 Bibliotheek</div>
       <input class="sb-search" id="sbSearch" type="text" placeholder="Zoeken op naam of code…" oninput="renderLib()" autocomplete="off">
     </div>
     <div class="sb-tabs">
-      <button class="sbtab on" id="tab-bo" onclick="setTab('bo')">Objecten<br><span style="font-weight:400;opacity:.7;font-size:9px">64</span></button>
-      <button class="sbtab" id="tab-el" onclick="setTab('el')">Elementen<br><span style="font-weight:400;opacity:.7;font-size:9px">245</span></button>
-      <button class="sbtab" id="tab-bd" onclick="setTab('bd')">Bouwdelen<br><span style="font-weight:400;opacity:.7;font-size:9px">760</span></button>
-      <button class="sbtab" id="tab-gb" onclick="setTab('gb')">Gebreken<br><span style="font-weight:400;opacity:.7;font-size:9px">166</span></button>
+      <button class="sbtab on" id="tab-bo" onclick="setTab('bo')">
+        <span class="sbtab-icon">🏗</span>
+        <span class="sbtab-label">Objecten</span>
+        <span class="sbtab-count">64</span>
+      </button>
+      <button class="sbtab" id="tab-el" onclick="setTab('el')">
+        <span class="sbtab-icon">🔧</span>
+        <span class="sbtab-label">Elementen</span>
+        <span class="sbtab-count">245</span>
+      </button>
+      <button class="sbtab" id="tab-bd" onclick="setTab('bd')">
+        <span class="sbtab-icon">🧱</span>
+        <span class="sbtab-label">Bouwdelen</span>
+        <span class="sbtab-count">760</span>
+      </button>
+      <button class="sbtab" id="tab-gb" onclick="setTab('gb')">
+        <span class="sbtab-icon">⚠️</span>
+        <span class="sbtab-label">Gebreken</span>
+        <span class="sbtab-count">166</span>
+      </button>
     </div>
     <div class="sb-count" id="sbCount"></div>
     <div class="sb-list" id="sbList"></div>
@@ -196,10 +238,12 @@ body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--
       <button class="btn" onclick="addAreaal()">＋ Areaal</button>
       <button class="btn" onclick="expandAll()">↕ Uitklappen</button>
       <button class="btn" onclick="collapseAll()">↕ Inklappen</button>
+      <button class="btn map-btn" id="mapViewBtn" onclick="toggleMapView()" style="display:none">🗺 Kaartweergave</button>
     </div>
     <div class="canvas" id="canvas" ondragover="e=>e.preventDefault()" ondrop="canvasDrop(event)">
       <div id="treeRoot"></div>
     </div>
+    <div id="mapView"></div>
   </div>
 
   <!-- DETAIL PANEL -->
@@ -207,7 +251,7 @@ body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--
     <div class="dp-head">
       <span class="dp-type-badge" id="dpBadge"></span>
       <span class="dp-title" id="dpTitle"></span>
-      <button class="na" onclick="closeDetail()" title="Sluiten">✕</button>
+      <button class="na" onclick="closeDetail()">✕</button>
     </div>
     <div class="dp-body" id="dpBody"></div>
   </div>
@@ -222,24 +266,15 @@ body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--
     <div class="fopts">
       <div class="fopt sel" id="fopt-ja" onclick="selFilter('ja')">
         <div class="fopt-dot" style="background:var(--green)"></div>
-        <div>
-          <div class="fopt-lbl">Alleen kritische elementen</div>
-          <div class="fopt-sub" id="fcnt-ja"></div>
-        </div>
+        <div><div class="fopt-lbl">Alleen kritische elementen</div><div class="fopt-sub" id="fcnt-ja"></div></div>
       </div>
       <div class="fopt" id="fopt-ja_opt" onclick="selFilter('ja_opt')">
         <div class="fopt-dot" style="background:var(--amber)"></div>
-        <div>
-          <div class="fopt-lbl">Kritisch + optioneel</div>
-          <div class="fopt-sub" id="fcnt-ja_opt"></div>
-        </div>
+        <div><div class="fopt-lbl">Kritisch + optioneel</div><div class="fopt-sub" id="fcnt-ja_opt"></div></div>
       </div>
       <div class="fopt" id="fopt-all" onclick="selFilter('all')">
         <div class="fopt-dot" style="background:var(--tx3)"></div>
-        <div>
-          <div class="fopt-lbl">Alle elementen</div>
-          <div class="fopt-sub" id="fcnt-all"></div>
-        </div>
+        <div><div class="fopt-lbl">Alle elementen</div><div class="fopt-sub" id="fcnt-all"></div></div>
       </div>
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
@@ -249,7 +284,7 @@ body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--
   </div>
 </div>
 
-<!-- GENERIC MODAL -->
+<!-- MODAL -->
 <div class="overlay" id="modalOverlay" style="display:none" onclick="if(event.target===this)closeModal()">
   <div class="mbox">
     <h3 id="mTitle"></h3>
@@ -262,22 +297,104 @@ body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--
 
 <script>
 // ══════════════════════════════════════════════
+//  ICONEN per beheerobjecttype
+// ══════════════════════════════════════════════
+const BO_ICONS = {
+  'Aanleginrichting':       '⚓',
+  'Aquaduct':               '🌉',
+  'Begraafplaats':          '🪦',
+  'Beheerobject Overstijgende Voorziening': '🏢',
+  'Beluchtingstank':        '💨',
+  'Bezinkbassin':           '🪣',
+  'Bosgebied':              '🌲',
+  'Brug (beweegbaar)':      '🏗',
+  'Brug (vast)':            '🌁',
+  'Bunker':                 '🏰',
+  'Coupure':                '🚧',
+  'Dam':                    '🏞',
+  'Dijk':                   '🛡',
+  'Drinkwaterinlaat':       '🚰',
+  'Duiker':                 '🔵',
+  'Duingebied':             '🏖',
+  'Ecoduct':                '🦌',
+  'Faunatunnel':            '🦊',
+  'Gemaal':                 '⚙️',
+  'Gistingstank':           '🧪',
+  'Grondkering':            '🪨',
+  'Haven':                  '⚓',
+  'Hevel':                  '🌊',
+  'Individuele Behandeling van Afvalwater systeem (IBA-systeem)': '♻️',
+  'Infragebonden gebouw':   '🏭',
+  'Kabel en leiding':       '🔌',
+  'Kade':                   '🚢',
+  'Kanaal':                 '🛶',
+  'Keersluis':              '🚪',
+  'Landbouwgebied':         '🌾',
+  'Meer':                   '🏞',
+  'Natuurgebied':           '🌿',
+  'Onderdoorgang':          '🚇',
+  'Ontvangst- en verdeelwerk': '🏭',
+  'Open tunnelbak':         '🚇',
+  'Opslagtank':             '🛢',
+  'Overkluizing':           '🌉',
+  'Park':                   '🌳',
+  'Persleiding':            '🔩',
+  'Procesbassin':           '🧫',
+  'Recreatief gebied':      '🎯',
+  'Riolering':              '🕳',
+  'Rivier':                 '🌊',
+  'Schutsluis':             '🚪',
+  'Sifon':                  '〰️',
+  'Spoorweg':               '🚆',
+  'Sport- en spelvoorziening': '⚽',
+  'Spuisluis':              '🚪',
+  'Stormvloedkering':       '🌊',
+  'Stuw':                   '🌊',
+  'Terrein':                '🟫',
+  'Tunnel':                 '🚇',
+  'Uiterwaard':             '🌾',
+  'Verkeerscentrale':       '🎛',
+  'Verzorgingsplaats':      '🛣',
+  'Viaduct':                '🌉',
+  'Water en watergang (lijnvormig), overig': '〰️',
+  'Water en watergang (niet lijnvormig), overig': '💧',
+  'Waterbuffer':            '💧',
+  'Waterreguleringswerk':   '🔧',
+  'Weg':                    '🛣',
+  'Windmolen':              '🌬',
+  'Zandfilterbassin':       '🪨',
+  'Zee':                    '🌊',
+};
+
+// Icon colors per type for map markers
+const BO_COLORS = {
+  'Gemaal':'#1a5fa8','Brug (beweegbaar)':'#b87200','Brug (vast)':'#b87200',
+  'Dijk':'#0e6e50','Stuw':'#0e6e50','Keersluis':'#0e6e50','Schutsluis':'#0e6e50',
+  'Tunnel':'#534AB7','Viaduct':'#534AB7','Aquaduct':'#534AB7',
+  'Gemaal':'#1a5fa8','Riolering':'#5B8C5A','Kanaal':'#2e86cc',
+  'Rivier':'#2e86cc','Meer':'#2e86cc','Zee':'#2e86cc',
+  'Weg':'#cc3a3a','Spoorweg':'#cc3a3a',
+};
+
+function boIcon(name){ return BO_ICONS[name] || '🏗'; }
+function boColor(name){ return BO_COLORS[name] || '#1a5fa8'; }
+
+// ══════════════════════════════════════════════
 //  CONSTANTS
 // ══════════════════════════════════════════════
-const LEVELS = ['areaal','complex','bo','eg','el','sy','bd','gb'];
-const LBL = {areaal:'Areaal',complex:'Complex',bo:'Beheerobject',eg:'Elementengroep',el:'Element',sy:'Systeem',bd:'Bouwdeel',gb:'Gebrek'};
-const COL = {areaal:'#534AB7',complex:'#1a5fa8',bo:'#2e86cc',eg:'#0e6e50',el:'#1aaa70',sy:'#5B8C5A',bd:'#b87200',gb:'#cc3a3a'};
-const KIDS = {areaal:['complex'],complex:['bo'],bo:['eg'],eg:['el'],el:['sy'],sy:['bd'],bd:['gb'],gb:[]};
-// Levels that get Maximo workcodes
-const WCODE_LEVELS = new Set(['areaal','complex','bo','el','bd']);
+const LBL={areaal:'Areaal',complex:'Complex',bo:'Beheerobject',eg:'Elementengroep',el:'Element',sy:'Systeem',bd:'Bouwdeel',gb:'Gebrek'};
+const COL={areaal:'#534AB7',complex:'#1a5fa8',bo:'#2e86cc',eg:'#0e6e50',el:'#1aaa70',sy:'#5B8C5A',bd:'#b87200',gb:'#cc3a3a'};
+const KIDS={areaal:['complex'],complex:['bo'],bo:['eg'],eg:['el'],el:['sy'],sy:['bd'],bd:['gb'],gb:[]};
+const WCODE_LEVELS=new Set(['areaal','complex','bo','el','bd']);
 
 // ══════════════════════════════════════════════
 //  STATE
 // ══════════════════════════════════════════════
-let tree=[], idC=1, projectName='Nieuw project';
-let selId=null, coll={}, libTab='bo';
-let dragLib=null, dragNid=null;
-let filterPending=null, filterChoice='ja';
+let tree=[],idC=1,projectName='Nieuw project';
+let selId=null,coll={},libTab='bo';
+let dragLib=null,dragNid=null;
+let filterPending=null,filterChoice='ja';
+let mapVisible=false,leafletMap=null,mapMarkers=[];
 
 const mkId=()=>'n'+(idC++);
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -289,6 +406,7 @@ function findN(id,ns=tree){for(const n of ns){if(n.id===id)return n;if(n.childre
 function findP(id,ns=tree,p=null){for(const n of ns){if(n.id===id)return p;if(n.children){const r=findP(id,n.children,n);if(r)return r;}}return null;}
 function addKid(p,c){if(!p.children)p.children=[];p.children.push(c);}
 function findFirst(type,ns=tree){for(const n of ns){if(n.type===type)return n;if(n.children){const r=findFirst(type,n.children);if(r)return r;}}return null;}
+function findAll(type,ns=tree,res=[]){for(const n of ns){if(n.type===type)res.push(n);if(n.children)findAll(type,n.children,res);}return res;}
 function nenCode(type,name){
   if(type==='bo')return BO.find(x=>x.n===name)?.c||'';
   if(type==='el')return EL.find(x=>x.n===name)?.c||'';
@@ -300,32 +418,30 @@ function nenCode(type,name){
 // ══════════════════════════════════════════════
 //  BUILD BO TREE
 // ══════════════════════════════════════════════
-function buildBoTree(boName, filter='ja'){
+function buildBoTree(boName,filter='ja'){
   const bo=BO.find(x=>x.n===boName);
-  const boNode={id:mkId(),type:'bo',label:boName,nenCode:bo?.c||'',def:bo?.d||'',wcode:'',children:[]};
+  const boNode={id:mkId(),type:'bo',label:boName,nenCode:bo?.c||'',def:bo?.d||'',
+    wcode:'',adres:'',stad:'',lat:'',lon:'',children:[]};
   const allowed=filter==='ja'?['ja']:filter==='ja_opt'?['ja','optioneel']:['ja','optioneel','nee'];
   const elRows=(MAP_BO_EL[boName]||[]).filter(r=>allowed.includes(r.m));
-  // Group by elementengroep
   const egMap={};
-  for(const r of elRows){(egMap[r.eg]=egMap[r.eg]||[]).push(r);}
-  for(const [egName,rows] of Object.entries(egMap)){
+  for(const r of elRows)(egMap[r.eg]=egMap[r.eg]||[]).push(r);
+  for(const[egName,rows]of Object.entries(egMap)){
     const egNode={id:mkId(),type:'eg',label:egName,nenCode:'',wcode:'',children:[]};
     for(const r of rows){
       const el=EL.find(x=>x.n===r.el);
       const elNode={id:mkId(),type:'el',label:r.el,nenCode:el?.c||'',def:el?.f||'',
         vakdiscipline:el?.v||'',reden:el?.r||'',meenemen:r.m,functie:r.f,wcode:'',children:[]};
-      // Systemen/bouwdelen
       const bdRows=MAP_EL_BD[r.el]||[];
       const syMap={};
-      for(const br of bdRows){(syMap[br.sy]=syMap[br.sy]||[]).push(br);}
-      for(const [syName,brows] of Object.entries(syMap)){
+      for(const br of bdRows)(syMap[br.sy]=syMap[br.sy]||[]).push(br);
+      for(const[syName,brows]of Object.entries(syMap)){
         const syNode={id:mkId(),type:'sy',label:syName,nenCode:'',wcode:'',children:[]};
         for(const br of brows){
           const bd=BD.find(x=>x.n===br.bd);
           const bdNode={id:mkId(),type:'bd',label:br.bd,nenCode:bd?.c||'',def:bd?.d||'',
             functie:br.f,wcode:'',children:[]};
-          // Gebreken
-          for(const gr of (MAP_BD_GB[br.bd]||[])){
+          for(const gr of(MAP_BD_GB[br.bd]||[])){
             const gb=GB.find(x=>x.n===gr.gb);
             bdNode.children.push({id:mkId(),type:'gb',label:gr.gb,nenCode:gb?.c||'',
               gebrekgroep:gr.gg,gebreksoort:gr.s,belang:gb?.b||'',
@@ -344,10 +460,10 @@ function buildBoTree(boName, filter='ja'){
   return boNode;
 }
 
-function countEls(boName,filter){
+function countEls(boName,f){
   const rows=MAP_BO_EL[boName]||[];
-  if(filter==='ja')return rows.filter(r=>r.m==='ja').length;
-  if(filter==='ja_opt')return rows.filter(r=>r.m==='ja'||r.m==='optioneel').length;
+  if(f==='ja')return rows.filter(r=>r.m==='ja').length;
+  if(f==='ja_opt')return rows.filter(r=>r.m==='ja'||r.m==='optioneel').length;
   return rows.length;
 }
 
@@ -363,19 +479,15 @@ function showFilter(boName,target){
   selFilter('ja');
   document.getElementById('filterDlg').style.display='flex';
 }
-function selFilter(f){
-  filterChoice=f;
-  ['ja','ja_opt','all'].forEach(x=>document.getElementById('fopt-'+x).classList.toggle('sel',x===f));
-}
+function selFilter(f){filterChoice=f;['ja','ja_opt','all'].forEach(x=>document.getElementById('fopt-'+x).classList.toggle('sel',x===f));}
 function cancelFilter(){document.getElementById('filterDlg').style.display='none';filterPending=null;}
 function confirmFilter(){
   if(!filterPending)return;
-  const {boName,target}=filterPending;
+  const{boName,target}=filterPending;
   const node=buildBoTree(boName,filterChoice);
   addKid(target,node);coll[target.id]=false;
   renderTree();autoSave();
-  const cnt=countEls(boName,filterChoice);
-  toast('✓ '+boName+' toegevoegd — '+cnt+' elementen ('+filterChoice+')');
+  toast('✓ '+boName+' toegevoegd — '+countEls(boName,filterChoice)+' elementen ('+filterChoice+')');
   document.getElementById('filterDlg').style.display='none';filterPending=null;
 }
 
@@ -393,12 +505,14 @@ function renderLib(){
   const items=q?arr.filter(x=>x.n.toLowerCase().includes(q)||(x.c||'').toLowerCase().includes(q)):arr;
   document.getElementById('sbCount').textContent=items.length+' van '+arr.length+' items';
   const list=document.getElementById('sbList');
-  list.innerHTML=items.map(i=>`
-    <div class="lib-item" draggable="true" data-type="${libTab}" data-name="${esc(i.n)}" title="${esc(i.n)}${i.d?' — '+i.d:''}">
-      <div class="lib-dot" style="background:${COL[libTab]}"></div>
+  list.innerHTML=items.map(i=>{
+    const icon=libTab==='bo'?boIcon(i.n):libTab==='el'?'🔧':libTab==='bd'?'🧱':'⚠️';
+    return `<div class="lib-item" draggable="true" data-type="${libTab}" data-name="${esc(i.n)}" title="${esc(i.n)}${i.d?' — '+i.d:''}">
+      <span class="lib-icon">${icon}</span>
       <span class="lib-name">${esc(i.n)}</span>
       <span class="lib-code">${esc(i.c||'')}</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   list.querySelectorAll('.lib-item').forEach(el=>{
     el.addEventListener('dragstart',e=>{
       if(dragNid){e.preventDefault();return;}
@@ -407,10 +521,7 @@ function renderLib(){
       e.dataTransfer.setData('text/plain',JSON.stringify(dragLib));
       setTimeout(()=>e.currentTarget.classList.add('dragging'),0);
     });
-    el.addEventListener('dragend',e=>{
-      e.currentTarget.classList.remove('dragging');
-      setTimeout(()=>{dragLib=null;},50);
-    });
+    el.addEventListener('dragend',e=>{e.currentTarget.classList.remove('dragging');setTimeout(()=>{dragLib=null;},50);});
     el.addEventListener('dblclick',e=>quickInsert(e.currentTarget.dataset.type,e.currentTarget.dataset.name));
   });
 }
@@ -418,11 +529,7 @@ function renderLib(){
 function quickInsert(type,name){
   if(!tree.length){toast('Maak eerst een Areaal aan');return;}
   const PARENT={complex:'areaal',bo:'complex',eg:'bo',el:'eg',sy:'el',bd:'sy',gb:'bd'};
-  if(type==='bo'){
-    const cplx=findFirst('complex');
-    if(!cplx){toast('Voeg eerst een Complex toe');return;}
-    showFilter(name,cplx);return;
-  }
+  if(type==='bo'){const cplx=findFirst('complex');if(!cplx){toast('Voeg eerst een Complex toe');return;}showFilter(name,cplx);return;}
   const par=findFirst(PARENT[type]);
   if(!par){toast('Geen '+LBL[PARENT[type]]+' gevonden');return;}
   addKid(par,{id:mkId(),type,label:name,nenCode:nenCode(type,name),wcode:'',children:[]});
@@ -436,13 +543,16 @@ function renderTree(){
   const root=document.getElementById('treeRoot');
   if(!tree.length){
     root.innerHTML=`<div class="empty">
-      <div class="empty-icon">🏗</div>
+      <div style="font-size:48px;opacity:.15">🏗</div>
       <div style="font-size:14px;font-weight:600;margin-bottom:6px">Nog geen decompositie</div>
       <div style="font-size:12px;color:var(--tx3);max-width:280px;line-height:1.6">Klik <b>+ Areaal</b> om te beginnen, of sleep een Beheerobject vanuit de bibliotheek op een Complex.</div>
     </div>`;return;
   }
   root.innerHTML=tree.map(n=>renderNode(n,0)).join('');
   attachEvents();
+  // Show map button if there are BO's with coords
+  const hasBo=findAll('bo').length>0;
+  document.getElementById('mapViewBtn').style.display=hasBo?'':'none';
 }
 
 function renderNode(node,depth){
@@ -450,7 +560,9 @@ function renderNode(node,depth){
   const hasKids=node.children&&node.children.length>0;
   const collapsed=!!coll[node.id];
   const pipes=Array.from({length:depth},()=>`<div class="indent-pipe"></div>`).join('');
-  const wcodeHtml=node.wcode?`<span class="node-wcode">${esc(node.wcode)}</span>`:'';
+  const icon=node.type==='bo'?`<span class="node-icon">${boIcon(node.label)}</span>`
+    :`<div class="node-dot" style="background:${col}"></div>`;
+  const wcHtml=node.wcode?`<span class="node-wcode">${esc(node.wcode)}</span>`:'';
   const nenHtml=node.nenCode?`<span class="node-nen">${esc(node.nenCode)}</span>`:'';
   let badge='';
   if(node.meenemen==='ja')badge=`<span class="node-badge badge-ja">ja</span>`;
@@ -461,9 +573,9 @@ function renderNode(node,depth){
       <div class="node-indent">${pipes}</div>
       <div class="node-body${selId===node.id?' sel':''}" id="nb-${node.id}" data-id="${node.id}" data-type="${node.type}" draggable="true">
         ${hasKids?`<span class="node-tog" data-tog="${node.id}">${collapsed?'+':'−'}</span>`:`<span style="width:16px;flex-shrink:0"></span>`}
-        <div class="node-dot" style="background:${col}"></div>
+        ${icon}
         <span class="node-label" title="${esc(node.label)}">${esc(node.label)}</span>
-        ${wcodeHtml}${nenHtml}${badge}
+        ${wcHtml}${nenHtml}${badge}
         ${hasKids?`<span class="node-count">${node.children.length}</span>`:''}
         <div class="node-actions">
           ${canAdd?`<button class="na" data-act="add" data-id="${node.id}" title="Kind toevoegen">＋</button>`:''}
@@ -483,60 +595,36 @@ function attachEvents(){
     e.stopPropagation();coll[el.dataset.tog]=!coll[el.dataset.tog];renderTree();
   }));
   document.querySelectorAll('.node-body').forEach(el=>{
-    el.addEventListener('click',e=>{
-      if(e.target.closest('[data-act]')||e.target.closest('[data-tog]'))return;
-      showDetail(el.dataset.id);
-    });
+    el.addEventListener('click',e=>{if(e.target.closest('[data-act]')||e.target.closest('[data-tog]'))return;showDetail(el.dataset.id);});
   });
   document.querySelectorAll('[data-act]').forEach(el=>el.addEventListener('click',e=>{
-    e.stopPropagation();
-    const{id,act}=el.dataset;
-    if(act==='add')openAddChild(id);
-    if(act==='ren')openRename(id);
-    if(act==='del')deleteNode(id);
-    if(act==='up')moveNode(id,-1);
-    if(act==='dn')moveNode(id,1);
+    e.stopPropagation();const{id,act}=el.dataset;
+    if(act==='add')openAddChild(id);if(act==='ren')openRename(id);
+    if(act==='del')deleteNode(id);if(act==='up')moveNode(id,-1);if(act==='dn')moveNode(id,1);
   }));
-  // Drag tree nodes
   document.querySelectorAll('.node-body').forEach(el=>{
-    el.addEventListener('dragstart',e=>{
-      if(dragLib){e.preventDefault();return;}
-      dragNid=el.dataset.id;dragLib=null;
-      e.dataTransfer.effectAllowed='move';
-      setTimeout(()=>el.classList.add('dragging'),0);
-    });
-    el.addEventListener('dragend',()=>{
-      document.querySelectorAll('.node-body.dragging,.node-body.drop-ok,.node-body.drop-no')
-        .forEach(x=>x.classList.remove('dragging','drop-ok','drop-no'));
-      dragNid=null;
-    });
+    el.addEventListener('dragstart',e=>{if(dragLib){e.preventDefault();return;}dragNid=el.dataset.id;dragLib=null;e.dataTransfer.effectAllowed='move';setTimeout(()=>el.classList.add('dragging'),0);});
+    el.addEventListener('dragend',()=>{document.querySelectorAll('.node-body.dragging,.node-body.drop-ok,.node-body.drop-no').forEach(x=>x.classList.remove('dragging','drop-ok','drop-no'));dragNid=null;});
     el.addEventListener('dragover',e=>{
       e.preventDefault();e.stopPropagation();
       e.dataTransfer.dropEffect=dragLib?'copy':'move';
-      document.querySelectorAll('.node-body.drop-ok,.node-body.drop-no')
-        .forEach(x=>x.classList.remove('drop-ok','drop-no'));
+      document.querySelectorAll('.node-body.drop-ok,.node-body.drop-no').forEach(x=>x.classList.remove('drop-ok','drop-no'));
       const tt=el.dataset.type;
-      if(dragLib){
-        const ok=(dragLib.type==='bo'&&tt==='complex')||(KIDS[tt]||[]).includes(dragLib.type);
-        el.classList.add(ok?'drop-ok':'drop-no');
-      } else if(dragNid&&dragNid!==el.dataset.id){
-        const n=findN(dragNid);
-        el.classList.add((KIDS[tt]||[]).includes(n?.type)?'drop-ok':'drop-no');
-      }
+      if(dragLib){const ok=(dragLib.type==='bo'&&tt==='complex')||(KIDS[tt]||[]).includes(dragLib.type);el.classList.add(ok?'drop-ok':'drop-no');}
+      else if(dragNid&&dragNid!==el.dataset.id){const n=findN(dragNid);el.classList.add((KIDS[tt]||[]).includes(n?.type)?'drop-ok':'drop-no');}
     });
     el.addEventListener('dragleave',e=>{if(!el.contains(e.relatedTarget))el.classList.remove('drop-ok','drop-no');});
     el.addEventListener('drop',e=>{
-      e.preventDefault();e.stopPropagation();
-      el.classList.remove('drop-ok','drop-no');
+      e.preventDefault();e.stopPropagation();el.classList.remove('drop-ok','drop-no');
       const tnode=findN(el.dataset.id);if(!tnode)return;
       if(dragLib){
         const{type,name}=dragLib;
-        if(type==='bo'&&tnode.type==='complex'){showFilter(name,tnode);}
+        if(type==='bo'&&tnode.type==='complex')showFilter(name,tnode);
         else if((KIDS[tnode.type]||[]).includes(type)){
           addKid(tnode,{id:mkId(),type,label:name,nenCode:nenCode(type,name),wcode:'',children:[]});
           coll[tnode.id]=false;renderTree();autoSave();toast(name+' toegevoegd');
-        } else {toast('⚠ '+LBL[type]+' past niet onder '+LBL[tnode.type]);}
-      } else if(dragNid&&dragNid!==tnode.id){
+        }else toast('⚠ '+LBL[type]+' past niet onder '+LBL[tnode.type]);
+      }else if(dragNid&&dragNid!==tnode.id){
         const n=findN(dragNid);if(!n)return;
         if(!(KIDS[tnode.type]||[]).includes(n.type)){toast('⚠ Kan hier niet plaatsen');return;}
         const op=findP(dragNid);
@@ -546,76 +634,75 @@ function attachEvents(){
     });
   });
 }
-
-function canvasDrop(e){
-  if(e.target.closest('.node-body'))return;
-  e.preventDefault();
-  if(dragLib&&dragLib.type==='areaal'){
-    tree.push({id:mkId(),type:'areaal',label:dragLib.name||'Areaal',nenCode:'',wcode:'',children:[]});
-    renderTree();autoSave();
-  }
-}
+function canvasDrop(e){if(e.target.closest('.node-body'))return;e.preventDefault();if(dragLib&&dragLib.type==='areaal'){tree.push({id:mkId(),type:'areaal',label:dragLib.name||'Areaal',nenCode:'',wcode:'',children:[]});renderTree();autoSave();}}
 
 // ══════════════════════════════════════════════
-//  DETAIL PANEL — rich info + werkcode
+//  DETAIL PANEL
 // ══════════════════════════════════════════════
 function showDetail(id){
-  selId=id;
-  const n=findN(id);if(!n){closeDetail();return;}
-  const panel=document.getElementById('detailPanel');
-  panel.classList.add('open');
-
-  // Badge
+  selId=id;const n=findN(id);if(!n){closeDetail();return;}
+  document.getElementById('detailPanel').classList.add('open');
   const badge=document.getElementById('dpBadge');
-  badge.textContent=LBL[n.type];
+  badge.textContent=n.type==='bo'?boIcon(n.label)+' '+LBL[n.type]:LBL[n.type];
   badge.style.background=COL[n.type];
-
   document.getElementById('dpTitle').textContent=n.label;
 
   let html='';
 
-  // ── Werkcode sectie (for relevant levels) ──
+  // ── Werkcode ──
   if(WCODE_LEVELS.has(n.type)){
     html+=`<div class="dp-section">
-      <div class="dp-section-title">⚙ Maximo Werkcode</div>
+      <div class="dp-section-title">⚙️ Maximo Werkcode</div>
       <div class="dp-field">
         <div class="dp-label">Werkcode / Objectnummer</div>
-        <input class="wcode-input" id="wcodeInput" type="text" value="${esc(n.wcode||'')}"
-          placeholder="bijv. KGM000041"
-          oninput="previewWcode()"
-          onkeydown="if(event.key==='Enter')saveWcode('${n.id}')">
-        <button class="wcode-save" id="wcodeSaveBtn" onclick="saveWcode('${n.id}')">Opslaan</button>
+        <input class="dp-input mono" id="inp-wcode" type="text" value="${esc(n.wcode||'')}" placeholder="bijv. KGM000041">
+      </div>`;
+    // Adres alleen voor beheerobject
+    if(n.type==='bo'){
+      html+=`<div class="dp-field">
+        <div class="dp-label">Adres (straat + huisnummer)</div>
+        <input class="dp-input" id="inp-adres" type="text" value="${esc(n.adres||'')}" placeholder="bijv. Ringvaartweg 1">
       </div>
-    </div>`;
+      <div class="dp-field">
+        <div class="dp-label">Stad / Gemeente</div>
+        <input class="dp-input" id="inp-stad" type="text" value="${esc(n.stad||'')}" placeholder="bijv. Aalsmeer">
+      </div>
+      <div class="dp-label" style="margin-bottom:4px">Coördinaten (WGS84)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:4px">
+        <div>
+          <div class="dp-label">Breedtegraad (lat)</div>
+          <input class="dp-input mono" id="inp-lat" type="text" value="${esc(n.lat||'')}" placeholder="52.3676">
+        </div>
+        <div>
+          <div class="dp-label">Lengtegraad (lon)</div>
+          <input class="dp-input mono" id="inp-lon" type="text" value="${esc(n.lon||'')}" placeholder="4.9041">
+        </div>
+      </div>`;
+    }
+    html+=`<div class="dp-save-row">
+      <button class="btn" onclick="cancelLocEdit('${n.id}')">Annuleren</button>
+      <button class="btn primary" onclick="saveLocEdit('${n.id}')">✓ Opslaan</button>
+    </div></div>`;
   }
 
   // ── Identificatie ──
   html+=`<div class="dp-section">
     <div class="dp-section-title">📋 Identificatie</div>
-    <div class="dp-field">
-      <div class="dp-label">Type</div>
-      <div class="dp-value"><span class="dp-tag" style="background:${COL[n.type]}22;color:${COL[n.type]};border:1px solid ${COL[n.type]}55">${LBL[n.type]}</span></div>
-    </div>
-    <div class="dp-field">
-      <div class="dp-label">Naam</div>
-      <div class="dp-value">${esc(n.label)}</div>
-    </div>`;
-  if(n.nenCode)html+=`<div class="dp-field">
-      <div class="dp-label">NEN 2767 Code</div>
-      <div class="dp-value mono">${esc(n.nenCode)}</div>
-    </div>`;
-  if(n.wcode)html+=`<div class="dp-field">
-      <div class="dp-label">Maximo Werkcode</div>
-      <div class="dp-value mono" style="color:var(--blue)">${esc(n.wcode)}</div>
-    </div>`;
+    <div class="dp-field"><div class="dp-label">Type</div>
+      <div class="dp-value"><span class="dp-tag" style="background:${COL[n.type]}22;color:${COL[n.type]};border:1px solid ${COL[n.type]}55">${n.type==='bo'?boIcon(n.label)+' ':''} ${LBL[n.type]}</span></div></div>
+    <div class="dp-field"><div class="dp-label">Naam</div><div class="dp-value">${esc(n.label)}</div></div>`;
+  if(n.nenCode)html+=`<div class="dp-field"><div class="dp-label">NEN 2767 Code</div><div class="dp-value mono">${esc(n.nenCode)}</div></div>`;
+  if(n.wcode)html+=`<div class="dp-field"><div class="dp-label">Maximo Werkcode</div><div class="dp-value mono" style="color:var(--blue)">${esc(n.wcode)}</div></div>`;
+  if(n.adres||n.stad)html+=`<div class="dp-field"><div class="dp-label">Locatie</div><div class="dp-value">${[n.adres,n.stad].filter(Boolean).join(', ')}</div></div>`;
+  if(n.lat&&n.lon)html+=`<div class="dp-field"><div class="dp-label">Coördinaten</div><div class="dp-value mono">${esc(n.lat)}, ${esc(n.lon)}</div></div>`;
   html+=`</div>`;
 
   // ── Beschrijving ──
-  const hasDesc=n.def||n.functie||n.vakdiscipline||n.reden||n.omschrijving||n.eenheid;
-  if(hasDesc){
+  const hasD=n.def||n.functie||n.vakdiscipline||n.reden||n.omschrijving||n.eenheid;
+  if(hasD){
     html+=`<div class="dp-section"><div class="dp-section-title">📖 Beschrijving</div>`;
     if(n.def)html+=`<div class="dp-field"><div class="dp-label">Werkdefinitie</div><div class="dp-value muted">${esc(n.def)}</div></div>`;
-    if(n.functie)html+=`<div class="dp-field"><div class="dp-label">Functie element</div><div class="dp-value">${esc(n.functie)}</div></div>`;
+    if(n.functie)html+=`<div class="dp-field"><div class="dp-label">Functie</div><div class="dp-value">${esc(n.functie)}</div></div>`;
     if(n.vakdiscipline)html+=`<div class="dp-field"><div class="dp-label">Vakdiscipline</div><div class="dp-value">${esc(n.vakdiscipline)}</div></div>`;
     if(n.reden)html+=`<div class="dp-field"><div class="dp-label">Reden opname</div><div class="dp-value muted">${esc(n.reden)}</div></div>`;
     if(n.omschrijving)html+=`<div class="dp-field"><div class="dp-label">Omschrijving</div><div class="dp-value muted">${esc(n.omschrijving)}</div></div>`;
@@ -623,124 +710,120 @@ function showDetail(id){
     html+=`</div>`;
   }
 
-  // ── Decompositie info ──
-  const hasDecomp=n.meenemen||n.gebrekgroep||n.gebreksoort||n.belang||n.afkorting||n.type_gb||n.toelichting||n.intensiteit;
-  if(hasDecomp){
+  // ── NEN Eigenschappen ──
+  const hasP=n.meenemen||n.gebrekgroep||n.gebreksoort||n.belang||n.type_gb||n.afkorting||n.toelichting||n.intensiteit;
+  if(hasP){
     html+=`<div class="dp-section"><div class="dp-section-title">🔍 NEN 2767 Eigenschappen</div>`;
-    if(n.meenemen){
-      const cls=n.meenemen==='ja'?'badge-ja':n.meenemen==='optioneel'?'badge-opt':'';
-      html+=`<div class="dp-field"><div class="dp-label">Meenemen (conditiemeting)</div><div class="dp-value"><span class="node-badge ${cls}" style="font-size:11px;padding:2px 8px">${esc(n.meenemen)}</span></div></div>`;
-    }
+    if(n.meenemen){const cls=n.meenemen==='ja'?'badge-ja':'badge-opt';html+=`<div class="dp-field"><div class="dp-label">Meenemen</div><div class="dp-value"><span class="node-badge ${cls}" style="font-size:11px;padding:2px 8px">${esc(n.meenemen)}</span></div></div>`;}
     if(n.type_gb)html+=`<div class="dp-field"><div class="dp-label">Gebrektype</div><div class="dp-value">${esc(n.type_gb)}</div></div>`;
     if(n.gebrekgroep)html+=`<div class="dp-field"><div class="dp-label">Gebrekgroep</div><div class="dp-value">${esc(n.gebrekgroep)}</div></div>`;
     if(n.gebreksoort)html+=`<div class="dp-field"><div class="dp-label">Gebreksoort</div><div class="dp-value muted" style="font-size:11px">${esc(n.gebreksoort)}</div></div>`;
-    if(n.belang){
-      const bcls='belang-'+n.belang;
-      html+=`<div class="dp-field"><div class="dp-label">Belang</div><div class="dp-value"><span class="dp-tag ${bcls}">${esc(n.belang)}</span></div></div>`;
-    }
+    if(n.belang)html+=`<div class="dp-field"><div class="dp-label">Belang</div><div class="dp-value"><span class="dp-tag belang-${n.belang}">${esc(n.belang)}</span></div></div>`;
     if(n.afkorting)html+=`<div class="dp-field"><div class="dp-label">Afkorting</div><div class="dp-value mono">${esc(n.afkorting)}</div></div>`;
     if(n.intensiteit)html+=`<div class="dp-field"><div class="dp-label">Intensiteit</div><div class="dp-value">${esc(n.intensiteit)}</div></div>`;
     if(n.toelichting)html+=`<div class="dp-field"><div class="dp-label">Toelichting</div><div class="dp-value muted">${esc(n.toelichting)}</div></div>`;
     html+=`</div>`;
   }
 
-  // ── Structuur ──
+  // ── Structuur & acties ──
   html+=`<div class="dp-section"><div class="dp-section-title">🌳 Structuur</div>`;
-  if(n.children&&n.children.length)html+=`<div class="dp-field"><div class="dp-label">Directe kinderen</div><div class="dp-value">${n.children.length} items</div></div>`;
+  if(n.children?.length)html+=`<div class="dp-field"><div class="dp-label">Kinderen</div><div class="dp-value">${n.children.length} items</div></div>`;
   html+=`<div style="display:flex;flex-direction:column;gap:5px;margin-top:6px">
     <button class="btn" onclick="openRename('${n.id}')" style="width:100%">✎ Naam wijzigen</button>
     <button class="btn danger" onclick="deleteNode('${n.id}')" style="width:100%">✕ Verwijderen</button>
   </div></div>`;
 
   document.getElementById('dpBody').innerHTML=html;
-
-  // Wire up werkcode save button visibility
-  if(WCODE_LEVELS.has(n.type)){
-    const inp=document.getElementById('wcodeInput');
-    const btn=document.getElementById('wcodeSaveBtn');
-    inp.addEventListener('input',()=>{btn.style.display='block';});
-    inp.addEventListener('keydown',e=>{if(e.key==='Escape'){inp.value=n.wcode||'';btn.style.display='none';}});
-  }
-
   renderTree();
 }
 
-function saveWcode(id){
+function saveLocEdit(id){
   const n=findN(id);if(!n)return;
-  const inp=document.getElementById('wcodeInput');if(!inp)return;
-  n.wcode=inp.value.trim();
-  const btn=document.getElementById('wcodeSaveBtn');if(btn)btn.style.display='none';
-  renderTree();autoSave();
-  toast('✓ Werkcode opgeslagen: '+(n.wcode||'(leeg)'));
-  showDetail(id);
+  const get=x=>{const el=document.getElementById('inp-'+x);return el?el.value.trim():'';};
+  n.wcode=get('wcode');
+  if(n.type==='bo'){n.adres=get('adres');n.stad=get('stad');n.lat=get('lat');n.lon=get('lon');}
+  renderTree();autoSave();toast('✓ Opgeslagen');showDetail(id);
+}
+function cancelLocEdit(id){showDetail(id);}
+function closeDetail(){selId=null;document.getElementById('detailPanel').classList.remove('open');renderTree();}
+
+// ══════════════════════════════════════════════
+//  KAART
+// ══════════════════════════════════════════════
+function toggleMapView(){
+  mapVisible=!mapVisible;
+  document.getElementById('canvas').style.display=mapVisible?'none':'';
+  document.getElementById('mapView').classList.toggle('show',mapVisible);
+  document.getElementById('mapViewBtn').classList.toggle('active',mapVisible);
+  if(mapVisible)renderMap();
 }
 
-function previewWcode(){
-  // Visual feedback while typing - no action needed
-}
+function toggleMap(){toggleMapView();}
 
-function closeDetail(){
-  selId=null;
-  document.getElementById('detailPanel').classList.remove('open');
-  renderTree();
+function renderMap(){
+  const mapEl=document.getElementById('mapView');
+  // Init leaflet once
+  if(!leafletMap){
+    mapEl.style.height='100%';
+    leafletMap=L.map(mapEl).setView([52.3,5.3],8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom:19
+    }).addTo(leafletMap);
+  }
+  // Clear old markers
+  mapMarkers.forEach(m=>m.remove());mapMarkers=[];
+
+  // Add markers for all BO's with coords
+  const bos=findAll('bo');
+  const bounds=[];
+  for(const bo of bos){
+    const lat=parseFloat(bo.lat),lon=parseFloat(bo.lon);
+    if(!bo.lat||!bo.lon||isNaN(lat)||isNaN(lon))continue;
+    const color=boColor(bo.label);
+    const icon=boIcon(bo.label);
+    // Custom divIcon
+    const divIcon=L.divIcon({
+      className:'',
+      html:`<div style="
+        background:${color};border:2px solid #fff;border-radius:50% 50% 50% 0;
+        width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+        font-size:17px;box-shadow:0 2px 8px rgba(0,0,0,.35);
+        transform:rotate(-45deg);cursor:pointer">
+        <span style="transform:rotate(45deg)">${icon}</span>
+      </div>`,
+      iconSize:[34,34],iconAnchor:[17,34],popupAnchor:[0,-36]
+    });
+    const adresStr=[bo.adres,bo.stad].filter(Boolean).join(', ');
+    const popup=`<div class="popup-title">${icon} ${bo.label}</div>
+      ${bo.nenCode?`<div class="popup-code">NEN code: ${bo.nenCode}</div>`:''}
+      ${adresStr?`<div class="popup-addr">📍 ${adresStr}</div>`:''}
+      ${bo.wcode?`<div class="popup-wcode">⚙ ${bo.wcode}</div>`:''}
+      <div style="font-size:10px;color:#999;margin-top:4px">${lat.toFixed(5)}, ${lon.toFixed(5)}</div>`;
+    const marker=L.marker([lat,lon],{icon:divIcon}).addTo(leafletMap).bindPopup(popup);
+    mapMarkers.push(marker);
+    bounds.push([lat,lon]);
+  }
+  // Fit bounds
+  if(bounds.length===1)leafletMap.setView(bounds[0],14);
+  else if(bounds.length>1)leafletMap.fitBounds(bounds,{padding:[40,40]});
+
+  if(bounds.length===0)toast('⚠ Geen beheerobjecten met coördinaten. Voeg lat/lon toe via het detail paneel.');
+  else toast(`🗺 ${bounds.length} object${bounds.length>1?'en':''} op kaart`);
+
+  // Invalidate size (needed when map was hidden)
+  setTimeout(()=>leafletMap.invalidateSize(),100);
 }
 
 // ══════════════════════════════════════════════
 //  TREE ACTIONS
 // ══════════════════════════════════════════════
-function moveNode(id,dir){
-  const par=findP(id);const list=par?par.children:tree;
-  const idx=list.findIndex(n=>n.id===id);if(idx===-1)return;
-  const ni=idx+dir;if(ni<0||ni>=list.length)return;
-  [list[idx],list[ni]]=[list[ni],list[idx]];renderTree();autoSave();
-}
-function deleteNode(id){
-  const n=findN(id);if(!n)return;
-  const hasKids=n.children&&n.children.length>0;
-  if(hasKids){
-    showModal('Verwijderen',`<p style="font-size:12px;line-height:1.6">Weet je zeker dat je <b>${esc(n.label)}</b> inclusief alle onderliggende niveaus wilt verwijderen?</p>`,
-      [{l:'Annuleren',c:'btn',cb:closeModal},{l:'Verwijderen',c:'btn danger',cb:()=>{doDelete(id);closeModal();}}]);
-  } else doDelete(id);
-}
-function doDelete(id){
-  const par=findP(id);
-  if(par)par.children=par.children.filter(c=>c.id!==id);else tree=tree.filter(n=>n.id!==id);
-  if(selId===id){selId=null;closeDetail();}
-  renderTree();autoSave();toast('Verwijderd');
-}
-function openRename(id){
-  const n=findN(id);if(!n)return;
-  showModal('Naam wijzigen — '+LBL[n.type],
-    `<div class="form-row"><label>Naam</label><input id="renInp" value="${esc(n.label)}"></div>`,
-    [{l:'Annuleren',c:'btn',cb:closeModal},
-     {l:'Opslaan',c:'btn primary',cb:()=>{
-       const v=document.getElementById('renInp').value.trim();
-       if(v){n.label=v;renderTree();autoSave();if(selId===id)showDetail(id);}closeModal();
-     }}]);
-  setTimeout(()=>{const el=document.getElementById('renInp');el&&el.select();},50);
-}
-function openAddChild(parentId){
-  const par=findN(parentId);if(!par)return;
-  const childType=(KIDS[par.type]||[])[0];if(!childType)return;
-  showModal('Toevoegen — '+LBL[childType],
-    `<div class="form-row"><label>Naam</label><input id="addInp" placeholder="${LBL[childType]} naam"></div>`,
-    [{l:'Annuleren',c:'btn',cb:closeModal},
-     {l:'Toevoegen',c:'btn primary',cb:()=>{
-       const v=document.getElementById('addInp').value.trim();
-       if(v){addKid(par,{id:mkId(),type:childType,label:v,nenCode:'',wcode:'',children:[]});coll[parentId]=false;renderTree();autoSave();toast(v+' toegevoegd');}closeModal();
-     }}]);
-  setTimeout(()=>{const el=document.getElementById('addInp');el&&el.focus();},50);
-}
-function addAreaal(){
-  showModal('Nieuw Areaal',
-    `<div class="form-row"><label>Naam</label><input id="areaalInp" placeholder="bijv. Waterschap AGV"></div>`,
-    [{l:'Annuleren',c:'btn',cb:closeModal},
-     {l:'Aanmaken',c:'btn primary',cb:()=>{
-       const v=document.getElementById('areaalInp').value.trim();
-       if(v){tree.push({id:mkId(),type:'areaal',label:v,nenCode:'',wcode:'',children:[]});renderTree();autoSave();toast(v+' aangemaakt');}closeModal();
-     }}]);
-  setTimeout(()=>{const el=document.getElementById('areaalInp');el&&el.focus();},50);
-}
+function moveNode(id,dir){const par=findP(id);const list=par?par.children:tree;const idx=list.findIndex(n=>n.id===id);if(idx===-1)return;const ni=idx+dir;if(ni<0||ni>=list.length)return;[list[idx],list[ni]]=[list[ni],list[idx]];renderTree();autoSave();}
+function deleteNode(id){const n=findN(id);if(!n)return;const hasK=n.children?.length>0;if(hasK){showModal('Verwijderen',`<p style="font-size:12px;line-height:1.6">Weet je zeker dat je <b>${esc(n.label)}</b> inclusief alle onderliggende niveaus wilt verwijderen?</p>`,[{l:'Annuleren',c:'btn',cb:closeModal},{l:'Verwijderen',c:'btn danger',cb:()=>{doDelete(id);closeModal();}}]);}else doDelete(id);}
+function doDelete(id){const par=findP(id);if(par)par.children=par.children.filter(c=>c.id!==id);else tree=tree.filter(n=>n.id!==id);if(selId===id){selId=null;closeDetail();}renderTree();autoSave();toast('Verwijderd');}
+function openRename(id){const n=findN(id);if(!n)return;showModal('Naam wijzigen — '+LBL[n.type],`<div class="form-row"><label>Naam</label><input id="renInp" value="${esc(n.label)}"></div>`,[{l:'Annuleren',c:'btn',cb:closeModal},{l:'Opslaan',c:'btn primary',cb:()=>{const v=document.getElementById('renInp').value.trim();if(v){n.label=v;renderTree();autoSave();if(selId===id)showDetail(id);}closeModal();}}]);setTimeout(()=>{const el=document.getElementById('renInp');el&&el.select();},50);}
+function openAddChild(parentId){const par=findN(parentId);if(!par)return;const ct=(KIDS[par.type]||[])[0];if(!ct)return;showModal('Toevoegen — '+LBL[ct],`<div class="form-row"><label>Naam</label><input id="addInp" placeholder="${LBL[ct]} naam"></div>`,[{l:'Annuleren',c:'btn',cb:closeModal},{l:'Toevoegen',c:'btn primary',cb:()=>{const v=document.getElementById('addInp').value.trim();if(v){addKid(par,{id:mkId(),type:ct,label:v,nenCode:'',wcode:'',children:[]});coll[parentId]=false;renderTree();autoSave();toast(v+' toegevoegd');}closeModal();}}]);setTimeout(()=>{const el=document.getElementById('addInp');el&&el.focus();},50);}
+function addAreaal(){showModal('Nieuw Areaal',`<div class="form-row"><label>Naam</label><input id="areaalInp" placeholder="bijv. Waterschap AGV"></div>`,[{l:'Annuleren',c:'btn',cb:closeModal},{l:'Aanmaken',c:'btn primary',cb:()=>{const v=document.getElementById('areaalInp').value.trim();if(v){tree.push({id:mkId(),type:'areaal',label:v,nenCode:'',wcode:'',children:[]});renderTree();autoSave();toast(v+' aangemaakt');}closeModal();}}]);setTimeout(()=>{const el=document.getElementById('areaalInp');el&&el.focus();},50);}
 function expandAll(){function w(ns){for(const n of ns){coll[n.id]=false;if(n.children)w(n.children);}}w(tree);renderTree();}
 function collapseAll(){function w(ns){for(const n of ns){if(n.children?.length)coll[n.id]=true;if(n.children)w(n.children);}}w(tree);renderTree();}
 
@@ -759,101 +842,48 @@ function closeModal(){document.getElementById('modalOverlay').style.display='non
 // ══════════════════════════════════════════════
 //  SAVE / LOAD / EXPORT
 // ══════════════════════════════════════════════
-let _saveTimer;
+let _st;
 function autoSave(){
   try{localStorage.setItem('nen2767_v2',JSON.stringify({tree,idC,projectName}));}catch(e){}
-  clearTimeout(_saveTimer);
-  _saveTimer=setTimeout(()=>{
-    const el=document.getElementById('topSaved');
-    if(el){el.textContent='✓ Automatisch opgeslagen';setTimeout(()=>{el.textContent='';},2500);}
-  },300);
+  clearTimeout(_st);_st=setTimeout(()=>{const el=document.getElementById('topSaved');if(el){el.textContent='✓ Automatisch opgeslagen';setTimeout(()=>{el.textContent='';},2500);}},300);
 }
 function saveJSON(){
   const blob=new Blob([JSON.stringify({version:2,projectName,tree,idC},null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download=(projectName||'decompositie').replace(/[^a-z0-9]/gi,'_')+'.json';a.click();
-  toast('💾 Opgeslagen als JSON');
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(projectName||'decompositie').replace(/[^a-z0-9]/gi,'_')+'.json';a.click();toast('💾 Opgeslagen als JSON');
 }
 function loadJSON(input){
   const file=input.files[0];if(!file)return;
   const reader=new FileReader();
-  reader.onload=e=>{
-    try{
-      const data=JSON.parse(e.target.result);
-      tree=data.tree||[];idC=data.idC||1;projectName=data.projectName||'Project';
-      document.getElementById('projectTitle').textContent=projectName;
-      coll={};selId=null;closeDetail();renderTree();autoSave();toast('📂 '+file.name+' geladen');
-    }catch{toast('⚠ Ongeldig bestand');}
-  };
+  reader.onload=e=>{try{const data=JSON.parse(e.target.result);tree=data.tree||[];idC=data.idC||1;projectName=data.projectName||'Project';document.getElementById('projectTitle').textContent=projectName;coll={};selId=null;closeDetail();renderTree();autoSave();toast('📂 '+file.name+' geladen');}catch{toast('⚠ Ongeldig bestand');}};
   reader.readAsText(file);input.value='';
 }
-function newProject(){
-  showModal('Nieuw project',
-    `<div class="form-row"><label>Projectnaam</label><input id="projInp" value="${esc(projectName)}"></div>`,
-    [{l:'Annuleren',c:'btn',cb:closeModal},
-     {l:'Aanmaken',c:'btn primary',cb:()=>{
-       const v=document.getElementById('projInp').value.trim()||'Nieuw project';
-       projectName=v;tree=[];idC=1;coll={};selId=null;closeDetail();
-       document.getElementById('projectTitle').textContent=v;
-       renderTree();autoSave();closeModal();toast('Nieuw project: '+v);
-     }}]);
-  setTimeout(()=>{const el=document.getElementById('projInp');el&&el.select();},50);
-}
-function renameProject(){
-  showModal('Project hernoemen',
-    `<div class="form-row"><label>Projectnaam</label><input id="rpInp" value="${esc(projectName)}"></div>`,
-    [{l:'Annuleren',c:'btn',cb:closeModal},
-     {l:'Opslaan',c:'btn primary',cb:()=>{
-       const v=document.getElementById('rpInp').value.trim();
-       if(v){projectName=v;document.getElementById('projectTitle').textContent=v;autoSave();}closeModal();
-     }}]);
-  setTimeout(()=>{const el=document.getElementById('rpInp');el&&el.select();},50);
-}
-function clearAll(){
-  if(!tree.length)return;
-  showModal('Alles leegmaken',
-    `<p style="font-size:12px;line-height:1.6">Weet je zeker dat je de volledige decompositie wilt wissen?<br>Dit kan <b>niet</b> ongedaan worden gemaakt.</p>`,
-    [{l:'Annuleren',c:'btn',cb:closeModal},
-     {l:'Leegmaken',c:'btn danger',cb:()=>{tree=[];idC=1;coll={};selId=null;closeDetail();renderTree();autoSave();closeModal();toast('Decompositie geleegd');}}]);
-}
-
+function newProject(){showModal('Nieuw project',`<div class="form-row"><label>Projectnaam</label><input id="projInp" value="${esc(projectName)}"></div>`,[{l:'Annuleren',c:'btn',cb:closeModal},{l:'Aanmaken',c:'btn primary',cb:()=>{const v=document.getElementById('projInp').value.trim()||'Nieuw project';projectName=v;tree=[];idC=1;coll={};selId=null;closeDetail();document.getElementById('projectTitle').textContent=v;renderTree();autoSave();closeModal();toast('Nieuw project: '+v);}}]);setTimeout(()=>{const el=document.getElementById('projInp');el&&el.select();},50);}
+function renameProject(){showModal('Project hernoemen',`<div class="form-row"><label>Projectnaam</label><input id="rpInp" value="${esc(projectName)}"></div>`,[{l:'Annuleren',c:'btn',cb:closeModal},{l:'Opslaan',c:'btn primary',cb:()=>{const v=document.getElementById('rpInp').value.trim();if(v){projectName=v;document.getElementById('projectTitle').textContent=v;autoSave();}closeModal();}}]);setTimeout(()=>{const el=document.getElementById('rpInp');el&&el.select();},50);}
+function clearAll(){if(!tree.length)return;showModal('Alles leegmaken',`<p style="font-size:12px;line-height:1.6">Weet je zeker dat je de volledige decompositie wilt wissen?<br>Dit kan <b>niet</b> ongedaan worden gemaakt.</p>`,[{l:'Annuleren',c:'btn',cb:closeModal},{l:'Leegmaken',c:'btn danger',cb:()=>{tree=[];idC=1;coll={};selId=null;closeDetail();if(mapVisible)toggleMapView();renderTree();autoSave();closeModal();toast('Decompositie geleegd');}}]);}
 function exportCSV(){
-  const cols=['Niveau','Type','Naam','NEN Code','Maximo Werkcode','Meenemen','Vakdiscipline','Functie','Definitie','Gebrekgroep','Gebreksoort','Belang','Eenheid','Intensiteit'];
+  const cols=['Niveau','Type','Naam','NEN Code','Maximo Werkcode','Adres','Stad','Lat','Lon','Meenemen','Vakdiscipline','Functie','Definitie','Gebrekgroep','Gebreksoort','Belang','Eenheid','Intensiteit'];
   const rows=[cols];
-  function walk(n,depth){
-    rows.push([
-      depth, LBL[n.type], n.label, n.nenCode||'', n.wcode||'',
-      n.meenemen||'', n.vakdiscipline||'', n.functie||'', n.def||'',
-      n.gebrekgroep||'', n.gebreksoort||'', n.belang||'', n.eenheid||'', n.intensiteit||''
-    ]);
-    if(n.children)n.children.forEach(c=>walk(c,depth+1));
+  function walk(n,d){
+    rows.push([d,LBL[n.type],n.label,n.nenCode||'',n.wcode||'',n.adres||'',n.stad||'',n.lat||'',n.lon||'',n.meenemen||'',n.vakdiscipline||'',n.functie||'',n.def||'',n.gebrekgroep||'',n.gebreksoort||'',n.belang||'',n.eenheid||'',n.intensiteit||'']);
+    if(n.children)n.children.forEach(c=>walk(c,d+1));
   }
   tree.forEach(n=>walk(n,0));
   const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
   const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download=(projectName||'decompositie').replace(/[^a-z0-9]/gi,'_')+'.csv';a.click();
-  toast('⬇ CSV geëxporteerd met '+rows.length+' rijen');
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(projectName||'decompositie').replace(/[^a-z0-9]/gi,'_')+'.csv';a.click();toast('⬇ CSV: '+rows.length+' rijen');
 }
 
 // ══════════════════════════════════════════════
 //  TOAST
 // ══════════════════════════════════════════════
 let _tt;
-function toast(msg){
-  const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
-  clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),3000);
-}
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),3000);}
 
 // ══════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════
 (function init(){
-  try{
-    const s=localStorage.getItem('nen2767_v2');
-    if(s){const d=JSON.parse(s);tree=d.tree||[];idC=d.idC||1;projectName=d.projectName||'Nieuw project';
-      document.getElementById('projectTitle').textContent=projectName;}
-  }catch(e){}
+  try{const s=localStorage.getItem('nen2767_v2');if(s){const d=JSON.parse(s);tree=d.tree||[];idC=d.idC||1;projectName=d.projectName||'Nieuw project';document.getElementById('projectTitle').textContent=projectName;}}catch(e){}
   document.getElementById('canvas').addEventListener('dragover',e=>e.preventDefault());
   renderLib();renderTree();
 })();
