@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>NEN 2767 — Fase 2 Conditiemeting</title>
+<script src="mapping.js"></script>
+<style>
+:root{
+  --bg:#f4f3ef;--sur:#fff;--sur2:#eeede8;--bdr:rgba(0,0,0,.10);--bdr2:rgba(0,0,0,.18);
+  --tx:#1a1a18;--tx2:#5a5a56;--tx3:#9a9a94;
+  --blue:#1a5fa8;--blue-l:#e8f1fb;--blue-d:#134e8a;
+  --green:#0e6e50;--green-l:#e1f4ec;
+  --amber:#b87200;--amber-l:#fdf0d8;
+  --red:#a02828;--red-l:#fbeaea;
+  --orange:#d4620a;
+  --r:8px;--rl:12px;
+  /* Score colours */
+  --s1:#1a7a3a;--s2:#4aa83c;--s3:#f5c800;--s4:#f59300;--s5:#e05a00;--s6:#c01020;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#18181a;--sur:#232326;--sur2:#2c2c30;--bdr:rgba(255,255,255,.09);--bdr2:rgba(255,255,255,.18);
+  --tx:#eeeee8;--tx2:#9a9a94;--tx3:#55554e;
+  --blue-l:#0f3d7022;--green-l:#0a4a3522;--amber-l:#5a380022;--red-l:#4a101022;
+}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);font-size:13px;min-height:100vh}
+
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:100;background:var(--blue);color:#fff;display:flex;align-items:center;gap:8px;padding:0 16px;height:48px;box-shadow:0 2px 8px rgba(0,0,0,.2);flex-shrink:0}
+.topbar-logo{font-size:14px;font-weight:800;letter-spacing:.5px}
+.topbar-sub{font-size:11px;opacity:.7}
+.topbar-sep{width:1px;height:22px;background:rgba(255,255,255,.25);margin:0 4px}
+.topbar-obj{font-size:12px;font-weight:600;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:6px}
+.tbtn{padding:5px 11px;border:1px solid rgba(255,255,255,.3);border-radius:var(--r);font-size:11px;cursor:pointer;background:rgba(255,255,255,.12);color:#fff;font-family:inherit;white-space:nowrap;transition:background .12s}
+.tbtn:hover{background:rgba(255,255,255,.24)}
+.tbtn.accent{background:rgba(255,255,255,.25);border-color:rgba(255,255,255,.55);font-weight:700}
+
+/* PROGRESS BAR */
+.progress-wrap{background:rgba(0,0,0,.15);height:3px;width:100%}
+.progress-bar{height:3px;background:rgba(255,255,255,.7);transition:width .3s}
+
+/* SCREENS */
+.screen{display:none;min-height:calc(100vh - 51px)}
+.screen.active{display:block}
+
+/* SETUP SCREEN */
+.setup-wrap{max-width:680px;margin:0 auto;padding:24px 16px}
+.setup-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rl);padding:24px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.setup-card h2{font-size:14px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.form-grid{display:grid;gap:12px}
+.form-grid.cols2{grid-template-columns:1fr 1fr}
+.form-grid.cols3{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:540px){.form-grid.cols2,.form-grid.cols3{grid-template-columns:1fr}}
+.field label{font-size:11px;color:var(--tx2);display:block;margin-bottom:4px;font-weight:500}
+.field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:13px;background:var(--sur2);color:var(--tx);outline:none;font-family:inherit}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue);background:var(--sur)}
+.field textarea{resize:vertical;min-height:60px}
+.upload-zone{border:2px dashed var(--bdr2);border-radius:var(--r);padding:20px;text-align:center;cursor:pointer;transition:all .15s;color:var(--tx3)}
+.upload-zone:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-l)}
+.upload-zone.has-file{border-color:var(--green);background:var(--green-l);color:var(--green)}
+.logo-preview{max-height:60px;max-width:200px;object-fit:contain;margin-top:8px;display:block}
+.level-btns{display:flex;gap:8px}
+.level-btn{flex:1;padding:10px 6px;border:2px solid var(--bdr2);border-radius:var(--r);text-align:center;cursor:pointer;font-size:12px;font-weight:600;background:var(--sur2);color:var(--tx2);transition:all .12s}
+.level-btn:hover{border-color:var(--blue-l);background:var(--blue-l)}
+.level-btn.sel{border-color:var(--blue);background:var(--blue-l);color:var(--blue)}
+.level-btn .lbl{font-size:10px;color:var(--tx3);font-weight:400;margin-top:2px}
+.bo-select-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;max-height:280px;overflow-y:auto}
+.bo-card{padding:10px 12px;border:2px solid var(--bdr);border-radius:var(--r);cursor:pointer;background:var(--sur2);transition:all .12s}
+.bo-card:hover{border-color:var(--blue-l);background:var(--blue-l)}
+.bo-card.sel{border-color:var(--blue);background:var(--blue-l)}
+.bo-card-icon{font-size:20px;margin-bottom:4px}
+.bo-card-name{font-size:12px;font-weight:600;line-height:1.3}
+.bo-card-code{font-size:10px;color:var(--tx3);font-family:monospace}
+.start-btn{width:100%;padding:14px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.3px;transition:background .15s}
+.start-btn:hover{background:var(--blue-d)}
+.start-btn:disabled{opacity:.4;cursor:default}
+
+/* INSPECTION SCREEN */
+.insp-layout{display:flex;height:calc(100vh - 51px)}
+.insp-nav{width:260px;background:var(--sur);border-right:1px solid var(--bdr);overflow-y:auto;flex-shrink:0;display:flex;flex-direction:column}
+@media(max-width:768px){.insp-nav{display:none}.insp-nav.mob-open{display:flex;position:fixed;inset:0;top:51px;z-index:50;width:100%}}
+.nav-head{padding:10px 12px;border-bottom:1px solid var(--bdr);flex-shrink:0}
+.nav-title{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.nav-progress{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx2)}
+.nav-prog-bar{flex:1;height:5px;background:var(--sur2);border-radius:3px;overflow:hidden}
+.nav-prog-fill{height:100%;background:var(--blue);border-radius:3px;transition:width .3s}
+.nav-items{flex:1;overflow-y:auto;padding:6px}
+.nav-eg{margin-bottom:2px}
+.nav-eg-head{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;padding:6px 8px 3px}
+.nav-item{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:12px;margin-bottom:1px;color:var(--tx2);transition:background .1s}
+.nav-item:hover{background:var(--sur2)}
+.nav-item.active{background:var(--blue-l);color:var(--blue);font-weight:600}
+.nav-item.done{color:var(--tx)}
+.nav-score{width:20px;height:20px;border-radius:4px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.insp-main{flex:1;overflow-y:auto;padding:16px}
+@media(max-width:768px){.insp-main{padding:10px}}
+
+/* BD CARD */
+.bd-section{margin-bottom:10px}
+.bd-section-title{font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;padding:8px 0 6px;border-bottom:1px solid var(--bdr);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.bd-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rl);margin-bottom:8px;overflow:hidden;transition:border-color .15s}
+.bd-card.scored{border-color:var(--bdr2)}
+.bd-card-head{padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.bd-card-head:hover{background:var(--sur2)}
+.bd-name{font-size:13px;font-weight:600;flex:1;min-width:0}
+.bd-code{font-size:10px;color:var(--tx3);font-family:monospace;flex-shrink:0}
+.bd-ci-badge{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.bd-tog{font-size:12px;color:var(--tx3);flex-shrink:0;transition:transform .15s}
+.bd-tog.open{transform:rotate(90deg)}
+.bd-body{display:none;padding:0 14px 14px}
+.bd-body.open{display:block}
+
+/* SCORE BUTTONS */
+.score-label{font-size:11px;color:var(--tx2);margin-bottom:6px;font-weight:500}
+.score-btns{display:flex;gap:4px;flex-wrap:wrap}
+.score-btn{flex:1;min-width:44px;padding:8px 4px;border:2px solid transparent;border-radius:6px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;color:#fff;text-align:center;transition:all .12s;opacity:.55}
+.score-btn:hover{opacity:.85;transform:scale(1.04)}
+.score-btn.sel{opacity:1;transform:scale(1.06);box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.score-btn[data-s="1"]{background:var(--s1)}
+.score-btn[data-s="2"]{background:var(--s2)}
+.score-btn[data-s="3"]{background:var(--s3);color:#333}
+.score-btn[data-s="4"]{background:var(--s4)}
+.score-btn[data-s="5"]{background:var(--s5)}
+.score-btn[data-s="6"]{background:var(--s6)}
+.score-desc{display:flex;gap:3px;margin-top:4px;flex-wrap:wrap}
+.score-desc-item{font-size:9px;padding:2px 5px;border-radius:4px;color:#fff;font-weight:600}
+
+/* GEBREKEN TABLE */
+.gb-section{margin-top:12px}
+.gb-section-title{font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+.gb-table{width:100%;border-collapse:collapse;font-size:11px}
+.gb-table th{text-align:left;padding:5px 6px;background:var(--sur2);font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--bdr)}
+.gb-table td{padding:5px 6px;border-bottom:1px solid var(--bdr);vertical-align:middle}
+.gb-table tr:last-child td{border-bottom:none}
+.gb-table tr:hover td{background:var(--sur2)}
+.gb-active{background:var(--amber-l)!important}
+.gb-toggle{width:18px;height:18px;border-radius:4px;border:1px solid var(--bdr2);background:var(--sur2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.gb-toggle.on{background:var(--amber);border-color:var(--amber);color:#fff}
+.ernst-sel{display:flex;gap:2px}
+.ernst-btn{padding:2px 6px;border:1px solid var(--bdr2);border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;background:var(--sur2);color:var(--tx2);font-family:inherit}
+.ernst-btn.sel-I{background:#4aa83c;color:#fff;border-color:#4aa83c}
+.ernst-btn.sel-II{background:#f59300;color:#fff;border-color:#f59300}
+.ernst-btn.sel-III{background:#c01020;color:#fff;border-color:#c01020}
+.int-sel{display:flex;gap:2px}
+.int-btn{padding:2px 6px;border:1px solid var(--bdr2);border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;background:var(--sur2);color:var(--tx2);font-family:inherit}
+.int-btn.sel{background:var(--blue);color:#fff;border-color:var(--blue)}
+.omv-input{width:54px;padding:3px 5px;border:1px solid var(--bdr2);border-radius:4px;font-size:11px;background:var(--sur2);color:var(--tx);text-align:center;outline:none}
+.omv-input:focus{border-color:var(--blue)}
+.ci-pill{padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;color:#fff;display:inline-block}
+
+/* REMARKS + PHOTO */
+.bd-meta{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:10px}
+@media(max-width:480px){.bd-meta{grid-template-columns:1fr}}
+.bd-remark textarea{width:100%;padding:7px 9px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:12px;background:var(--sur2);color:var(--tx);outline:none;font-family:inherit;resize:vertical;min-height:54px}
+.bd-remark textarea:focus{border-color:var(--blue)}
+.bd-photo-zone{display:flex;flex-direction:column;gap:5px;align-items:center}
+.bd-photo-thumb{width:72px;height:72px;border-radius:var(--r);object-fit:cover;border:1px solid var(--bdr);cursor:pointer}
+.bd-photo-add{width:72px;height:72px;border:2px dashed var(--bdr2);border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--tx3);font-size:10px;gap:2px;transition:all .12s}
+.bd-photo-add:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-l)}
+
+/* SUMMARY SCREEN */
+.summary-wrap{max-width:900px;margin:0 auto;padding:20px 16px}
+.sum-header{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rl);padding:20px;margin-bottom:16px}
+.sum-title{font-size:18px;font-weight:700;margin-bottom:4px}
+.sum-sub{font-size:12px;color:var(--tx2)}
+.ci-overview{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:16px}
+.ci-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rl);padding:14px}
+.ci-card-label{font-size:11px;color:var(--tx2);margin-bottom:6px}
+.ci-card-score{font-size:32px;font-weight:800;line-height:1}
+.ci-card-bar{height:6px;border-radius:3px;margin-top:8px;background:var(--sur2)}
+.ci-card-fill{height:100%;border-radius:3px}
+.aandacht-list{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rl);padding:16px;margin-bottom:16px}
+.aandacht-item{display:flex;align-items:start;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr)}
+.aandacht-item:last-child{border:none;padding-bottom:0}
+.score-pill{width:28px;height:28px;border-radius:6px;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.sum-table{width:100%;border-collapse:collapse;font-size:12px;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rl);overflow:hidden}
+.sum-table th{padding:8px 10px;background:var(--sur2);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);text-align:left;border-bottom:1px solid var(--bdr)}
+.sum-table td{padding:7px 10px;border-bottom:1px solid var(--bdr)}
+.sum-table tr:last-child td{border:none}
+.sum-table tr:hover td{background:var(--sur2)}
+
+/* LIGHTBOX */
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;z-index:1000}
+.lightbox img{max-width:92vw;max-height:88vh;border-radius:var(--r)}
+.lightbox-close{position:absolute;top:16px;right:20px;color:#fff;font-size:30px;cursor:pointer;background:none;border:none}
+
+/* SCORE LEGEND */
+.score-legend{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.sl-item{display:flex;align-items:center;gap:4px;font-size:11px}
+.sl-dot{width:14px;height:14px;border-radius:3px;flex-shrink:0}
+
+/* MOBILE NAV TOGGLE */
+.mob-nav-btn{display:none;padding:5px 10px;border:1px solid rgba(255,255,255,.3);border-radius:var(--r);font-size:12px;cursor:pointer;background:rgba(255,255,255,.12);color:#fff;font-family:inherit}
+@media(max-width:768px){.mob-nav-btn{display:flex;align-items:center;gap:4px}}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--tx);color:var(--bg);padding:9px 16px;border-radius:var(--r);font-size:12px;z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none;max-width:320px}
+.toast.show{opacity:1}
+
+/* PRINT / PDF styles */
+@media print{
+  .topbar,.insp-nav,.mob-nav-btn,.tbtn,.score-btns,.gb-toggle,.ernst-sel,.int-sel,.omv-input{display:none!important}
+  .screen{display:block!important}
+  body{background:#fff;font-size:11px}
+  .bd-card{break-inside:avoid;box-shadow:none;border:1px solid #ccc}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div id="topLogo" style="height:28px;display:flex;align-items:center">
+    <span class="topbar-logo" style="color:#fff">NEN 2767</span>
+  </div>
+  <div class="topbar-sep"></div>
+  <span style="font-size:11px;opacity:.7">Fase 2 — Conditiemeting</span>
+  <div class="topbar-sep"></div>
+  <span class="topbar-obj" id="topObj" style="display:none"></span>
+  <div class="topbar-right">
+    <button class="mob-nav-btn" id="mobNavBtn" onclick="toggleMobNav()">☰ Navigatie</button>
+    <button class="tbtn" id="btnSave" onclick="saveInspectie()" style="display:none">💾 Opslaan</button>
+    <button class="tbtn" id="btnSummary" onclick="showSummary()" style="display:none">📊 Samenvatting</button>
+    <button class="tbtn accent" id="btnReport" onclick="generateReport()" style="display:none">📄 Rapport</button>
+    <button class="tbtn" onclick="goSetup()" style="font-size:10px;opacity:.7">← Terug</button>
+  </div>
+</div>
+<div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+
+<!-- SETUP SCREEN -->
+<div class="screen active" id="screenSetup">
+  <div class="setup-wrap">
+
+    <div class="setup-card">
+      <h2>🏗 NEN 2767 Conditiemeting</h2>
+      <p style="font-size:12px;color:var(--tx2);margin-bottom:16px;line-height:1.6">Start een nieuwe inspectie. Laad een decompositie uit Fase 1 of kies handmatig een beheerobject.</p>
+      <div class="form-grid cols2">
+        <div class="field">
+          <label>📂 Laad Fase 1 decompositie (JSON)</label>
+          <div class="upload-zone" id="jsonZone" onclick="document.getElementById('jsonFile').click()">
+            <div style="font-size:20px;margin-bottom:4px">📋</div>
+            <div style="font-size:12px;font-weight:600">Klik om JSON te laden</div>
+            <div style="font-size:11px;color:var(--tx3)">of sleep hiernaartoe</div>
+            <input type="file" id="jsonFile" accept=".json" style="display:none" onchange="loadFase1JSON(this)">
+          </div>
+        </div>
+        <div class="field">
+          <label>🏷 Logo opdrachtgever</label>
+          <div class="upload-zone" id="logoZone" onclick="document.getElementById('logoFile').click()">
+            <div style="font-size:20px;margin-bottom:4px">🖼</div>
+            <div style="font-size:12px;font-weight:600">Logo uploaden</div>
+            <div style="font-size:11px;color:var(--tx3)">PNG, JPG, SVG, WEBP</div>
+            <input type="file" id="logoFile" accept="image/*" style="display:none" onchange="loadLogo(this)">
+          </div>
+          <img id="logoPreview" class="logo-preview" style="display:none">
+        </div>
+      </div>
+    </div>
+
+    <!-- Beheerobject selectie -->
+    <div class="setup-card" id="cardBOSelect">
+      <h2>🏗 Selecteer Beheerobject</h2>
+      <div class="field" style="margin-bottom:12px">
+        <input type="text" id="boSearch" placeholder="Zoeken…" oninput="filterBOCards()" style="padding:7px 10px;border:1px solid var(--bdr2);border-radius:var(--r);width:100%;font-size:12px;background:var(--sur2);color:var(--tx);outline:none;font-family:inherit">
+      </div>
+      <div class="bo-select-grid" id="boGrid"></div>
+    </div>
+
+    <!-- Rapport niveau -->
+    <div class="setup-card">
+      <h2>📊 Rapportage niveau</h2>
+      <div class="level-btns">
+        <div class="level-btn sel" data-level="bd" onclick="selectLevel('bd')">
+          <div>🧱 Bouwdeel</div>
+          <div class="lbl">Meest gedetailleerd</div>
+        </div>
+        <div class="level-btn" data-level="el" onclick="selectLevel('el')">
+          <div>🔧 Element</div>
+          <div class="lbl">Samengevat per element</div>
+        </div>
+        <div class="level-btn" data-level="bo" onclick="selectLevel('bo')">
+          <div>🏗 Beheerobject</div>
+          <div class="lbl">Totaalconditie</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Algemene gegevens -->
+    <div class="setup-card">
+      <h2>📋 Rapportgegevens</h2>
+      <div class="form-grid cols2">
+        <div class="field"><label>Datum inspectie *</label><input type="date" id="inpDatum"></div>
+        <div class="field"><label>Inspecteur *</label><input type="text" id="inpInspecteur" placeholder="Naam inspecteur"></div>
+        <div class="field"><label>Opdrachtgever</label><input type="text" id="inpOpdrachtgever" placeholder="bijv. Waterschap AGV"></div>
+        <div class="field"><label>Contractnummer</label><input type="text" id="inpContract" placeholder="bijv. SC25200009"></div>
+        <div class="field"><label>Opgesteld door</label><input type="text" id="inpOpgesteld" placeholder="Naam"></div>
+        <div class="field"><label>Gecontroleerd door</label><input type="text" id="inpGecontroleerd" placeholder="Naam"></div>
+        <div class="field"><label>Geautoriseerd door</label><input type="text" id="inpGeautoriseerd" placeholder="Naam"></div>
+        <div class="field"><label>Draaiurenstand</label><input type="text" id="inpDraaiuren" placeholder="bijv. 12.450 uur"></div>
+      </div>
+      <div class="form-grid" style="margin-top:10px">
+        <div class="field"><label>Opmerkingen / Inleiding</label><textarea id="inpInleiding" placeholder="Korte toelichting op de inspectie…"></textarea></div>
+      </div>
+    </div>
+
+    <!-- Object foto -->
+    <div class="setup-card">
+      <h2>📷 Foto beheerobject (titelblad)</h2>
+      <div class="upload-zone" id="objFotoZone" onclick="document.getElementById('objFotoFile').click()">
+        <div style="font-size:24px;margin-bottom:4px">📷</div>
+        <div style="font-size:12px;font-weight:600">Foto object uploaden</div>
+        <div style="font-size:11px;color:var(--tx3)">Wordt gebruikt op het titelblad van het rapport</div>
+        <input type="file" id="objFotoFile" accept="image/*" style="display:none" onchange="loadObjFoto(this)">
+      </div>
+      <img id="objFotoPreview" style="max-width:100%;max-height:200px;object-fit:cover;border-radius:var(--r);margin-top:10px;display:none;border:1px solid var(--bdr)">
+    </div>
+
+    <button class="start-btn" id="startBtn" onclick="startInspectie()" disabled>
+      🚀 Inspectie starten
+    </button>
+  </div>
+</div>
+
+<!-- INSPECTION SCREEN -->
+<div class="screen" id="screenInspection">
+  <div class="insp-layout">
+    <div class="insp-nav" id="inspNav">
+      <div class="nav-head">
+        <div class="nav-title" id="navBoName"></div>
+        <div class="nav-progress">
+          <div class="nav-prog-bar"><div class="nav-prog-fill" id="navProgFill"></div></div>
+          <span id="navProgTxt" style="white-space:nowrap;flex-shrink:0"></span>
+        </div>
+      </div>
+      <div class="nav-items" id="navItems"></div>
+    </div>
+    <div class="insp-main" id="inspMain">
+      <!-- content rendered by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- SUMMARY SCREEN -->
+<div class="screen" id="screenSummary">
+  <div class="summary-wrap" id="summaryContent"></div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" style="display:none" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════
+//  ICONS (from fase 1)
+// ════════════════════════════════════════════════
+const BO_ICONS={'Aanleginrichting':'⚓','Aquaduct':'🌉','Begraafplaats':'🪦','Beheerobject Overstijgende Voorziening':'🏢','Beluchtingstank':'💨','Bezinkbassin':'🪣','Bosgebied':'🌲','Brug (beweegbaar)':'🏗','Brug (vast)':'🌁','Bunker':'🏰','Coupure':'🚧','Dam':'🏞','Dijk':'🛡','Drinkwaterinlaat':'🚰','Duiker':'🔵','Duingebied':'🏖','Ecoduct':'🦌','Faunatunnel':'🦊','Gemaal':'⚙️','Gistingstank':'🧪','Grondkering':'🪨','Haven':'⚓','Hevel':'🌊','Individuele Behandeling van Afvalwater systeem (IBA-systeem)':'♻️','Infragebonden gebouw':'🏭','Kabel en leiding':'🔌','Kade':'🚢','Kanaal':'🛶','Keersluis':'🚪','Landbouwgebied':'🌾','Meer':'🏞','Natuurgebied':'🌿','Onderdoorgang':'🚇','Ontvangst- en verdeelwerk':'🏭','Open tunnelbak':'🚇','Opslagtank':'🛢','Overkluizing':'🌉','Park':'🌳','Persleiding':'🔩','Procesbassin':'🧫','Recreatief gebied':'🎯','Riolering':'🕳','Rivier':'🌊','Schutsluis':'🚪','Sifon':'〰️','Spoorweg':'🚆','Sport- en spelvoorziening':'⚽','Spuisluis':'🚪','Stormvloedkering':'🌊','Stuw':'🌊','Terrein':'🟫','Tunnel':'🚇','Uiterwaard':'🌾','Verkeerscentrale':'🎛','Verzorgingsplaats':'🛣','Viaduct':'🌉','Water en watergang (lijnvormig), overig':'〰️','Water en watergang (niet lijnvormig), overig':'💧','Waterbuffer':'💧','Waterreguleringswerk':'🔧','Weg':'🛣','Windmolen':'🌬','Zandfilterbassin':'🪨','Zee':'🌊'};
+const boIcon=n=>BO_ICONS[n]||'🏗';
+
+// Score config
+const SCORE_LABELS={1:'Uitstekend',2:'Goed',3:'Redelijk',4:'Matig',5:'Slecht',6:'Zeer slecht'};
+const SCORE_COLORS={1:'#1a7a3a',2:'#4aa83c',3:'#c8a800',4:'#f59300',5:'#e05a00',6:'#c01020'};
+const ERNST_FACTOR={I:0.1,II:1.0,III:10};
+const INT_FACTOR={1:0.1,2:1.0,3:10};
+
+// CI → conditiescore mapping (NEN 2767)
+function ciToScore(ci){
+  if(ci===0)return 1;
+  if(ci<0.2)return 2;
+  if(ci<1.0)return 3;
+  if(ci<5.0)return 4;
+  if(ci<20)return 5;
+  return 6;
+}
+function calcCI(gebreken){
+  // Sum of (ernst_factor * omvang/100 * intensiteit_factor) per gebrek
+  let sum=0;
+  for(const g of gebreken){
+    if(g.actief&&g.ernst&&g.omvang&&g.intensiteit){
+      sum+=ERNST_FACTOR[g.ernst]*(parseFloat(g.omvang)/100)*INT_FACTOR[g.intensiteit];
+    }
+  }
+  return Math.round(sum*100)/100;
+}
+
+// ════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════
+let fase1Data=null,logoData=null,objFotoData=null;
+let selectedBO=null,reportLevel='bd';
+let meta={datum:new Date().toISOString().split('T')[0],inspecteur:'',opdrachtgever:'',contract:'',opgesteld:'',gecontroleerd:'',geautoriseerd:'',draaiuren:'',inleiding:''};
+let inspData={}; // bdId -> {score, gebreken:[{...}], opmerking, photos:[]}
+let bdList=[]; // flat list of {bdId, bdName, bdCode, bdDef, elName, egName, syName, gbs:[]}
+let currentBdIdx=0;
+let mobNavOpen=false;
+
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+// ════════════════════════════════════════════════
+//  SETUP
+// ════════════════════════════════════════════════
+function init(){
+  document.getElementById('inpDatum').value=meta.datum;
+  renderBOGrid(BO);
+  // Try restore
+  try{
+    const s=localStorage.getItem('nen2767_inspectie');
+    if(s){
+      const d=JSON.parse(s);
+      if(d.meta)Object.assign(meta,d.meta);
+      if(d.inspData)inspData=d.inspData;
+      if(d.bdList)bdList=d.bdList;
+      if(d.selectedBO)selectedBO=d.selectedBO;
+      if(d.logoData){logoData=d.logoData;showLogo(logoData);}
+      if(d.objFotoData){objFotoData=d.objFotoData;showObjFoto(objFotoData);}
+      fillMetaFields();
+      toast('↩ Vorige sessie hersteld');
+    }
+  }catch(e){}
+}
+
+function renderBOGrid(arr){
+  const grid=document.getElementById('boGrid');
+  grid.innerHTML=arr.map(bo=>`
+    <div class="bo-card${selectedBO===bo.n?' sel':''}" data-name="${esc(bo.n)}" onclick="selectBO('${esc(bo.n)}')">
+      <div class="bo-card-icon">${boIcon(bo.n)}</div>
+      <div class="bo-card-name">${esc(bo.n)}</div>
+      <div class="bo-card-code">${bo.c||''}</div>
+    </div>`).join('');
+}
+function filterBOCards(){
+  const q=document.getElementById('boSearch').value.toLowerCase();
+  const filtered=q?BO.filter(b=>b.n.toLowerCase().includes(q)):BO;
+  renderBOGrid(filtered);
+}
+function selectBO(name){
+  selectedBO=name;
+  document.querySelectorAll('.bo-card').forEach(c=>c.classList.toggle('sel',c.dataset.name===name));
+  document.getElementById('startBtn').disabled=false;
+  buildBDList();
+}
+function selectLevel(l){
+  reportLevel=l;
+  document.querySelectorAll('.level-btn').forEach(b=>b.classList.toggle('sel',b.dataset.level===l));
+}
+function loadFase1JSON(inp){
+  const f=inp.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      fase1Data=JSON.parse(e.target.result);
+      // Extract BO names from the tree
+      const bos=[];
+      function walk(n){if(n.type==='bo')bos.push({n:n.label,c:n.nenCode||'',wcode:n.wcode||''});if(n.children)n.children.forEach(walk);}
+      (fase1Data.tree||[]).forEach(walk);
+      if(bos.length){
+        // Override BO list with fase1 objects
+        renderBOGrid(bos.map(b=>({n:b.n,c:b.c})));
+        document.getElementById('jsonZone').classList.add('has-file');
+        document.getElementById('jsonZone').innerHTML=`<div style="font-size:20px;margin-bottom:4px">✅</div><div style="font-size:12px;font-weight:600">${f.name}</div><div style="font-size:11px">${bos.length} beheerobjecten geladen</div>`;
+        toast(`✓ ${bos.length} beheerobjecten geladen uit Fase 1`);
+      }
+    }catch(err){toast('⚠ Kan JSON niet lezen');}
+  };r.readAsText(f);inp.value='';
+}
+function loadLogo(inp){
+  const f=inp.files[0];if(!f)return;
+  const r=new FileReader();r.onload=e=>{logoData=e.target.result;showLogo(logoData);};r.readAsDataURL(f);inp.value='';
+}
+function showLogo(data){
+  const img=document.getElementById('logoPreview');img.src=data;img.style.display='block';
+  document.getElementById('logoZone').classList.add('has-file');
+  // Also update topbar
+  const tl=document.getElementById('topLogo');tl.innerHTML=`<img src="${data}" style="height:28px;object-fit:contain">`;
+}
+function loadObjFoto(inp){
+  const f=inp.files[0];if(!f)return;
+  const r=new FileReader();r.onload=e=>{
+    objFotoData=e.target.result;
+    const pr=document.getElementById('objFotoPreview');pr.src=objFotoData;pr.style.display='block';
+    document.getElementById('objFotoZone').classList.add('has-file');
+    document.getElementById('objFotoZone').querySelector('div:first-child').textContent='✅';
+  };r.readAsDataURL(f);inp.value='';
+}
+function showObjFoto(data){
+  const pr=document.getElementById('objFotoPreview');pr.src=data;pr.style.display='block';
+}
+function fillMetaFields(){
+  ['datum','inspecteur','opdrachtgever','contract','opgesteld','gecontroleerd','geautoriseerd','draaiuren','inleiding'].forEach(k=>{
+    const el=document.getElementById('inp'+k.charAt(0).toUpperCase()+k.slice(1));
+    if(el&&meta[k])el.value=meta[k];
+  });
+  if(selectedBO){document.getElementById('startBtn').disabled=false;}
+}
+function getMeta(){
+  return{
+    datum:document.getElementById('inpDatum').value,
+    inspecteur:document.getElementById('inpInspecteur').value,
+    opdrachtgever:document.getElementById('inpOpdrachtgever').value,
+    contract:document.getElementById('inpContract').value,
+    opgesteld:document.getElementById('inpOpgesteld').value,
+    gecontroleerd:document.getElementById('inpGecontroleerd').value,
+    geautoriseerd:document.getElementById('inpGeautoriseerd').value,
+    draaiuren:document.getElementById('inpDraaiuren').value,
+    inleiding:document.getElementById('inpInleiding').value,
+  };
+}
+
+// ════════════════════════════════════════════════
+//  BUILD BD LIST from mapping
+// ════════════════════════════════════════════════
+function buildBDList(){
+  bdList=[];
+  if(!selectedBO)return;
+  const elRows=(MAP_BO_EL[selectedBO]||[]).filter(r=>r.m==='ja'||r.m==='optioneel');
+  for(const er of elRows){
+    const bdRows=MAP_EL_BD[er.el]||[];
+    const syMap={};
+    for(const br of bdRows)(syMap[br.sy]=syMap[br.sy]||[]).push(br);
+    for(const[sy,brows]of Object.entries(syMap)){
+      for(const br of brows){
+        const gbs=(MAP_BD_GB[br.bd]||[]).map(g=>({
+          name:g.gb,gg:g.gg,soort:g.s,
+          actief:false,ernst:'',omvang:'',intensiteit:'',
+        }));
+        const bdId=er.eg+'|'+er.el+'|'+sy+'|'+br.bd;
+        bdList.push({bdId,bdName:br.bd,bdCode:BD.find(x=>x.n===br.bd)?.c||'',bdDef:BD.find(x=>x.n===br.bd)?.d||'',egName:er.eg,elName:er.el,syName:sy,functie:br.f,gbs});
+        if(!inspData[bdId])inspData[bdId]={score:0,gebreken:[...gbs.map(g=>({...g}))],opmerking:'',photos:[]};
+      }
+    }
+  }
+}
+
+// ════════════════════════════════════════════════
+//  START INSPECTIE
+// ════════════════════════════════════════════════
+function startInspectie(){
+  if(!selectedBO){toast('Selecteer eerst een beheerobject');return;}
+  meta=getMeta();
+  if(!meta.inspecteur){toast('Vul de inspecteur in');return;}
+  buildBDList();
+  if(!bdList.length){toast('Geen bouwdelen gevonden voor dit object');return;}
+  document.getElementById('screenSetup').classList.remove('active');
+  document.getElementById('screenInspection').classList.add('active');
+  document.getElementById('screenSummary').classList.remove('active');
+  document.getElementById('topObj').textContent=boIcon(selectedBO)+' '+selectedBO;
+  document.getElementById('topObj').style.display='';
+  document.getElementById('btnSave').style.display='';
+  document.getElementById('btnSummary').style.display='';
+  document.getElementById('btnReport').style.display='';
+  document.getElementById('navBoName').textContent=selectedBO;
+  currentBdIdx=0;
+  renderNav();
+  renderBDCard(currentBdIdx);
+  autoSave();
+}
+function goSetup(){
+  document.getElementById('screenSetup').classList.add('active');
+  document.getElementById('screenInspection').classList.remove('active');
+  document.getElementById('screenSummary').classList.remove('active');
+}
+
+// ════════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════════
+function renderNav(){
+  const done=bdList.filter(b=>inspData[b.bdId]?.score>0).length;
+  const pct=bdList.length?Math.round(done/bdList.length*100):0;
+  document.getElementById('navProgFill').style.width=pct+'%';
+  document.getElementById('navProgTxt').textContent=done+'/'+bdList.length;
+  document.getElementById('progressBar').style.width=pct+'%';
+
+  // Group by EG → EL
+  const grouped={};
+  bdList.forEach((b,i)=>{
+    const k=b.egName+'|||'+b.elName;
+    if(!grouped[k])grouped[k]={egName:b.egName,elName:b.elName,items:[]};
+    grouped[k].items.push({b,i});
+  });
+  let html='';
+  for(const[k,g]of Object.entries(grouped)){
+    html+=`<div class="nav-eg"><div class="nav-eg-head">${esc(g.egName)}</div>`;
+    html+=`<div style="font-size:11px;font-weight:600;padding:2px 8px 4px;color:var(--tx2)">${esc(g.elName)}</div>`;
+    for(const{b,i}of g.items){
+      const d=inspData[b.bdId];
+      const score=d?.score||0;
+      const scoreBg=score?SCORE_COLORS[score]:'var(--bdr2)';
+      html+=`<div class="nav-item${i===currentBdIdx?' active':''}${score>0?' done':''}" onclick="renderBDCard(${i})">
+        <div class="nav-score" style="background:${scoreBg}">${score||'·'}</div>
+        <span style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(b.bdName)}</span>
+      </div>`;
+    }
+    html+=`</div>`;
+  }
+  document.getElementById('navItems').innerHTML=html;
+}
+
+function renderBDCard(idx){
+  if(idx<0||idx>=bdList.length)return;
+  currentBdIdx=idx;
+  const b=bdList[idx];
+  const d=inspData[b.bdId];
+  renderNav();
+
+  let html=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:11px;color:var(--tx3);margin-bottom:2px">${esc(b.egName)} → ${esc(b.elName)} → ${esc(b.syName)}</div>
+        <div style="font-size:16px;font-weight:700">${esc(b.bdName)}</div>
+        ${b.bdCode?`<div style="font-size:10px;color:var(--tx3);font-family:monospace">${esc(b.bdCode)}</div>`:''}
+      </div>
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <button class="tbtn" onclick="prevBD()" ${idx===0?'disabled':''}>← Vorige</button>
+        <button class="tbtn accent" onclick="nextBD()">Volgende →</button>
+      </div>
+    </div>`;
+
+  if(b.bdDef)html+=`<div style="font-size:11px;color:var(--tx2);background:var(--sur2);padding:8px 12px;border-radius:var(--r);margin-bottom:12px;line-height:1.5">${esc(b.bdDef)}</div>`;
+
+  // Score legend
+  html+=`<div class="score-legend">`;
+  for(let s=1;s<=6;s++)html+=`<div class="sl-item"><div class="sl-dot" style="background:${SCORE_COLORS[s]}"></div><span>${s} — ${SCORE_LABELS[s]}</span></div>`;
+  html+=`</div>`;
+
+  // Score buttons
+  html+=`<div class="score-label">Conditiescore bouwdeel</div>
+    <div class="score-btns" style="margin-bottom:16px">`;
+  for(let s=1;s<=6;s++){
+    html+=`<button class="score-btn${d.score===s?' sel':''}" data-s="${s}" onclick="setScore('${esc(b.bdId)}',${s})" title="${SCORE_LABELS[s]}">${s}</button>`;
+  }
+  html+=`</div>`;
+
+  // Gebreken
+  if(d.gebreken.length){
+    html+=`<div class="gb-section">
+      <div class="gb-section-title">
+        <span>⚠ Gebreken (${d.gebreken.filter(g=>g.actief).length} actief)</span>
+        <span style="font-size:10px;color:var(--tx3)">Activeer gebreken en vul ernst/omvang/intensiteit in</span>
+      </div>
+      <div style="overflow-x:auto">
+      <table class="gb-table">
+        <thead><tr>
+          <th style="width:28px"></th>
+          <th>Gebrek</th>
+          <th>Gebrekgroep</th>
+          <th>Ernst</th>
+          <th>Omvang</th>
+          <th>Intensiteit</th>
+          <th>CI</th>
+        </tr></thead>
+        <tbody>`;
+    d.gebreken.forEach((g,gi)=>{
+      const ci=g.actief&&g.ernst&&g.omvang&&g.intensiteit?calcCI([g]):null;
+      html+=`<tr class="${g.actief?'gb-active':''}">
+        <td><button class="gb-toggle${g.actief?' on':''}" onclick="toggleGebrek('${esc(b.bdId)}',${gi})">${g.actief?'✓':'+'}</button></td>
+        <td style="font-size:11px">${esc(g.name)}</td>
+        <td style="font-size:10px;color:var(--tx3)">${esc(g.gg)}</td>
+        <td>
+          <div class="ernst-sel">
+            ${['I','II','III'].map(e=>`<button class="ernst-btn${g.ernst===e?' sel-'+e:''}" onclick="setErnst('${esc(b.bdId)}',${gi},'${e}')">${e}</button>`).join('')}
+          </div>
+        </td>
+        <td>
+          <input class="omv-input" type="number" min="0" max="100" value="${g.omvang||''}" placeholder="%" onchange="setOmvang('${esc(b.bdId)}',${gi},this.value)">
+        </td>
+        <td>
+          <div class="int-sel">
+            ${[1,2,3].map(i=>`<button class="int-btn${g.intensiteit==i?' sel':''}" onclick="setIntensiteit('${esc(b.bdId)}',${gi},${i})">${i}</button>`).join('')}
+          </div>
+        </td>
+        <td>${ci!==null?`<span class="ci-pill" style="background:${SCORE_COLORS[ciToScore(ci)]}">${ci}</span>`:'—'}</td>
+      </tr>`;
+    });
+    html+=`</tbody></table></div></div>`;
+  }
+
+  // CI auto-calc info
+  const ci=calcCI(d.gebreken);
+  if(d.gebreken.some(g=>g.actief)){
+    const autoScore=ciToScore(ci);
+    html+=`<div style="margin-top:10px;padding:8px 12px;background:var(--blue-l);border-radius:var(--r);font-size:12px;display:flex;align-items:center;gap:8px">
+      <span>📐 Berekende conditie-index: <b>${ci}</b> → Conditiescore: </span>
+      <span class="ci-pill" style="background:${SCORE_COLORS[autoScore]};font-size:13px;padding:3px 10px">${autoScore} — ${SCORE_LABELS[autoScore]}</span>
+      <button onclick="setScore('${esc(b.bdId)}',${autoScore})" style="margin-left:auto;padding:3px 8px;border:1px solid var(--blue);border-radius:4px;background:var(--blue);color:#fff;font-size:11px;cursor:pointer;font-family:inherit">Overnemen</button>
+    </div>`;
+  }
+
+  // Remark + photos
+  html+=`<div class="bd-meta" style="margin-top:14px">
+    <div class="bd-remark">
+      <div style="font-size:11px;font-weight:500;color:var(--tx2);margin-bottom:4px">📝 Opmerking / Actie</div>
+      <textarea placeholder="Bijzonderheden, aanbevolen acties…" onchange="setOpmerking('${esc(b.bdId)}',this.value)">${esc(d.opmerking)}</textarea>
+    </div>
+    <div class="bd-photo-zone">
+      <div style="font-size:10px;color:var(--tx3);font-weight:500;margin-bottom:4px">FOTO'S</div>`;
+
+  d.photos.forEach((p,pi)=>{
+    html+=`<img class="bd-photo-thumb" src="${p.data}" onclick="openLightbox('${p.data}')" title="${esc(p.name||'')}">`;
+  });
+  if(d.photos.length<5)html+=`<label class="bd-photo-add"><input type="file" accept="image/*" multiple style="display:none" onchange="addBDPhoto('${esc(b.bdId)}',event)"><span style="font-size:18px">📷</span><span>Foto</span></label>`;
+  html+=`</div></div>`;
+
+  // Navigation bottom
+  html+=`<div style="display:flex;justify-content:space-between;margin-top:20px;padding-top:14px;border-top:1px solid var(--bdr)">
+    <button class="tbtn" onclick="prevBD()" ${idx===0?'disabled':''}  style="padding:8px 16px">← Vorige</button>
+    <span style="font-size:11px;color:var(--tx3);align-self:center">${idx+1} / ${bdList.length}</span>
+    ${idx===bdList.length-1
+      ?`<button class="tbtn accent" onclick="showSummary()" style="padding:8px 16px">📊 Naar samenvatting →</button>`
+      :`<button class="tbtn accent" onclick="nextBD()" style="padding:8px 16px">Volgende →</button>`}
+  </div>`;
+
+  document.getElementById('inspMain').innerHTML=html;
+  document.getElementById('inspMain').scrollTop=0;
+  closeMobNav();
+}
+
+function prevBD(){if(currentBdIdx>0){currentBdIdx--;renderBDCard(currentBdIdx);}}
+function nextBD(){if(currentBdIdx<bdList.length-1){currentBdIdx++;renderBDCard(currentBdIdx);}else showSummary();}
+
+// ════════════════════════════════════════════════
+//  DATA UPDATES
+// ════════════════════════════════════════════════
+function setScore(bdId,s){
+  inspData[bdId].score=s;renderBDCard(currentBdIdx);autoSave();
+}
+function toggleGebrek(bdId,gi){
+  const g=inspData[bdId].gebreken[gi];g.actief=!g.actief;
+  if(!g.actief){g.ernst='';g.omvang='';g.intensiteit='';}
+  renderBDCard(currentBdIdx);autoSave();
+}
+function setErnst(bdId,gi,e){inspData[bdId].gebreken[gi].ernst=e;renderBDCard(currentBdIdx);autoSave();}
+function setOmvang(bdId,gi,v){inspData[bdId].gebreken[gi].omvang=Math.min(100,Math.max(0,parseFloat(v)||0));autoSave();}
+function setIntensiteit(bdId,gi,i){inspData[bdId].gebreken[gi].intensiteit=i;renderBDCard(currentBdIdx);autoSave();}
+function setOpmerking(bdId,v){inspData[bdId].opmerking=v;autoSave();}
+
+const MAX_PX=800,JPEG_Q=0.78;
+function compressImg(file){return new Promise(res=>{const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>{let w=img.width,h=img.height;if(w>MAX_PX||h>MAX_PX){if(w>h){h=Math.round(h*MAX_PX/w);w=MAX_PX;}else{w=Math.round(w*MAX_PX/h);h=MAX_PX;}}const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);res({data:c.toDataURL('image/jpeg',JPEG_Q),name:file.name});};img.src=e.target.result;};r.readAsDataURL(file);});}
+async function addBDPhoto(bdId,e){
+  const files=Array.from(e.target.files).slice(0,5-inspData[bdId].photos.length);
+  for(const f of files){const c=await compressImg(f);inspData[bdId].photos.push(c);}
+  renderBDCard(currentBdIdx);autoSave();
+}
+
+// ════════════════════════════════════════════════
+//  SUMMARY
+// ════════════════════════════════════════════════
+function showSummary(){
+  document.getElementById('screenInspection').classList.remove('active');
+  document.getElementById('screenSummary').classList.add('active');
+  document.getElementById('screenSetup').classList.remove('active');
+
+  // Calc scores per element and per BO
+  const elScores={},egScores={};
+  for(const b of bdList){
+    const d=inspData[b.bdId];const score=d.score||0;
+    if(!elScores[b.elName])elScores[b.elName]={scores:[],eg:b.egName};
+    if(score)elScores[b.elName].scores.push(score);
+    if(!egScores[b.egName])egScores[b.egName]={scores:[]};
+    if(score)egScores[b.egName].scores.push(score);
+  }
+  const avg=arr=>arr.length?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length*10)/10:null;
+  const boScores=bdList.map(b=>inspData[b.bdId].score).filter(Boolean);
+  const boAvg=avg(boScores);
+
+  // Aandachtspunten (score >= 3)
+  const aandacht=bdList.filter(b=>(inspData[b.bdId].score||0)>=3)
+    .sort((a,b)=>(inspData[b.bdId].score||0)-(inspData[a.bdId].score||0));
+
+  const done=bdList.filter(b=>inspData[b.bdId].score>0).length;
+
+  let html=`<div class="sum-header">
+    <div style="display:flex;align-items:start;gap:16px;flex-wrap:wrap">
+      ${logoData?`<img src="${logoData}" style="height:44px;object-fit:contain">`:''}
+      <div>
+        <div class="sum-title">${boIcon(selectedBO)} ${esc(selectedBO)}</div>
+        <div class="sum-sub">${esc(meta.opdrachtgever||'')}${meta.datum?' · '+meta.datum:''} · Inspecteur: ${esc(meta.inspecteur||'')}</div>
+        <div style="margin-top:8px;font-size:11px;color:var(--tx2)">${done}/${bdList.length} bouwdelen beoordeeld</div>
+      </div>
+      ${boAvg?`<div style="margin-left:auto;text-align:center">
+        <div style="font-size:42px;font-weight:800;color:${SCORE_COLORS[Math.round(boAvg)]};line-height:1">${boAvg}</div>
+        <div style="font-size:11px;color:var(--tx2)">Gemiddelde conditie</div>
+        <div style="font-size:12px;font-weight:600;color:${SCORE_COLORS[Math.round(boAvg)]}">${SCORE_LABELS[Math.round(boAvg)]}</div>
+      </div>`:''}
+    </div>
+  </div>`;
+
+  // CI overview cards per elementengroep
+  html+=`<div class="ci-overview">`;
+  for(const[eg,data]of Object.entries(egScores)){
+    const a=avg(data.scores);
+    if(!a)continue;
+    const col=SCORE_COLORS[Math.round(a)];
+    html+=`<div class="ci-card">
+      <div class="ci-card-label">${esc(eg)}</div>
+      <div class="ci-card-score" style="color:${col}">${a}</div>
+      <div style="font-size:11px;color:${col}">${SCORE_LABELS[Math.round(a)]}</div>
+      <div class="ci-card-bar"><div class="ci-card-fill" style="width:${a/6*100}%;background:${col}"></div></div>
+    </div>`;
+  }
+  html+=`</div>`;
+
+  // Aandachtspunten
+  if(aandacht.length){
+    html+=`<div class="aandacht-list" style="margin-bottom:16px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px">⚠ Aandachtspunten (score ≥ 3)</div>`;
+    for(const b of aandacht){
+      const d=inspData[b.bdId];const s=d.score;
+      const gbs=d.gebreken.filter(g=>g.actief);
+      html+=`<div class="aandacht-item">
+        <div class="score-pill" style="background:${SCORE_COLORS[s]}">${s}</div>
+        <div>
+          <div style="font-size:12px;font-weight:600">${esc(b.bdName)}</div>
+          <div style="font-size:11px;color:var(--tx2)">${esc(b.egName)} → ${esc(b.elName)} → ${esc(b.syName)}</div>
+          ${gbs.length?`<div style="font-size:11px;color:var(--amber);margin-top:2px">Gebreken: ${gbs.map(g=>g.name).join(', ')}</div>`:''}
+          ${d.opmerking?`<div style="font-size:11px;color:var(--tx2);margin-top:2px;font-style:italic">📝 ${esc(d.opmerking)}</div>`:''}
+        </div>
+      </div>`;
+    }
+    html+=`</div>`;
+  }
+
+  // Full table
+  html+=`<div style="font-size:13px;font-weight:700;margin-bottom:10px">📋 Volledig overzicht</div>
+  <table class="sum-table" style="margin-bottom:24px">
+    <thead><tr>
+      <th>Elementengroep</th><th>Element</th><th>Systeem</th><th>Bouwdeel</th>
+      <th>Score</th><th>Actieve gebreken</th><th>Opmerking</th>
+    </tr></thead><tbody>`;
+  for(const b of bdList){
+    const d=inspData[b.bdId];const s=d.score;
+    const gbs=d.gebreken.filter(g=>g.actief);
+    html+=`<tr>
+      <td style="font-size:11px">${esc(b.egName)}</td>
+      <td style="font-size:11px">${esc(b.elName)}</td>
+      <td style="font-size:11px">${esc(b.syName)}</td>
+      <td style="font-weight:600">${esc(b.bdName)}</td>
+      <td>${s?`<span class="score-pill" style="background:${SCORE_COLORS[s]};font-size:12px;padding:2px 7px">${s}</span>`:'—'}</td>
+      <td style="font-size:11px">${gbs.map(g=>g.name).join(', ')||'—'}</td>
+      <td style="font-size:11px;color:var(--tx2)">${esc(d.opmerking)||'—'}</td>
+    </tr>`;
+  }
+  html+=`</tbody></table>
+  <div style="display:flex;gap:8px;justify-content:center;padding-bottom:32px">
+    <button class="tbtn" onclick="document.getElementById('screenInspection').classList.add('active');document.getElementById('screenSummary').classList.remove('active')">← Terug naar inspectie</button>
+    <button class="tbtn accent" onclick="generateReport()">📄 Rapport genereren</button>
+  </div>`;
+
+  document.getElementById('summaryContent').innerHTML=html;
+}
+
+// ════════════════════════════════════════════════
+//  REPORT GENERATION
+// ════════════════════════════════════════════════
+function generateReport(){
+  const m=getMeta()||meta;
+  const boScores=bdList.map(b=>inspData[b.bdId].score).filter(Boolean);
+  const boAvg=boScores.length?Math.round(boScores.reduce((a,b)=>a+b,0)/boScores.length*10)/10:null;
+  const done=bdList.filter(b=>inspData[b.bdId].score>0).length;
+  const aandacht=bdList.filter(b=>(inspData[b.bdId].score||0)>=3).sort((a,b)=>(inspData[b.bdId].score||0)-(inspData[a.bdId].score||0));
+  const allPhotos=[];bdList.forEach(b=>{inspData[b.bdId].photos.forEach((p,i)=>{allPhotos.push({...p,bdName:b.bdName,fotonr:allPhotos.length+1});});});
+
+  const logoHtml=logoData?`<img src="${logoData}" style="height:60px;object-fit:contain">`:`<div style="font-size:22px;font-weight:800;color:#1a5fa8">NEN 2767</div>`;
+  const objFotoHtml=objFotoData?`<img src="${objFotoData}" style="width:100%;max-height:280px;object-fit:cover;border-radius:8px;margin:16px 0">`:'';
+
+  // Group for vinklijst
+  const grouped={};
+  for(const b of bdList){
+    const k=b.egName;
+    if(!grouped[k])grouped[k]={egName:k,bds:[]};
+    grouped[k].bds.push(b);
+  }
+
+  let vinkRows='';
+  for(const[eg,g]of Object.entries(grouped)){
+    vinkRows+=`<tr><td colspan="7" style="background:#f5e6d3;font-weight:700;padding:6px 8px;font-size:12px">${eg}</td></tr>`;
+    for(const b of g.bds){
+      const d=inspData[b.bdId];const s=d.score;
+      const gbs=d.gebreken.filter(g=>g.actief);
+      const photos=d.photos;
+      const fotoNrs=photos.map(p=>{const idx=allPhotos.findIndex(x=>x.data===p.data);return idx>=0?idx+1:'';}).filter(Boolean).join(', ');
+      const scoreColor=s?SCORE_COLORS[s]:'#ccc';
+      vinkRows+=`<tr style="border-bottom:1px solid #eee">
+        <td style="padding:5px 8px;font-size:11px">&nbsp;&nbsp;• ${b.elName}</td>
+        <td style="padding:5px 8px;font-size:11px">${b.syName}</td>
+        <td style="padding:5px 8px;font-size:11px">${b.bdName}</td>
+        <td style="text-align:center;padding:5px">${s?`<span style="background:${scoreColor};color:#fff;padding:2px 7px;border-radius:4px;font-weight:700;font-size:12px">${s}</span>`:'—'}</td>
+        <td style="padding:5px 8px;font-size:11px">${gbs.map(g=>g.name).join(', ')||'—'}</td>
+        <td style="padding:5px 8px;font-size:11px;color:#555">${d.opmerking||'—'}</td>
+        <td style="padding:5px 8px;font-size:11px;text-align:center">${fotoNrs||'—'}</td>
+      </tr>`;
+    }
+  }
+
+  let gebrekenRows='';
+  const gebrekenList=[];
+  for(const b of bdList){
+    const d=inspData[b.bdId];
+    for(const g of d.gebreken.filter(g=>g.actief)){
+      const ci=calcCI([g]);
+      gebrekenList.push({...g,bdName:b.bdName,elName:b.elName,egName:b.egName,syName:b.syName,ci,score:d.score});
+    }
+  }
+  gebrekenList.sort((a,b)=>b.ci-a.ci);
+  for(const g of gebrekenList){
+    const col=SCORE_COLORS[ciToScore(g.ci)];
+    gebrekenRows+=`<tr style="border-bottom:1px solid #eee">
+      <td style="padding:5px 8px;font-size:11px">${g.egName}</td>
+      <td style="padding:5px 8px;font-size:11px">${g.elName}</td>
+      <td style="padding:5px 8px;font-size:11px">${g.bdName}</td>
+      <td style="padding:5px 8px;font-size:11px;font-weight:600">${g.name}</td>
+      <td style="padding:5px 8px;font-size:11px;text-align:center">${g.ernst||'—'}</td>
+      <td style="padding:5px 8px;font-size:11px;text-align:center">${g.omvang||'—'}%</td>
+      <td style="padding:5px 8px;font-size:11px;text-align:center">${g.intensiteit||'—'}</td>
+      <td style="text-align:center;padding:5px"><span style="background:${col};color:#fff;padding:2px 6px;border-radius:4px;font-weight:700;font-size:11px">${g.ci}</span></td>
+    </tr>`;
+  }
+
+  let fotoHtml='';
+  const fotoRows=[];
+  for(let i=0;i<allPhotos.length;i+=2){
+    fotoRows.push([allPhotos[i],allPhotos[i+1]||null]);
+  }
+  for(const row of fotoRows){
+    fotoHtml+=`<tr>`;
+    for(const p of row){
+      if(p)fotoHtml+=`<td style="padding:8px;text-align:center;border:1px solid #eee">
+        <img src="${p.data}" style="max-width:100%;max-height:220px;object-fit:cover;border-radius:4px"><br>
+        <span style="font-size:11px;color:#555">Fotonr.: ${p.fotonr} — ${p.bdName}</span>
+      </td>`;
+      else fotoHtml+=`<td style="border:1px solid #eee;background:#f5f5f5"></td>`;
+    }
+    fotoHtml+=`</tr>`;
+  }
+
+  const now=new Date().toLocaleDateString('nl-NL',{day:'2-digit',month:'long',year:'numeric'});
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>Inspectierapport — ${selectedBO}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#222;background:#fff}
+    .page{max-width:800px;margin:0 auto;padding:20px}
+    .page-break{page-break-before:always;padding-top:20px}
+    h1{font-size:22px;color:#d4620a;font-weight:700;margin-bottom:4px}
+    h2{font-size:15px;color:#d4620a;font-weight:700;border-bottom:2px solid #d4620a;padding-bottom:4px;margin:24px 0 12px}
+    h3{font-size:13px;font-weight:700;margin:16px 0 8px}
+    table{width:100%;border-collapse:collapse}
+    .cover-line{height:4px;background:linear-gradient(90deg,#d4620a,#f59300);margin:16px 0}
+    .meta-table td{padding:4px 8px;font-size:12px}
+    .meta-table td:first-child{font-weight:600;color:#555;width:160px}
+    .score-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-weight:700;color:#fff;font-size:11px}
+    .toc-item{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dotted #ddd;font-size:12px}
+    .no-print{margin:16px 0}
+    @media print{.no-print{display:none}.page{padding:12px}h2{margin-top:16px}}
+  </style>
+  </head><body>
+  <div class="page">
+    <!-- COVER -->
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
+      ${logoHtml}
+      <div style="text-align:right;font-size:11px;color:#888">
+        <div style="font-weight:700;font-size:13px;color:#555">${esc(m.opdrachtgever||'')}</div>
+        <div>Conditiemeting NEN 2767</div>
+      </div>
+    </div>
+    <div class="cover-line"></div>
+    <h1 style="font-size:24px;margin-top:12px">Inspectierapport</h1>
+    <div style="font-size:16px;color:#d4620a;font-weight:600;margin-bottom:16px">${boIcon(selectedBO)} ${esc(selectedBO)}</div>
+    ${objFotoHtml}
+    <table class="meta-table" style="margin-top:12px">
+      <tr><td>Datum rapportage</td><td>: ${esc(m.datum||now)}</td></tr>
+      <tr><td>Opdrachtgever</td><td>: ${esc(m.opdrachtgever||'')}</td></tr>
+      <tr><td>Object</td><td>: ${esc(selectedBO)}</td></tr>
+      ${m.contract?`<tr><td>Contractnummer</td><td>: ${esc(m.contract)}</td></tr>`:''}
+      <tr><td>Opgesteld door</td><td>: ${esc(m.opgesteld||m.inspecteur||'')}</td></tr>
+      ${m.gecontroleerd?`<tr><td>Gecontroleerd door</td><td>: ${esc(m.gecontroleerd)}</td></tr>`:''}
+      ${m.geautoriseerd?`<tr><td>Geautoriseerd door</td><td>: ${esc(m.geautoriseerd)}</td></tr>`:''}
+      ${m.draaiuren?`<tr><td>Draaiurenstand</td><td>: ${esc(m.draaiuren)}</td></tr>`:''}
+    </table>
+    <div class="cover-line" style="margin-top:24px"></div>
+    <div style="font-size:10px;color:#888;text-align:center;margin-top:4px">${esc(m.opdrachtgever||'')} | NEN 2767 Conditiemeting | ${now}</div>
+
+    <!-- TOC -->
+    <div class="page-break">
+      <h2 style="color:#d4620a;border-color:#d4620a">INHOUDSOPGAVE</h2>
+      <div class="toc-item"><span>1. Inleiding</span><span>3</span></div>
+      <div class="toc-item"><span>2. Samenvatting conditie</span><span>3</span></div>
+      <div class="toc-item"><span>3. Conditiematrix bouwdelen</span><span>4</span></div>
+      ${gebrekenList.length?`<div class="toc-item"><span>4. Gebrekenregister</span><span>5</span></div>`:''}
+      ${allPhotos.length?`<div class="toc-item"><span>5. Fotorapportage</span><span>6</span></div>`:''}
+    </div>
+
+    <!-- INLEIDING -->
+    <div class="page-break">
+      <h2>1. Inleiding</h2>
+      <p style="line-height:1.7">${esc(m.inleiding||`Deze rapportage bevat de resultaten van de conditiemeting uitgevoerd op ${esc(selectedBO)} conform NEN 2767.`)}</p>
+      <h2>2. Samenvatting conditie</h2>
+      ${boAvg?`<div style="display:flex;align-items:center;gap:20px;background:#f5f5f5;padding:16px;border-radius:8px;margin-bottom:16px">
+        <div style="text-align:center">
+          <div style="font-size:48px;font-weight:800;color:${SCORE_COLORS[Math.round(boAvg)]}">${boAvg}</div>
+          <div style="font-size:13px;font-weight:600;color:${SCORE_COLORS[Math.round(boAvg)]}">${SCORE_LABELS[Math.round(boAvg)]}</div>
+          <div style="font-size:11px;color:#888">Gemiddelde conditie</div>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:12px;margin-bottom:8px">${done}/${bdList.length} bouwdelen beoordeeld</div>
+          <div style="font-size:12px;color:#c01020;font-weight:600">${aandacht.length} aandachtspunten (score ≥ 3)</div>
+        </div>
+      </div>`:'<p style="color:#888">Nog geen scores ingevoerd.</p>'}
+      <h3>Conditieverklaring scores:</h3>
+      <table style="margin-bottom:12px">
+        ${[1,2,3,4,5,6].map(s=>`<tr><td style="padding:3px 8px"><span class="score-badge" style="background:${SCORE_COLORS[s]}">${s}</span></td><td style="padding:3px 8px;font-size:11px;font-weight:600">${SCORE_LABELS[s]}</td><td style="padding:3px 8px;font-size:11px;color:#555">${['Geen gebreken','Geringe gebreken, goed onderhouden','Lichte gebreken, regelmatig onderhoud nodig','Matige gebreken, intensief onderhoud nodig','Ernstige gebreken, renovatie overwegen','Zeer ernstige gebreken, direct ingrijpen'][s-1]}</td></tr>`).join('')}
+      </table>
+    </div>
+
+    <!-- VINKLIJST -->
+    <div class="page-break">
+      <h2>3. Conditiematrix bouwdelen</h2>
+      <table style="font-size:11px">
+        <thead><tr style="background:#d4620a;color:#fff">
+          <th style="padding:6px 8px;text-align:left">Element</th>
+          <th style="padding:6px 8px;text-align:left">Systeem</th>
+          <th style="padding:6px 8px;text-align:left">Bouwdeel</th>
+          <th style="padding:6px 8px;text-align:center">Score</th>
+          <th style="padding:6px 8px;text-align:left">Gebreken</th>
+          <th style="padding:6px 8px;text-align:left">Opmerkingen</th>
+          <th style="padding:6px 8px;text-align:center">Foto nr.</th>
+        </tr></thead>
+        <tbody>${vinkRows}</tbody>
+      </table>
+    </div>
+
+    ${gebrekenList.length?`
+    <div class="page-break">
+      <h2>4. Gebrekenregister</h2>
+      <p style="font-size:11px;color:#555;margin-bottom:10px">Geregistreerde gebreken gesorteerd op conditie-index (hoogste prioriteit eerst).</p>
+      <table>
+        <thead><tr style="background:#d4620a;color:#fff">
+          <th style="padding:6px 8px;text-align:left">EG</th>
+          <th style="padding:6px 8px;text-align:left">Element</th>
+          <th style="padding:6px 8px;text-align:left">Bouwdeel</th>
+          <th style="padding:6px 8px;text-align:left">Gebrek</th>
+          <th style="padding:6px 8px;text-align:center">Ernst</th>
+          <th style="padding:6px 8px;text-align:center">Omvang</th>
+          <th style="padding:6px 8px;text-align:center">Int.</th>
+          <th style="padding:6px 8px;text-align:center">CI</th>
+        </tr></thead>
+        <tbody>${gebrekenRows}</tbody>
+      </table>
+    </div>`:''}
+
+    ${allPhotos.length?`
+    <div class="page-break">
+      <h2>${gebrekenList.length?'5':'4'}. Fotorapportage</h2>
+      <table style="border:1px solid #eee"><thead><tr style="background:#d4620a;color:#fff"><th colspan="2" style="padding:8px;text-align:center;letter-spacing:.5px">BIJBEHORENDE FOTO'S</th></tr></thead>
+      <tbody>${fotoHtml}</tbody></table>
+    </div>`:''}
+
+    <div class="no-print" style="text-align:center;padding:20px 0">
+      <button onclick="window.print()" style="padding:10px 24px;background:#d4620a;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">🖨 Afdrukken / Opslaan als PDF</button>
+    </div>
+  </div>
+  </body></html>`);
+  w.document.close();
+  toast('📄 Rapport geopend — gebruik Afdrukken voor PDF');
+}
+
+// ════════════════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════════════════
+function toggleMobNav(){mobNavOpen=!mobNavOpen;document.getElementById('inspNav').classList.toggle('mob-open',mobNavOpen);}
+function closeMobNav(){mobNavOpen=false;document.getElementById('inspNav').classList.remove('mob-open');}
+function openLightbox(src){document.getElementById('lightboxImg').src=src;document.getElementById('lightbox').style.display='flex';}
+function closeLightbox(){document.getElementById('lightbox').style.display='none';}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});
+
+let _st;
+function autoSave(){
+  try{localStorage.setItem('nen2767_inspectie',JSON.stringify({meta,inspData,bdList,selectedBO,logoData:logoData||null,objFotoData:objFotoData||null}));}catch(e){}
+  clearTimeout(_st);_st=setTimeout(()=>{},500);
+}
+function saveInspectie(){
+  const blob=new Blob([JSON.stringify({version:1,selectedBO,meta:getMeta(),inspData,bdList},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='inspectie_'+((selectedBO||'').replace(/[^a-z0-9]/gi,'_'))+'_'+(getMeta().datum||'').replace(/-/g,'')+'.json';
+  a.click();toast('💾 Inspectie opgeslagen');
+}
+
+let _tt;
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),3000);}
+
+init();
+</script>
+</body>
+</html>
