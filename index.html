@@ -133,9 +133,9 @@ body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--
 // ════════════════════════════════════════
 //  TYPE CONFIG
 // ════════════════════════════════════════
-const TLBL={portfolio:'Areaal Portefeuille',complex:'Complex',bo:'Beheerobject',eg:'Elementengroep',el:'Element',sy:'Systeem',bd:'Bouwdeel',gb:'Gebrek'};
-const TCOL={portfolio:'#534AB7',complex:'#185FA5',bo:'#378ADD',eg:'#0D7A6E',el:'#1D9E75',sy:'#5B8C5A',bd:'#BA7517',gb:'#E24B4A'};
-const KIDS={portfolio:['complex'],complex:['bo'],bo:['eg'],eg:['el'],el:['sy'],sy:['bd'],bd:['gb'],gb:[]};
+const TLBL={portfolio:'Areaal Portefeuille',complex:'Complex',bo:'Beheerobject',eg:'Elementengroep',el:'Element',gb:'Gebrek'};
+const TCOL={portfolio:'#534AB7',complex:'#185FA5',bo:'#378ADD',eg:'#0D7A6E',el:'#1D9E75',gb:'#E24B4A'};
+const KIDS={portfolio:['complex'],complex:['bo'],bo:['eg'],eg:['el'],el:['gb'],gb:[]};
 const LIB={bo:BO,el:EL,bd:BD,gb:GB};
 
 // ════════════════════════════════════════
@@ -189,28 +189,25 @@ setInterval(autoSave, 10000);
 function buildBoTree(boName){
   const boSid=S.indexOf(boName);
   if(boSid===-1||!M[boSid])return null;
+  // Fase-2 mapping format:
+  // M[boSid] = [[cplxSid, [[subBoSid, flag, [[egSid, [[elSid, elM, [gbSid,...]], ...]], ...]], ...]], ...]
   const boNode={id:mkId(),type:'bo',label:boName,code:BO.find(x=>x.n===boName)?.c||'',children:[]};
-  for(const [egSid,elArr] of M[boSid]){
-    const egNode={id:mkId(),type:'eg',label:S[egSid],code:'',children:[]};
-    for(const [elSid,elM,syArr] of elArr){
-      const elName=S[elSid];
-      const elNode={id:mkId(),type:'el',label:elName,code:EL.find(x=>x.n===elName)?.c||'',meenemen:S[elM],children:[]};
-      for(const [sySid,bdArr] of syArr){
-        const syNode={id:mkId(),type:'sy',label:S[sySid],code:'',children:[]};
-        for(const [bdSid,bdM,gbArr] of bdArr){
-          const bdName=S[bdSid];
-          const bdNode={id:mkId(),type:'bd',label:bdName,code:BD.find(x=>x.n===bdName)?.c||'',meenemen:S[bdM],children:[]};
-          for(const [gbSid,ggSid,gsSid,gbM] of gbArr){
+  for(const [cplxSid,boArr] of M[boSid]){
+    for(const [subBoSid,flag,egArr] of boArr){
+      for(const [egSid,elArr] of egArr){
+        const egNode={id:mkId(),type:'eg',label:S[egSid],code:'',children:[]};
+        for(const [elSid,elM,gbArr] of elArr){
+          const elName=S[elSid];
+          const elNode={id:mkId(),type:'el',label:elName,code:EL.find(x=>x.n===elName)?.c||'',meenemen:S[elM],children:[]};
+          for(const gbSid of gbArr){
             const gbName=S[gbSid];
-            bdNode.children.push({id:mkId(),type:'gb',label:gbName,code:GB.find(x=>x.n===gbName)?.c||'',gebrekgroep:S[ggSid],meenemen:S[gbM],children:[]});
+            elNode.children.push({id:mkId(),type:'gb',label:gbName,code:GB.find(x=>x.n===gbName)?.c||'',children:[]});
           }
-          syNode.children.push(bdNode);
+          egNode.children.push(elNode);
         }
-        elNode.children.push(syNode);
+        boNode.children.push(egNode);
       }
-      egNode.children.push(elNode);
     }
-    boNode.children.push(egNode);
   }
   return boNode;
 }
@@ -245,7 +242,7 @@ function renderLib(){
       e.dataTransfer.setData('text/plain',JSON.stringify(dragLib));
       setTimeout(()=>e.currentTarget.classList.add('dragging'),0);
     });
-    el.addEventListener('dragend',e=>{e.currentTarget.classList.remove('dragging');setTimeout(()=>{dragLib=null;},0);});
+    el.addEventListener('dragend',e=>{e.currentTarget.classList.remove('dragging');dragLib=null});
     el.addEventListener('dblclick',e=>quickInsert(activeTab,e.currentTarget.dataset.name,isAuto));
   });
 }
@@ -259,7 +256,7 @@ function quickInsert(type,name,auto=false){
     if(node){addKid(cplx,node);coll[cplx.id]=false;renderTree();autoSave();toast('✓ '+name+' + volledige hiërarchie toegevoegd');}
     return;
   }
-  const PARENT={complex:'portfolio',bo:'complex',eg:'bo',el:'eg',sy:'el',bd:'sy',gb:'bd'};
+  const PARENT={complex:'portfolio',bo:'complex',eg:'bo',el:'eg',gb:'el'};
   const par=findFirstOfType(PARENT[type]);
   if(!par){toast('Geen '+TLBL[PARENT[type]]+' gevonden');return}
   addKid(par,{id:mkId(),type,label:name,code:libCode(type,name),children:[]});
@@ -330,14 +327,9 @@ function attachEvents(){
   // Drag tree nodes
   document.querySelectorAll('.node-body').forEach(el=>{
     el.setAttribute('draggable','true');
-    el.addEventListener('dragstart',e=>{
-      // Don't start a node drag if a library item drag is already in progress
-      if(dragLib){e.preventDefault();e.stopPropagation();return;}
-      dragNid=el.dataset.id;dragLib=null;e.dataTransfer.effectAllowed='move';setTimeout(()=>el.classList.add('dragging'),0);
-    });
+    el.addEventListener('dragstart',e=>{dragNid=el.dataset.id;dragLib=null;e.dataTransfer.effectAllowed='move';setTimeout(()=>el.classList.add('dragging'),0)});
     el.addEventListener('dragend',()=>{document.querySelectorAll('.node-body.dragging,.node-body.dov,.node-body.dinv').forEach(x=>x.classList.remove('dragging','dov','dinv'));dragNid=null});
     el.addEventListener('dragover',e=>{
-      if(dragLib) e.dataTransfer.dropEffect='copy'; else e.dataTransfer.dropEffect='move';
       e.preventDefault();e.stopPropagation();
       document.querySelectorAll('.node-body.dov,.node-body.dinv').forEach(x=>x.classList.remove('dov','dinv'));
       const tt=el.dataset.type;
