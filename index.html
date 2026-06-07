@@ -3,262 +3,439 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>NEN 2767 Decompositie Bibliotheek</title>
+<title>NEN 2767 — Decompositie Bibliotheek</title>
 <script src="mapping.js"></script>
 <style>
-:root{--bg:#f5f4f0;--sur:#fff;--sur2:#f0efe9;--bdr:rgba(0,0,0,.10);--bdr2:rgba(0,0,0,.20);--tx:#1a1a18;--tx2:#5a5a56;--tx3:#9a9a94;--blue:#185FA5;--blue-l:#e6f1fb;--green:#0F6E56;--green-l:#e1f5ee;--red:#A32D2D;--red-l:#fcebeb;--r:8px;--rl:12px}
-@media(prefers-color-scheme:dark){:root{--bg:#1a1a18;--sur:#242422;--sur2:#2e2e2a;--bdr:rgba(255,255,255,.10);--bdr2:rgba(255,255,255,.20);--tx:#f0efe9;--tx2:#a0a09a;--tx3:#606058;--blue-l:#0c447c22;--green-l:#0a4a3522;--red-l:#50131322}}
+:root{
+  --bg:#f4f3ef;--sur:#ffffff;--sur2:#eeede8;--bdr:rgba(0,0,0,.10);--bdr2:rgba(0,0,0,.18);
+  --tx:#1a1a18;--tx2:#5a5a56;--tx3:#9a9a94;
+  --blue:#1a5fa8;--blue-l:#e8f1fb;--blue-d:#134e8a;
+  --green:#0e6e50;--green-l:#e1f4ec;
+  --amber:#b87200;--amber-l:#fdf0d8;
+  --red:#a02828;--red-l:#fbeaea;
+  --r:6px;--rl:10px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#18181a;--sur:#232326;--sur2:#2c2c30;--bdr:rgba(255,255,255,.09);--bdr2:rgba(255,255,255,.18);
+  --tx:#eeeee8;--tx2:#9a9a94;--tx3:#55554e;
+  --blue-l:#0f3d7022;--green-l:#0a4a3522;--amber-l:#5a380022;--red-l:#4a101022;
+}}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);font-size:14px;height:100vh;overflow:hidden}
-.app{display:flex;height:100vh}
-.sidebar{width:300px;min-width:220px;background:var(--sur);border-right:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-.detail{width:290px;background:var(--sur);border-left:1px solid var(--bdr);overflow-y:auto;flex-shrink:0;display:none}
-.detail.open{display:block}
-.sb-hdr{padding:10px 12px;border-bottom:1px solid var(--bdr)}
-.sb-search{width:100%;padding:6px 10px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:12px;background:var(--sur2);color:var(--tx);outline:none;font-family:inherit;margin-top:7px}
+body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);font-size:13px;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+/* ── TOP BAR ── */
+.topbar{height:44px;background:var(--blue);color:#fff;display:flex;align-items:center;gap:8px;padding:0 14px;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.topbar-title{font-size:13px;font-weight:700;letter-spacing:.3px}
+.topbar-sub{font-size:11px;opacity:.7;margin-left:4px}
+.topbar-actions{margin-left:auto;display:flex;gap:6px}
+.tbtn{padding:4px 10px;border:1px solid rgba(255,255,255,.35);border-radius:var(--r);font-size:11px;cursor:pointer;background:rgba(255,255,255,.12);color:#fff;font-family:inherit;transition:background .12s}
+.tbtn:hover{background:rgba(255,255,255,.22)}
+.tbtn.primary{background:rgba(255,255,255,.25);border-color:rgba(255,255,255,.5)}
+
+/* ── LAYOUT ── */
+.workspace{flex:1;display:flex;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sidebar{width:280px;min-width:220px;background:var(--sur);border-right:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+.sb-head{padding:10px 12px 6px;border-bottom:1px solid var(--bdr)}
+.sb-title{font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.sb-search{width:100%;padding:5px 9px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:12px;background:var(--sur2);color:var(--tx);outline:none;font-family:inherit}
 .sb-search:focus{border-color:var(--blue)}
-.sb-tabs{display:flex;border-bottom:1px solid var(--bdr)}
-.stab{flex:1;padding:7px 2px;font-size:10px;font-weight:600;text-align:center;cursor:pointer;border:none;background:transparent;color:var(--tx2);border-bottom:2px solid transparent;font-family:inherit}
-.stab.active{color:var(--blue);border-bottom-color:var(--blue)}.stab:hover:not(.active){background:var(--sur2)}
-.sb-mode{display:flex;gap:4px;padding:6px 8px;border-bottom:1px solid var(--bdr)}
-.mdbtn{flex:1;padding:5px 4px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:10px;font-weight:600;cursor:pointer;background:var(--sur);color:var(--tx2);text-align:center;font-family:inherit;transition:all .12s}
-.mdbtn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
-.sb-count{font-size:10px;color:var(--tx3);padding:4px 12px;border-bottom:1px solid var(--bdr)}
-.lib-list{flex:1;overflow-y:auto;padding:5px}
-.lib-item{display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:var(--r);cursor:grab;font-size:11px;color:var(--tx);border:1px solid transparent;margin-bottom:2px;background:var(--sur2);user-select:none;-webkit-user-select:none;transition:border-color .1s,background .1s}
-.lib-item:hover{border-color:var(--bdr2);background:var(--sur)}.lib-item.dragging{opacity:.4}
-.lib-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.lib-code{font-size:10px;color:var(--tx3);margin-left:auto;font-family:monospace;background:var(--bg);padding:1px 5px;border-radius:20px;white-space:nowrap;border:1px solid var(--bdr);flex-shrink:0}
-.auto-badge{font-size:9px;background:var(--blue);color:#fff;padding:1px 5px;border-radius:20px;flex-shrink:0}
-.hdr{padding:10px 12px;border-bottom:1px solid var(--bdr);background:var(--sur);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.hdr-title{font-size:12px;font-weight:600;flex:1;min-width:100px}
-.btn{padding:5px 9px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:11px;cursor:pointer;background:var(--sur);color:var(--tx);display:inline-flex;align-items:center;gap:4px;white-space:nowrap;font-family:inherit;transition:background .12s}
-.btn:hover{background:var(--sur2)}.btn.pr{background:var(--blue);color:#fff;border-color:var(--blue)}.btn.pr:hover{background:#134e88}
-.btn.gr{background:var(--green);color:#fff;border-color:var(--green)}.btn.gr:hover{background:#0a5040}
-.btn.dan{color:var(--red);border-color:var(--red);background:var(--red-l)}
+.sb-filter{display:flex;gap:4px;padding:6px 12px;border-bottom:1px solid var(--bdr)}
+.fbtn{flex:1;padding:4px 2px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:10px;font-weight:600;cursor:pointer;background:var(--sur);color:var(--tx2);text-align:center;font-family:inherit;transition:all .12s}
+.fbtn.on{color:#fff}
+.fbtn.f-ja.on{background:var(--green);border-color:var(--green)}
+.fbtn.f-opt.on{background:var(--amber);border-color:var(--amber)}
+.fbtn.f-nee.on{background:var(--tx3);border-color:var(--tx3)}
+.sb-count{font-size:10px;color:var(--tx3);padding:3px 12px;border-bottom:1px solid var(--bdr)}
+.sb-list{flex:1;overflow-y:auto;padding:5px}
+.lib-item{display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:var(--r);cursor:grab;font-size:12px;border:1px solid transparent;margin-bottom:2px;background:var(--sur2);user-select:none;transition:border-color .1s,background .1s}
+.lib-item:hover{border-color:var(--bdr2);background:var(--sur)}
+.lib-item.dragging{opacity:.35}
+.lib-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.lib-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lib-code{font-size:10px;color:var(--tx3);font-family:monospace;background:var(--bg);padding:1px 5px;border-radius:20px;border:1px solid var(--bdr);flex-shrink:0}
+
+/* ── MODE toggle ── */
+.sb-mode{display:flex;gap:4px;padding:6px 12px;border-bottom:1px solid var(--bdr)}
+.mbtn{flex:1;padding:4px 4px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:10px;font-weight:600;cursor:pointer;background:var(--sur);color:var(--tx2);text-align:center;font-family:inherit;transition:all .12s}
+.mbtn.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* ── CANVAS ── */
+.canvas-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.canvas-head{padding:8px 14px;border-bottom:1px solid var(--bdr);background:var(--sur);display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex-shrink:0}
+.canvas-title{font-size:12px;font-weight:600;flex:1}
+.btn{padding:4px 9px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:11px;cursor:pointer;background:var(--sur);color:var(--tx);font-family:inherit;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;transition:background .12s}
+.btn:hover{background:var(--sur2)}
+.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn.primary:hover{background:var(--blue-d)}
+.btn.danger{color:var(--red);border-color:var(--red);background:var(--red-l)}
 .canvas{flex:1;overflow:auto;padding:14px}
+
+/* ── EMPTY STATE ── */
 .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:10px;color:var(--tx2);text-align:center}
-.node-block{user-select:none;-webkit-user-select:none}
-.node-row{display:flex;align-items:stretch}
-.node-indent{display:flex}
-.ip{width:20px;border-right:1px solid var(--bdr);margin-right:4px;flex-shrink:0}
-.node-body{flex:1;display:flex;align-items:center;gap:5px;padding:5px 7px;border-radius:var(--r);border:1px solid transparent;background:var(--sur2);cursor:pointer;min-width:0;margin-bottom:2px;transition:border-color .1s,background .1s}
-.node-body:hover{border-color:var(--bdr2)}.node-body.sel{border-color:var(--blue);background:var(--blue-l)}
-.node-body.dov{border-color:var(--blue)!important;background:var(--blue-l)!important;outline:2px dashed var(--blue);outline-offset:-2px}
-.node-body.dinv{border-color:var(--red)!important;background:var(--red-l)!important}
-.ntog{width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--tx2);cursor:pointer;flex-shrink:0;border-radius:4px;border:1px solid var(--bdr);background:var(--sur);font-family:monospace}
-.ntog:hover{background:var(--sur2)}
-.nico{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.nlab{font-size:11px;color:var(--tx);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ncod{font-size:10px;color:var(--tx3);font-family:monospace;flex-shrink:0}
-.ncnt{font-size:10px;background:var(--sur);border:1px solid var(--bdr);color:var(--tx3);padding:0 4px;border-radius:20px;flex-shrink:0}
-.mbadge{font-size:9px;padding:1px 5px;border-radius:20px;flex-shrink:0;border:1px solid}
-.mbadge.opt{background:#faeeda;color:#854F0B;border-color:#BA7517}
-.nact{display:flex;gap:2px;opacity:0}.node-body:hover .nact{opacity:1}
-.na{width:20px;height:20px;border:none;background:transparent;cursor:pointer;color:var(--tx2);font-size:12px;display:flex;align-items:center;justify-content:center;border-radius:4px;padding:0}
+.empty-icon{font-size:48px;opacity:.15}
+.empty-title{font-size:14px;font-weight:600}
+.empty-sub{font-size:12px;color:var(--tx3);max-width:280px;line-height:1.5}
+
+/* ── TREE NODES ── */
+.node-block{user-select:none}
+.node-row{display:flex;align-items:stretch;margin-bottom:2px}
+.node-indent{display:flex;flex-shrink:0}
+.indent-pipe{width:20px;border-right:1px solid var(--bdr);margin-right:4px;flex-shrink:0}
+.node-body{flex:1;display:flex;align-items:center;gap:5px;padding:4px 7px;border-radius:var(--r);border:1px solid transparent;background:var(--sur2);cursor:pointer;min-width:0;transition:border-color .1s,background .1s}
+.node-body:hover{border-color:var(--bdr2)}
+.node-body.sel{border-color:var(--blue)!important;background:var(--blue-l)!important}
+.node-body.drop-ok{border-color:var(--blue)!important;background:var(--blue-l)!important;outline:2px dashed var(--blue);outline-offset:-2px}
+.node-body.drop-no{border-color:var(--red)!important;background:var(--red-l)!important}
+.node-tog{width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--tx2);border:1px solid var(--bdr);border-radius:3px;background:var(--sur);flex-shrink:0;cursor:pointer;font-family:monospace}
+.node-tog:hover{background:var(--sur2)}
+.node-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.node-label{font-size:12px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.node-code{font-size:10px;color:var(--tx3);font-family:monospace;flex-shrink:0}
+.node-badge{font-size:9px;padding:1px 6px;border-radius:20px;flex-shrink:0;border:1px solid}
+.badge-ja{background:var(--green-l);color:var(--green);border-color:var(--green)}
+.badge-opt{background:var(--amber-l);color:var(--amber);border-color:var(--amber)}
+.node-count{font-size:10px;background:var(--sur);border:1px solid var(--bdr);color:var(--tx3);padding:0 4px;border-radius:20px;flex-shrink:0}
+.node-actions{display:flex;gap:2px;opacity:0;flex-shrink:0}
+.node-body:hover .node-actions{opacity:1}
+.na{width:20px;height:20px;border:none;background:transparent;cursor:pointer;color:var(--tx2);font-size:12px;display:flex;align-items:center;justify-content:center;border-radius:3px}
 .na:hover{background:var(--sur);color:var(--tx)}
-.detail .dp-hdr{padding:11px 13px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
-.dp-ttl{font-size:12px;font-weight:600}
-.dp-body{padding:13px}
-.dpf{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--bdr)}.dpf:last-child{border:none}
-.dpl{font-size:10px;color:var(--tx3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
-.dpv{font-size:12px;color:var(--tx);line-height:1.5}
-.tbadge{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:500}
-.dp-acts{display:flex;flex-direction:column;gap:6px;margin-top:12px}
-.moverlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000}
-.mbox{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rl);padding:20px;width:400px;max-width:95vw;box-shadow:0 4px 20px rgba(0,0,0,.15)}
-.mbox h3{font-size:14px;font-weight:600;margin-bottom:13px}
-.fr{margin-bottom:9px}.fr label{font-size:11px;color:var(--tx2);display:block;margin-bottom:3px}
-.fr input,.fr select,.fr textarea{width:100%;padding:7px 10px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:12px;background:var(--sur2);color:var(--tx);outline:none;font-family:inherit}
-.fr input:focus,.fr select:focus{border-color:var(--blue)}
-.mbtns{display:flex;gap:8px;justify-content:flex-end;margin-top:13px}
-.toast{position:fixed;bottom:18px;right:18px;background:var(--tx);color:var(--bg);padding:9px 15px;border-radius:var(--r);font-size:12px;z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none;max-width:340px}
+
+/* ── DETAIL PANEL ── */
+.detail{width:270px;background:var(--sur);border-left:1px solid var(--bdr);overflow-y:auto;flex-shrink:0;display:none}
+.detail.open{display:block}
+.dp-head{padding:10px 13px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.dp-title{font-size:12px;font-weight:600}
+.dp-body{padding:12px 13px}
+.dp-field{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--bdr)}
+.dp-field:last-child{border:none;margin:0;padding:0}
+.dp-label{font-size:10px;color:var(--tx3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
+.dp-value{font-size:12px;line-height:1.5}
+.dp-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:500}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000}
+.modal{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rl);padding:18px;width:400px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.modal h3{font-size:14px;font-weight:600;margin-bottom:14px}
+.form-row{margin-bottom:9px}
+.form-row label{font-size:11px;color:var(--tx2);display:block;margin-bottom:3px}
+.form-row input,.form-row select,.form-row textarea{width:100%;padding:6px 9px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:12px;background:var(--sur2);color:var(--tx);outline:none;font-family:inherit}
+.form-row input:focus,.form-row select:focus{border-color:var(--blue)}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+
+/* ── FILTER DIALOG ── */
+.filter-dialog{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000}
+.filter-box{background:var(--sur);border-radius:var(--rl);padding:20px;width:340px;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.filter-box h3{font-size:14px;font-weight:600;margin-bottom:6px}
+.filter-box p{font-size:12px;color:var(--tx2);margin-bottom:14px;line-height:1.5}
+.filter-options{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.filter-opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border:2px solid var(--bdr);border-radius:var(--r);cursor:pointer;transition:all .12s}
+.filter-opt:hover{border-color:var(--bdr2)}
+.filter-opt.selected{border-color:var(--blue);background:var(--blue-l)}
+.filter-opt-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.filter-opt-label{font-size:12px;font-weight:600}
+.filter-opt-sub{font-size:11px;color:var(--tx2)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:16px;right:16px;background:var(--tx);color:var(--bg);padding:8px 14px;border-radius:var(--r);font-size:12px;z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none;max-width:320px}
 .toast.show{opacity:1}
+
+/* ── SCROLLBAR ── */
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px}
 </style>
 </head>
 <body>
-<div class="app" id="app">
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <span class="topbar-title">NEN 2767</span>
+  <span class="topbar-sub">Fase 1 — Decompositie Bibliotheek</span>
+  <div class="topbar-actions">
+    <button class="tbtn" onclick="newProject()">＋ Nieuw project</button>
+    <button class="tbtn" onclick="saveJSON()">💾 Opslaan</button>
+    <button class="tbtn" onclick="document.getElementById('loadFile').click()">📂 Laden</button>
+    <input type="file" id="loadFile" accept=".json" style="display:none" onchange="loadJSON(this)">
+    <button class="tbtn" onclick="exportCSV()">⬇ CSV</button>
+    <button class="tbtn primary" onclick="clearAll()">🗑 Leegmaken</button>
+  </div>
+</div>
+
+<div class="workspace">
+
+  <!-- SIDEBAR -->
   <div class="sidebar">
-    <div class="sb-hdr">
-      <div style="font-size:12px;font-weight:600">📚 NEN 2767 Bibliotheek</div>
-      <input class="sb-search" id="libSearch" type="text" placeholder="Zoeken op naam of code…" autocomplete="off">
+    <div class="sb-head">
+      <div class="sb-title">📚 NEN 2767 Bibliotheek</div>
+      <input class="sb-search" id="sbSearch" type="text" placeholder="Zoeken op naam of code…" oninput="renderLib()" autocomplete="off">
     </div>
-    <div class="sb-tabs">
-      <button class="stab active" id="tab-bo" onclick="switchTab('bo')">Objecten<br><span style="font-weight:400;opacity:.7">64</span></button>
-      <button class="stab" id="tab-el" onclick="switchTab('el')">Elementen<br><span style="font-weight:400;opacity:.7">245</span></button>
-      <button class="stab" id="tab-bd" onclick="switchTab('bd')">Bouwdelen<br><span style="font-weight:400;opacity:.7">760</span></button>
-      <button class="stab" id="tab-gb" onclick="switchTab('gb')">Gebreken<br><span style="font-weight:400;opacity:.7">166</span></button>
-    </div>
+
+    <!-- Mode: auto (BO) or manual -->
     <div class="sb-mode">
-      <button class="mdbtn active" id="mode-auto" onclick="setMode('auto')" title="Sleep een Beheerobject → volledige hiërarchie automatisch">🔗 Automatisch</button>
-      <button class="mdbtn" id="mode-hand" onclick="setMode('hand')" title="Items één voor één handmatig toevoegen">✋ Handmatig</button>
+      <button class="mbtn on" id="mode-bo" onclick="setLibMode('bo')">🏗 Beheerobjecten</button>
+      <button class="mbtn" id="mode-el" onclick="setLibMode('el')">🔧 Elementen</button>
+      <button class="mbtn" id="mode-bd" onclick="setLibMode('bd')">🧱 Bouwdelen</button>
+      <button class="mbtn" id="mode-gb" onclick="setLibMode('gb')">⚠ Gebreken</button>
     </div>
-    <div class="sb-count" id="libCount"></div>
-    <div class="lib-list" id="libList"></div>
+
+    <div class="sb-count" id="sbCount"></div>
+    <div class="sb-list" id="sbList"></div>
   </div>
 
-  <div class="main">
-    <div class="hdr">
-      <span class="hdr-title">🏗 NEN 2767 Decompositie Bibliotheek &nbsp;<span style="font-weight:400;color:var(--tx3);font-size:11px">Fase 1</span></span>
-      <button class="btn pr" onclick="openAddModal('portfolio',null)">＋ Nieuw Areaal</button>
-      <button class="btn" onclick="expandAll()">▾ Uitvouwen</button>
-      <button class="btn" onclick="collapseAll()">▴ Invouwen</button>
-      <button class="btn" onclick="saveToFile()" title="Sla decompositie op als JSON-bestand">💾 Opslaan</button>
-      <button class="btn" onclick="document.getElementById('loadInput').click()" title="Laad eerder opgeslagen decompositie">📂 Laden</button>
-      <input type="file" id="loadInput" accept=".json" style="display:none" onchange="loadFromFile(this)">
-      <button class="btn" onclick="exportCSV()">⬇ Excel</button>
+  <!-- CANVAS -->
+  <div class="canvas-wrap">
+    <div class="canvas-head">
+      <span class="canvas-title" id="projectTitle">Nieuw project</span>
+      <button class="btn" onclick="addNode('areaal',null)">＋ Areaal</button>
+      <button class="btn" onclick="expandAll()">↕ Alles uitklappen</button>
+      <button class="btn" onclick="collapseAll()">↕ Alles inklappen</button>
     </div>
-    <div class="canvas" id="canvas">
+    <div class="canvas" id="canvas"
+      ondragover="canvasDragover(event)"
+      ondrop="canvasDrop(event)">
       <div id="treeRoot"></div>
     </div>
   </div>
 
+  <!-- DETAIL PANEL -->
   <div class="detail" id="detailPanel">
-    <div class="dp-hdr">
-      <span class="dp-ttl" id="dpTitle">Details</span>
-      <button class="btn" onclick="closeDetail()" style="padding:2px 7px">✕</button>
+    <div class="dp-head">
+      <span class="dp-title" id="dpTitle">Details</span>
+      <button class="na" onclick="closeDetail()">✕</button>
     </div>
     <div class="dp-body" id="dpBody"></div>
   </div>
+
 </div>
 
-<div class="moverlay" id="moverlay" style="display:none" onclick="if(event.target===this)closeModal()">
-  <div class="mbox" id="mbox"></div>
+<!-- FILTER DIALOG (shown when dropping a BO) -->
+<div class="filter-dialog" id="filterDialog" style="display:none">
+  <div class="filter-box">
+    <h3 id="filterBoName">Beheerobject toevoegen</h3>
+    <p>Welke elementen wil je meenemen in de decompositie?</p>
+    <div class="filter-options">
+      <div class="filter-opt selected" id="fopt-ja" onclick="selectFilter('ja')">
+        <div class="filter-opt-dot" style="background:var(--green)"></div>
+        <div>
+          <div class="filter-opt-label">Alleen kritische elementen</div>
+          <div class="filter-opt-sub" id="fcount-ja">— elementen (ja)</div>
+        </div>
+      </div>
+      <div class="filter-opt" id="fopt-ja_opt" onclick="selectFilter('ja_opt')">
+        <div class="filter-opt-dot" style="background:var(--amber)"></div>
+        <div>
+          <div class="filter-opt-label">Kritisch + optioneel</div>
+          <div class="filter-opt-sub" id="fcount-ja_opt">— elementen (ja + optioneel)</div>
+        </div>
+      </div>
+      <div class="filter-opt" id="fopt-all" onclick="selectFilter('all')">
+        <div class="filter-opt-dot" style="background:var(--tx3)"></div>
+        <div>
+          <div class="filter-opt-label">Alle elementen</div>
+          <div class="filter-opt-sub" id="fcount-all">— elementen (ja + optioneel + nee)</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="cancelFilter()">Annuleren</button>
+      <button class="btn primary" onclick="confirmFilter()">Toevoegen</button>
+    </div>
+  </div>
 </div>
+
+<!-- GENERIC MODAL -->
+<div class="overlay" id="modal" style="display:none">
+  <div class="modal">
+    <h3 id="modalTitle"></h3>
+    <div id="modalBody"></div>
+    <div class="modal-btns" id="modalBtns"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
 // ════════════════════════════════════════
-//  TYPE CONFIG
+//  CONSTANTS
 // ════════════════════════════════════════
-const TLBL={portfolio:'Areaal Portefeuille',complex:'Complex',bo:'Beheerobject',eg:'Elementengroep',el:'Element',gb:'Gebrek'};
-const TCOL={portfolio:'#534AB7',complex:'#185FA5',bo:'#378ADD',eg:'#0D7A6E',el:'#1D9E75',gb:'#E24B4A'};
-const KIDS={portfolio:['complex'],complex:['bo'],bo:['eg'],eg:['el'],el:['gb'],gb:[]};
-const LIB={bo:BO,el:EL,bd:BD,gb:GB};
+const LEVELS = ['areaal','complex','bo','eg','el','sy','bd','gb'];
+const LEVEL_LABEL = {areaal:'Areaal',complex:'Complex',bo:'Beheerobject',eg:'Elementengroep',el:'Element',sy:'Systeem',bd:'Bouwdeel',gb:'Gebrek'};
+const LEVEL_COLOR = {areaal:'#534AB7',complex:'#1a5fa8',bo:'#2e86cc',eg:'#0e6e50',el:'#1aaa70',sy:'#5B8C5A',bd:'#b87200',gb:'#cc3a3a'};
+const KIDS = {areaal:['complex'],complex:['bo'],bo:['eg'],eg:['el'],el:['sy'],sy:['bd'],bd:['gb'],gb:[]};
 
 // ════════════════════════════════════════
 //  STATE
 // ════════════════════════════════════════
-let tree=[],idC=1,activeTab='bo',libMode='auto',selId=null,coll={},dragLib=null,dragNid=null;
-const mkId=()=>'n'+(idC++);
-const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const toast=(msg,ms=3000)=>{const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),ms)};
+let tree = [], idC = 1, projectName = 'Nieuw project';
+let selId = null, coll = {}, libMode = 'bo';
+let dragLib = null, dragNid = null;
+let filterPending = null, filterChoice = 'ja';
 
-function findN(id,ns=tree){for(const n of ns){if(n.id===id)return n;if(n.children){const r=findN(id,n.children);if(r)return r;}}return null}
-function findP(id,ns=tree,p=null){for(const n of ns){if(n.id===id)return p;if(n.children){const r=findP(id,n.children,n);if(r)return r;}}return null}
-function countD(n){let c=(n.children||[]).length;(n.children||[]).forEach(x=>c+=countD(x));return c}
-function addKid(par,child){if(!par.children)par.children=[];par.children.push(child)}
-function findFirstOfType(type,ns=tree){for(const n of ns){if(n.type===type)return n;if(n.children){const r=findFirstOfType(type,n.children);if(r)return r;}}return null}
-function libCode(type,name){return LIB[type]?.find(x=>x.n===name)?.c||''}
+const mkId = () => 'n' + (idC++);
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
 // ════════════════════════════════════════
-//  AUTO-SAVE naar localStorage (achtergrond)
-//  zodat terug navigeren vanuit inspectie.html
-//  de decompositie NIET verliest
+//  TREE HELPERS
 // ════════════════════════════════════════
-const LS_KEY = 'nen2767_decompositie_v2';
-
-function autoSave(){
-  try{
-    localStorage.setItem(LS_KEY, JSON.stringify({tree, idC, timestamp: Date.now()}));
-  }catch(e){}
+function findN(id, ns=tree){
+  for(const n of ns){if(n.id===id)return n;if(n.children){const r=findN(id,n.children);if(r)return r;}}return null;
+}
+function findP(id,ns=tree,p=null){
+  for(const n of ns){if(n.id===id)return p;if(n.children){const r=findP(id,n.children,n);if(r)return r;}}return null;
+}
+function addKid(parent,child){
+  if(!parent.children)parent.children=[];
+  parent.children.push(child);
+}
+function findFirstOfType(type,ns=tree){
+  for(const n of ns){if(n.type===type)return n;if(n.children){const r=findFirstOfType(type,n.children);if(r)return r;}}return null;
+}
+function libCode(type,name){
+  if(type==='bo')return BO.find(x=>x.n===name)?.c||'';
+  if(type==='el')return EL.find(x=>x.n===name)?.c||'';
+  if(type==='bd')return BD.find(x=>x.n===name)?.c||'';
+  if(type==='gb')return GB.find(x=>x.n===name)?.c||'';
+  return '';
 }
 
-function autoLoad(){
-  try{
-    const saved = localStorage.getItem(LS_KEY);
-    if(!saved) return false;
-    const data = JSON.parse(saved);
-    if(data.tree && data.tree.length > 0){
-      tree = data.tree;
-      idC = data.idC || 1;
-      return true;
-    }
-  }catch(e){}
-  return false;
-}
-
-// Auto-save elke 10 seconden en bij elke tree-wijziging
-setInterval(autoSave, 10000);
-
 // ════════════════════════════════════════
-//  SMART TREE BUILDER
+//  BUILD BO TREE
 // ════════════════════════════════════════
-function buildBoTree(boName){
-  const boSid=S.indexOf(boName);
-  if(boSid===-1||!M[boSid])return null;
-  // Fase-2 mapping format:
-  // M[boSid] = [[cplxSid, [[subBoSid, flag, [[egSid, [[elSid, elM, [gbSid,...]], ...]], ...]], ...]], ...]
-  const boNode={id:mkId(),type:'bo',label:boName,code:BO.find(x=>x.n===boName)?.c||'',children:[]};
-  for(const [cplxSid,boArr] of M[boSid]){
-    for(const [subBoSid,flag,egArr] of boArr){
-      for(const [egSid,elArr] of egArr){
-        const egNode={id:mkId(),type:'eg',label:S[egSid],code:'',children:[]};
-        for(const [elSid,elM,gbArr] of elArr){
-          const elName=S[elSid];
-          const elNode={id:mkId(),type:'el',label:elName,code:EL.find(x=>x.n===elName)?.c||'',meenemen:S[elM],children:[]};
-          for(const gbSid of gbArr){
-            const gbName=S[gbSid];
-            elNode.children.push({id:mkId(),type:'gb',label:gbName,code:GB.find(x=>x.n===gbName)?.c||'',children:[]});
-          }
-          egNode.children.push(elNode);
-        }
-        boNode.children.push(egNode);
+function buildBoTree(boName, filter='ja'){
+  const bo = BO.find(x=>x.n===boName);
+  const boNode = {id:mkId(),type:'bo',label:boName,code:bo?.c||'',def:bo?.d||'',children:[]};
+  const elRows = MAP_BO_EL[boName] || [];
+  // Filter elements
+  const allowed = filter==='ja' ? ['ja'] : filter==='ja_opt' ? ['ja','optioneel'] : ['ja','optioneel','nee'];
+  const eligible = elRows.filter(r=>allowed.includes(r.m));
+
+  // Group by eg
+  const egMap = {};
+  for(const r of eligible){
+    if(!egMap[r.eg]) egMap[r.eg] = [];
+    egMap[r.eg].push(r);
+  }
+
+  for(const [egName, rows] of Object.entries(egMap)){
+    const egNode = {id:mkId(),type:'eg',label:egName,code:'',children:[]};
+    for(const r of rows){
+      const el = EL.find(x=>x.n===r.el);
+      const elNode = {id:mkId(),type:'el',label:r.el,code:el?.c||'',def:el?.f||'',meenemen:r.m,children:[]};
+      // Add systemen/bouwdelen
+      const bdRows = MAP_EL_BD[r.el] || [];
+      const syMap = {};
+      for(const br of bdRows){
+        if(!syMap[br.sy]) syMap[br.sy] = [];
+        syMap[br.sy].push(br);
       }
+      for(const [syName, brows] of Object.entries(syMap)){
+        const syNode = {id:mkId(),type:'sy',label:syName,code:'',children:[]};
+        for(const br of brows){
+          const bd = BD.find(x=>x.n===br.bd);
+          const bdNode = {id:mkId(),type:'bd',label:br.bd,code:bd?.c||'',def:bd?.d||'',children:[]};
+          // Gebreken
+          const gbRows = MAP_BD_GB[br.bd] || [];
+          for(const gr of gbRows){
+            const gb = GB.find(x=>x.n===gr.gb);
+            bdNode.children.push({id:mkId(),type:'gb',label:gr.gb,code:gb?.c||'',gebrekgroep:gr.gg,gebreksoort:gr.s,belang:gb?.b||'',children:[]});
+          }
+          syNode.children.push(bdNode);
+        }
+        elNode.children.push(syNode);
+      }
+      egNode.children.push(elNode);
     }
+    boNode.children.push(egNode);
   }
   return boNode;
+}
+
+function countFilteredEls(boName, filter){
+  const rows = MAP_BO_EL[boName] || [];
+  if(filter==='ja') return rows.filter(r=>r.m==='ja').length;
+  if(filter==='ja_opt') return rows.filter(r=>r.m==='ja'||r.m==='optioneel').length;
+  return rows.length;
+}
+
+// ════════════════════════════════════════
+//  FILTER DIALOG
+// ════════════════════════════════════════
+function showFilterDialog(boName, targetNode){
+  filterPending = {boName, targetNode};
+  filterChoice = 'ja';
+  document.getElementById('filterBoName').textContent = boName + ' toevoegen';
+  document.getElementById('fcount-ja').textContent = countFilteredEls(boName,'ja') + ' elementen (alleen kritisch)';
+  document.getElementById('fcount-ja_opt').textContent = countFilteredEls(boName,'ja_opt') + ' elementen (kritisch + optioneel)';
+  document.getElementById('fcount-all').textContent = countFilteredEls(boName,'all') + ' elementen (alles)';
+  selectFilter('ja');
+  document.getElementById('filterDialog').style.display='flex';
+}
+function selectFilter(f){
+  filterChoice=f;
+  ['ja','ja_opt','all'].forEach(x=>document.getElementById('fopt-'+x).classList.toggle('selected',x===f));
+}
+function cancelFilter(){ document.getElementById('filterDialog').style.display='none'; filterPending=null; }
+function confirmFilter(){
+  if(!filterPending) return;
+  const {boName, targetNode} = filterPending;
+  const node = buildBoTree(boName, filterChoice);
+  addKid(targetNode, node);
+  coll[targetNode.id]=false;
+  renderTree(); autoSave();
+  toast('✓ '+boName+' toegevoegd ('+filterChoice+')');
+  document.getElementById('filterDialog').style.display='none';
+  filterPending=null;
 }
 
 // ════════════════════════════════════════
 //  LIBRARY
 // ════════════════════════════════════════
-function switchTab(t){activeTab=t;['bo','el','bd','gb'].forEach(x=>document.getElementById('tab-'+x).classList.toggle('active',x===t));renderLib()}
-function setMode(m){libMode=m;document.getElementById('mode-auto').classList.toggle('active',m==='auto');document.getElementById('mode-hand').classList.toggle('active',m==='hand');renderLib()}
-
+function setLibMode(m){
+  libMode=m;
+  ['bo','el','bd','gb'].forEach(x=>document.getElementById('mode-'+x).classList.toggle('on',x===m));
+  renderLib();
+}
 function renderLib(){
-  const q=(document.getElementById('libSearch').value||'').toLowerCase();
-  const arr=LIB[activeTab];
-  const items=arr.filter(i=>!q||i.n.toLowerCase().includes(q)||(i.c&&i.c.toString().toLowerCase().includes(q)));
-  const cl={bo:'#378ADD',el:'#1D9E75',bd:'#BA7517',gb:'#E24B4A'}[activeTab];
-  const isAuto=libMode==='auto'&&activeTab==='bo';
-  document.getElementById('libCount').textContent=isAuto?`🔗 Sleep een beheerobject → volledige hiërarchie`:`${items.length} van ${arr.length} items`;
-  const list=document.getElementById('libList');
-  if(!items.length){list.innerHTML='<div style="text-align:center;padding:20px;font-size:11px;color:var(--tx3)">Geen resultaten</div>';return;}
-  list.innerHTML=items.map(i=>`
-    <div class="lib-item" draggable="true" data-type="${activeTab}" data-name="${esc(i.n)}" title="${esc(i.n)}${isAuto?' → volledige decompositie automatisch':''}">
-      <span class="lib-dot" style="background:${cl}"></span>
-      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(i.n)}</span>
-      ${isAuto?'<span class="auto-badge">auto</span>':''}
-      <span class="lib-code">${esc(i.c)}</span>
+  const q = document.getElementById('sbSearch').value.toLowerCase().trim();
+  const arr = libMode==='bo'?BO : libMode==='el'?EL : libMode==='bd'?BD : GB;
+  const items = q ? arr.filter(x=>x.n.toLowerCase().includes(q)||(x.c||'').toLowerCase().includes(q)) : arr;
+  document.getElementById('sbCount').textContent = items.length+' van '+arr.length+' items';
+  const list = document.getElementById('sbList');
+  list.innerHTML = items.map(i=>`
+    <div class="lib-item" draggable="true" data-type="${libMode}" data-name="${esc(i.n)}" title="${esc(i.n)}">
+      <div class="lib-dot" style="background:${LEVEL_COLOR[libMode]||'#888'}"></div>
+      <span class="lib-name">${esc(i.n)}</span>
+      <span class="lib-code">${esc(i.c||'')}</span>
     </div>`).join('');
   list.querySelectorAll('.lib-item').forEach(el=>{
     el.addEventListener('dragstart',e=>{
-      dragLib={type:e.currentTarget.dataset.type,name:e.currentTarget.dataset.name,auto:isAuto};
+      if(dragNid){e.preventDefault();return;}
+      dragLib={type:e.currentTarget.dataset.type,name:e.currentTarget.dataset.name};
       dragNid=null;
       e.dataTransfer.effectAllowed='copy';
       e.dataTransfer.setData('text/plain',JSON.stringify(dragLib));
       setTimeout(()=>e.currentTarget.classList.add('dragging'),0);
     });
-    el.addEventListener('dragend',e=>{e.currentTarget.classList.remove('dragging');dragLib=null});
-    el.addEventListener('dblclick',e=>quickInsert(activeTab,e.currentTarget.dataset.name,isAuto));
+    el.addEventListener('dragend',e=>{
+      e.currentTarget.classList.remove('dragging');
+      setTimeout(()=>{dragLib=null;},50);
+    });
+    el.addEventListener('dblclick',e=>quickInsert(e.currentTarget.dataset.type,e.currentTarget.dataset.name));
   });
 }
 
-function quickInsert(type,name,auto=false){
-  if(!tree.length){toast('Maak eerst een Areaal Portefeuille aan');return}
-  if(auto&&type==='bo'){
+function quickInsert(type,name){
+  if(!tree.length){toast('Maak eerst een Areaal aan');return;}
+  const PARENT={complex:'areaal',bo:'complex',eg:'bo',el:'eg',sy:'el',bd:'sy',gb:'bd'};
+  if(type==='bo'){
     const cplx=findFirstOfType('complex');
-    if(!cplx){toast('Voeg eerst een Complex toe aan het Areaal');return}
-    const node=buildBoTree(name);
-    if(node){addKid(cplx,node);coll[cplx.id]=false;renderTree();autoSave();toast('✓ '+name+' + volledige hiërarchie toegevoegd');}
+    if(!cplx){toast('Voeg eerst een Complex toe');return;}
+    showFilterDialog(name,cplx);
     return;
   }
-  const PARENT={complex:'portfolio',bo:'complex',eg:'bo',el:'eg',gb:'el'};
   const par=findFirstOfType(PARENT[type]);
-  if(!par){toast('Geen '+TLBL[PARENT[type]]+' gevonden');return}
+  if(!par){toast('Geen '+LEVEL_LABEL[PARENT[type]]+' gevonden');return;}
   addKid(par,{id:mkId(),type,label:name,code:libCode(type,name),children:[]});
   coll[par.id]=false;renderTree();autoSave();toast(name+' toegevoegd');
 }
@@ -270,12 +447,9 @@ function renderTree(){
   const root=document.getElementById('treeRoot');
   if(!tree.length){
     root.innerHTML=`<div class="empty">
-      <div style="font-size:48px;opacity:.2">🏗</div>
-      <div style="font-size:13px;font-weight:500">Nog geen decompositie</div>
-      <div style="font-size:12px;color:var(--tx3);max-width:280px">
-        Klik <strong>+ Nieuw Areaal</strong>, voeg een <strong>Complex</strong> toe,<br>
-        en sleep een <strong>Beheerobject</strong> (automatisch = volledige hiërarchie)
-      </div>
+      <div class="empty-icon">🏗</div>
+      <div class="empty-title">Nog geen decompositie</div>
+      <div class="empty-sub">Klik <b>+ Areaal</b> om te starten, of sleep een beheerobject vanuit de bibliotheek op een Complex.</div>
     </div>`;
     return;
   }
@@ -284,42 +458,55 @@ function renderTree(){
 }
 
 function renderNode(node,depth){
+  const col=LEVEL_COLOR[node.type]||'#888';
   const hasKids=node.children&&node.children.length>0;
-  const isCollapsed=coll[node.id];
-  const col=TCOL[node.type]||'#888';
-  const pipes=Array.from({length:depth},()=>'<div class="ip"></div>').join('');
-  const mBadge=node.meenemen&&node.meenemen!=='ja'?`<span class="mbadge opt">${esc(node.meenemen)}</span>`:'';
-  const canKids=(KIDS[node.type]||[]).length>0;
-  return `<div class="node-block" id="blk-${node.id}" data-id="${node.id}" data-type="${node.type}">
-    <div class="node-row"><div class="node-indent">${pipes}</div>
-    <div class="node-body ${selId===node.id?'sel':''}" id="nb-${node.id}" data-id="${node.id}" data-type="${node.type}">
-      ${hasKids?`<span class="ntog" data-tog="${node.id}">${isCollapsed?'+':'−'}</span>`:`<span style="width:16px;flex-shrink:0"></span>`}
-      <span class="nico" style="background:${col}"></span>
-      <span class="nlab" title="${esc(node.label)}">${esc(node.label)}</span>
-      ${node.code?`<span class="ncod">${esc(node.code)}</span>`:''}
-      ${mBadge}
-      ${hasKids?`<span class="ncnt">${node.children.length}</span>`:''}
-      <span class="nact">
-        ${canKids?`<button class="na" data-act="add" data-id="${node.id}" title="Kind toevoegen">＋</button>`:''}
-        <button class="na" data-act="up"  data-id="${node.id}" title="Omhoog">↑</button>
-        <button class="na" data-act="dn"  data-id="${node.id}" title="Omlaag">↓</button>
-        <button class="na" data-act="ren" data-id="${node.id}" title="Naam wijzigen">✎</button>
-        <button class="na" data-act="del" data-id="${node.id}" title="Verwijderen">✕</button>
-      </span>
-    </div></div>
-    ${hasKids&&!isCollapsed?`<div class="node-children">${node.children.map(c=>renderNode(c,depth+1)).join('')}</div>`:''}
+  const isCollapsed=!!coll[node.id];
+  const pipes=Array.from({length:depth},()=>`<div class="indent-pipe"></div>`).join('');
+  let badge='';
+  if(node.meenemen==='ja') badge=`<span class="node-badge badge-ja">ja</span>`;
+  else if(node.meenemen==='optioneel') badge=`<span class="node-badge badge-opt">opt</span>`;
+  const canAdd=(KIDS[node.type]||[]).length>0;
+  return `<div class="node-block" id="blk-${node.id}">
+    <div class="node-row">
+      <div class="node-indent">${pipes}</div>
+      <div class="node-body${selId===node.id?' sel':''}" id="nb-${node.id}" data-id="${node.id}" data-type="${node.type}" draggable="true">
+        ${hasKids?`<span class="node-tog" data-tog="${node.id}">${isCollapsed?'+':'−'}</span>`:`<span style="width:16px;flex-shrink:0"></span>`}
+        <div class="node-dot" style="background:${col}"></div>
+        <span class="node-label" title="${esc(node.label)}">${esc(node.label)}</span>
+        ${node.code?`<span class="node-code">${esc(node.code)}</span>`:''}
+        ${badge}
+        ${hasKids?`<span class="node-count">${node.children.length}</span>`:''}
+        <div class="node-actions">
+          ${canAdd?`<button class="na" data-act="add" data-id="${node.id}" title="Kind toevoegen">＋</button>`:''}
+          <button class="na" data-act="up" data-id="${node.id}" title="Omhoog">↑</button>
+          <button class="na" data-act="dn" data-id="${node.id}" title="Omlaag">↓</button>
+          <button class="na" data-act="ren" data-id="${node.id}" title="Naam wijzigen">✎</button>
+          <button class="na" data-act="del" data-id="${node.id}" title="Verwijderen">✕</button>
+        </div>
+      </div>
+    </div>
+    ${hasKids&&!isCollapsed?`<div>${node.children.map(c=>renderNode(c,depth+1)).join('')}</div>`:''}
   </div>`;
 }
 
 function attachEvents(){
-  document.querySelectorAll('[data-tog]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();const id=el.dataset.tog;coll[id]=!coll[id];renderTree()}));
+  // Toggle collapse
+  document.querySelectorAll('[data-tog]').forEach(el=>el.addEventListener('click',e=>{
+    e.stopPropagation();coll[el.dataset.tog]=!coll[el.dataset.tog];renderTree();
+  }));
+  // Click → detail
   document.querySelectorAll('.node-body').forEach(el=>{
-    el.addEventListener('click',e=>{if(e.target.closest('[data-act]')||e.target.closest('[data-tog]'))return;showDetail(el.dataset.id)});
+    el.addEventListener('click',e=>{
+      if(e.target.closest('[data-act]')||e.target.closest('[data-tog]'))return;
+      showDetail(el.dataset.id);
+    });
   });
+  // Action buttons
   document.querySelectorAll('[data-act]').forEach(el=>el.addEventListener('click',e=>{
-    e.stopPropagation();const{id,act}=el.dataset;
-    if(act==='add')openAddChildModal(id);
-    if(act==='ren')openRenameModal(id);
+    e.stopPropagation();
+    const {id,act}=el.dataset;
+    if(act==='add')openAddChild(id);
+    if(act==='ren')openRename(id);
     if(act==='del')deleteNode(id);
     if(act==='up')moveNode(id,-1);
     if(act==='dn')moveNode(id,1);
@@ -327,45 +514,72 @@ function attachEvents(){
   // Drag tree nodes
   document.querySelectorAll('.node-body').forEach(el=>{
     el.setAttribute('draggable','true');
-    el.addEventListener('dragstart',e=>{dragNid=el.dataset.id;dragLib=null;e.dataTransfer.effectAllowed='move';setTimeout(()=>el.classList.add('dragging'),0)});
-    el.addEventListener('dragend',()=>{document.querySelectorAll('.node-body.dragging,.node-body.dov,.node-body.dinv').forEach(x=>x.classList.remove('dragging','dov','dinv'));dragNid=null});
+    el.addEventListener('dragstart',e=>{
+      if(dragLib){e.preventDefault();return;}
+      dragNid=el.dataset.id;dragLib=null;
+      e.dataTransfer.effectAllowed='move';
+      setTimeout(()=>el.classList.add('dragging'),0);
+    });
+    el.addEventListener('dragend',()=>{
+      document.querySelectorAll('.node-body.dragging,.node-body.drop-ok,.node-body.drop-no')
+        .forEach(x=>x.classList.remove('dragging','drop-ok','drop-no'));
+      dragNid=null;
+    });
     el.addEventListener('dragover',e=>{
       e.preventDefault();e.stopPropagation();
-      document.querySelectorAll('.node-body.dov,.node-body.dinv').forEach(x=>x.classList.remove('dov','dinv'));
+      if(dragLib) e.dataTransfer.dropEffect='copy';
+      else e.dataTransfer.dropEffect='move';
+      document.querySelectorAll('.node-body.drop-ok,.node-body.drop-no')
+        .forEach(x=>x.classList.remove('drop-ok','drop-no'));
       const tt=el.dataset.type;
       if(dragLib){
-        const ok=(dragLib.auto&&dragLib.type==='bo'&&tt==='complex')||(!dragLib.auto&&(KIDS[tt]||[]).includes(dragLib.type));
-        el.classList.add(ok?'dov':'dinv');
+        const ok=(KIDS[tt]||[]).includes(dragLib.type)||(dragLib.type==='bo'&&tt==='complex');
+        el.classList.add(ok?'drop-ok':'drop-no');
       } else if(dragNid&&dragNid!==el.dataset.id){
         const n=findN(dragNid);
-        el.classList.add((KIDS[tt]||[]).includes(n?.type)?'dov':'dinv');
+        el.classList.add((KIDS[tt]||[]).includes(n?.type)?'drop-ok':'drop-no');
       }
     });
-    el.addEventListener('dragleave',e=>{if(!el.contains(e.relatedTarget))el.classList.remove('dov','dinv')});
+    el.addEventListener('dragleave',e=>{
+      if(!el.contains(e.relatedTarget))el.classList.remove('drop-ok','drop-no');
+    });
     el.addEventListener('drop',e=>{
       e.preventDefault();e.stopPropagation();
-      el.classList.remove('dov','dinv');
+      el.classList.remove('drop-ok','drop-no');
       const tnode=findN(el.dataset.id);if(!tnode)return;
       if(dragLib){
-        const{type,name,auto}=dragLib;
-        if(auto&&type==='bo'&&tnode.type==='complex'){
-          const node=buildBoTree(name);
-          if(node){addKid(tnode,node);coll[tnode.id]=false;renderTree();autoSave();toast('✓ '+name+' + volledige decompositie toegevoegd');}
-        } else if(!auto&&(KIDS[tnode.type]||[]).includes(type)){
+        const {type,name}=dragLib;
+        if(type==='bo'&&tnode.type==='complex'){
+          showFilterDialog(name,tnode);
+        } else if((KIDS[tnode.type]||[]).includes(type)){
           addKid(tnode,{id:mkId(),type,label:name,code:libCode(type,name),children:[]});
           coll[tnode.id]=false;renderTree();autoSave();toast(name+' toegevoegd');
         } else {
-          toast('⚠ '+TLBL[type]+' past niet onder '+TLBL[tnode.type]);
+          toast('⚠ '+LEVEL_LABEL[type]+' past niet onder '+LEVEL_LABEL[tnode.type]);
         }
       } else if(dragNid&&dragNid!==tnode.id){
         const n=findN(dragNid);if(!n)return;
-        if(!(KIDS[tnode.type]||[]).includes(n.type)){toast('⚠ Kan hier niet plaatsen');return}
+        if(!(KIDS[tnode.type]||[]).includes(n.type)){toast('⚠ Kan hier niet plaatsen');return;}
         const op=findP(dragNid);
-        if(op)op.children=op.children.filter(c=>c.id!==dragNid);else tree=tree.filter(x=>x.id!==dragNid);
+        if(op)op.children=op.children.filter(c=>c.id!==dragNid);
+        else tree=tree.filter(x=>x.id!==dragNid);
         addKid(tnode,n);coll[tnode.id]=false;renderTree();autoSave();toast(n.label+' verplaatst');
       }
     });
   });
+}
+
+// ════════════════════════════════════════
+//  CANVAS DRAG (for dropping on empty canvas)
+// ════════════════════════════════════════
+function canvasDragover(e){e.preventDefault();}
+function canvasDrop(e){
+  if(e.target.closest('.node-body'))return;
+  if(dragLib&&dragLib.type==='areaal'){
+    const name=dragLib.name||'Areaal';
+    tree.push({id:mkId(),type:'areaal',label:name,code:'',children:[]});
+    renderTree();autoSave();toast(name+' toegevoegd');
+  }
 }
 
 // ════════════════════════════════════════
@@ -377,175 +591,193 @@ function moveNode(id,dir){
   const ni=idx+dir;if(ni<0||ni>=list.length)return;
   [list[idx],list[ni]]=[list[ni],list[idx]];renderTree();autoSave();
 }
-function expandAll(){function w(ns){ns.forEach(n=>{coll[n.id]=false;if(n.children)w(n.children)})}w(tree);renderTree()}
-function collapseAll(){function w(ns){ns.forEach(n=>{if(n.children?.length)coll[n.id]=true;if(n.children)w(n.children)})}w(tree);renderTree()}
 function deleteNode(id){
-  if(!confirm('Verwijder dit item en alle onderliggende items?'))return;
-  const p=findP(id);
-  if(p)p.children=p.children.filter(c=>c.id!==id);else tree=tree.filter(n=>n.id!==id);
-  if(selId===id)closeDetail();renderTree();autoSave();
+  const n=findN(id);if(!n)return;
+  const label=n.label;
+  const hasKids=n.children&&n.children.length>0;
+  if(hasKids){
+    showModal('Verwijderen','<p style="font-size:12px;line-height:1.6">Weet je zeker dat je <b>'+esc(label)+'</b> en alle onderliggende niveaus wilt verwijderen?</p>',
+      [{label:'Annuleren',cls:'btn',cb:closeModal},{label:'Verwijderen',cls:'btn danger',cb:()=>{doDelete(id);closeModal();}}]);
+  } else { doDelete(id); }
+}
+function doDelete(id){
+  const par=findP(id);
+  if(par)par.children=par.children.filter(c=>c.id!==id);
+  else tree=tree.filter(n=>n.id!==id);
+  if(selId===id){selId=null;closeDetail();}
+  renderTree();autoSave();toast('Verwijderd');
+}
+function openRename(id){
+  const n=findN(id);if(!n)return;
+  showModal('Naam wijzigen',`<div class="form-row"><label>Naam</label><input id="renInput" value="${esc(n.label)}" style="font-size:13px"></div>`,
+    [{label:'Annuleren',cls:'btn',cb:closeModal},
+     {label:'Opslaan',cls:'btn primary',cb:()=>{
+       const v=document.getElementById('renInput').value.trim();
+       if(v){n.label=v;renderTree();autoSave();if(selId===id)showDetail(id);}
+       closeModal();
+     }}]);
+  setTimeout(()=>{const el=document.getElementById('renInput');el&&el.select();},50);
+}
+function openAddChild(parentId){
+  const par=findN(parentId);if(!par)return;
+  const childType=(KIDS[par.type]||[])[0];
+  if(!childType)return;
+  showModal('Toevoegen — '+LEVEL_LABEL[childType],
+    `<div class="form-row"><label>Naam</label><input id="addInput" placeholder="${LEVEL_LABEL[childType]} naam" style="font-size:13px"></div>`,
+    [{label:'Annuleren',cls:'btn',cb:closeModal},
+     {label:'Toevoegen',cls:'btn primary',cb:()=>{
+       const v=document.getElementById('addInput').value.trim();
+       if(v){addKid(par,{id:mkId(),type:childType,label:v,code:'',children:[]});coll[parentId]=false;renderTree();autoSave();toast(v+' toegevoegd');}
+       closeModal();
+     }}]);
+  setTimeout(()=>{const el=document.getElementById('addInput');el&&el.focus();},50);
+}
+function addNode(type,parentId){
+  if(type==='areaal'){
+    showModal('Nieuw Areaal',`<div class="form-row"><label>Naam</label><input id="nodeInput" placeholder="bijv. Waterschap AGV" style="font-size:13px"></div>`,
+      [{label:'Annuleren',cls:'btn',cb:closeModal},
+       {label:'Toevoegen',cls:'btn primary',cb:()=>{
+         const v=document.getElementById('nodeInput').value.trim();
+         if(v){tree.push({id:mkId(),type:'areaal',label:v,code:'',children:[]});renderTree();autoSave();toast(v+' aangemaakt');}
+         closeModal();
+       }}]);
+    setTimeout(()=>{const el=document.getElementById('nodeInput');el&&el.focus();},50);
+  }
+}
+function expandAll(){
+  function walk(ns){for(const n of ns){coll[n.id]=false;if(n.children)walk(n.children);}}
+  walk(tree);renderTree();
+}
+function collapseAll(){
+  function walk(ns){for(const n of ns){if(n.children&&n.children.length)coll[n.id]=true;if(n.children)walk(n.children);}}
+  walk(tree);renderTree();
 }
 
 // ════════════════════════════════════════
 //  DETAIL PANEL
 // ════════════════════════════════════════
 function showDetail(id){
-  const node=findN(id);if(!node)return;
   selId=id;
+  const n=findN(id);if(!n){closeDetail();return;}
   document.getElementById('detailPanel').classList.add('open');
-  document.getElementById('dpTitle').textContent=TLBL[node.type]||node.type;
-  const col=TCOL[node.type]||'#888';
-  let libInfo='';
-  if(node.type==='bo'){const b=BO.find(x=>x.n===node.label);if(b?.d)libInfo+=`<div class="dpf"><div class="dpl">Definitie</div><div class="dpv">${esc(b.d)}</div></div>`;}
-  else if(node.type==='el'){const e=EL.find(x=>x.n===node.label);if(e?.g)libInfo+=`<div class="dpf"><div class="dpl">Elementengroep</div><div class="dpv">${esc(e.g)}</div></div>`;if(e?.f)libInfo+=`<div class="dpf"><div class="dpl">Functie</div><div class="dpv">${esc(e.f)}</div></div>`;}
-  else if(node.type==='bd'){const b=BD.find(x=>x.n===node.label);if(b?.d)libInfo+=`<div class="dpf"><div class="dpl">Definitie</div><div class="dpv">${esc(b.d)}</div></div>`;}
-  else if(node.type==='gb'){if(node.gebrekgroep)libInfo+=`<div class="dpf"><div class="dpl">Gebrekgroep</div><div class="dpv">${esc(node.gebrekgroep)}</div></div>`;const g=GB.find(x=>x.n===node.label);if(g?.t)libInfo+=`<div class="dpf"><div class="dpl">Type</div><div class="dpv">${esc(g.t)}</div></div>`;if(g?.e)libInfo+=`<div class="dpf"><div class="dpl">Ernst</div><div class="dpv">${esc(g.e)}</div></div>`;}
-  if(node.meenemen&&node.meenemen!=='ja')libInfo+=`<div class="dpf"><div class="dpl">Meenemen</div><div class="dpv">${esc(node.meenemen)}</div></div>`;
-  const canKids=(KIDS[node.type]||[]).length>0;
-
-  // Fase 2 knop alleen voor BO nodes
-  const fase2Block = node.type==='bo' ? `
-    <div class="dpf" style="background:var(--green-l);border-radius:6px;padding:8px 10px;border:none">
-      <div class="dpl" style="color:var(--green)">Fase 2 — Conditiemeting</div>
-      <div class="dpv" style="color:var(--green);font-size:11px;margin-bottom:8px">Voer een NEN 2767 conditiemeting uit voor dit beheerobject</div>
-      <button class="btn gr" style="width:100%;justify-content:center;font-size:12px" onclick="startInspectie('${id}')">📋 Inspectie starten</button>
-    </div>` : '';
-
-  document.getElementById('dpBody').innerHTML=`
-    <div class="dpf"><div class="dpl">Naam</div><div class="dpv" style="font-weight:500">${esc(node.label)}</div></div>
-    <div class="dpf"><div class="dpl">Type</div><div class="dpv"><span class="tbadge" style="background:${col}22;color:${col}"><span style="width:6px;height:6px;border-radius:50%;background:${col};display:inline-block"></span>${TLBL[node.type]||node.type}</span></div></div>
-    ${node.code?`<div class="dpf"><div class="dpl">NEN 2767 Code</div><div class="dpv" style="font-family:monospace">${esc(node.code)}</div></div>`:''}
-    ${libInfo}
-    <div class="dpf"><div class="dpl">Onderliggende items</div><div class="dpv">${countD(node)}</div></div>
-    ${fase2Block}
-    <div class="dp-acts">
-      ${canKids?`<button class="btn" onclick="openAddChildModal('${id}')">＋ Kind toevoegen</button>`:''}
-      <button class="btn" onclick="openRenameModal('${id}')">✎ Naam wijzigen</button>
-      <button class="btn" onclick="moveNode('${id}',-1)">↑ Omhoog</button>
-      <button class="btn" onclick="moveNode('${id}',1)">↓ Omlaag</button>
-      <button class="btn dan" onclick="deleteNode('${id}')">✕ Verwijderen</button>
-    </div>`;
+  document.getElementById('dpTitle').textContent=LEVEL_LABEL[n.type]+' — Details';
+  let html=`<div class="dp-field"><div class="dp-label">Type</div><div class="dp-value"><span class="dp-tag" style="background:${LEVEL_COLOR[n.type]}22;color:${LEVEL_COLOR[n.type]};border:1px solid ${LEVEL_COLOR[n.type]}44">${LEVEL_LABEL[n.type]}</span></div></div>`;
+  html+=`<div class="dp-field"><div class="dp-label">Naam</div><div class="dp-value">${esc(n.label)}</div></div>`;
+  if(n.code)html+=`<div class="dp-field"><div class="dp-label">Code</div><div class="dp-value" style="font-family:monospace">${esc(n.code)}</div></div>`;
+  if(n.def)html+=`<div class="dp-field"><div class="dp-label">Definitie</div><div class="dp-value" style="font-size:11px;line-height:1.6;color:var(--tx2)">${esc(n.def)}</div></div>`;
+  if(n.meenemen)html+=`<div class="dp-field"><div class="dp-label">Meenemen</div><div class="dp-value"><span class="node-badge ${n.meenemen==='ja'?'badge-ja':'badge-opt'}">${n.meenemen}</span></div></div>`;
+  if(n.gebrekgroep)html+=`<div class="dp-field"><div class="dp-label">Gebrekgroep</div><div class="dp-value">${esc(n.gebrekgroep)}</div></div>`;
+  if(n.gebreksoort)html+=`<div class="dp-field"><div class="dp-label">Gebreksoort</div><div class="dp-value" style="font-size:11px">${esc(n.gebreksoort)}</div></div>`;
+  if(n.belang)html+=`<div class="dp-field"><div class="dp-label">Belang</div><div class="dp-value">${esc(n.belang)}</div></div>`;
+  if(n.children&&n.children.length)html+=`<div class="dp-field"><div class="dp-label">Kinderen</div><div class="dp-value">${n.children.length} items</div></div>`;
+  html+=`<div class="dp-field" style="display:flex;flex-direction:column;gap:6px">
+    <button class="btn" onclick="openRename('${n.id}')" style="width:100%">✎ Naam wijzigen</button>
+    <button class="btn danger" onclick="deleteNode('${n.id}')" style="width:100%">✕ Verwijderen</button>
+  </div>`;
+  document.getElementById('dpBody').innerHTML=html;
+  // Re-render to show selection
   renderTree();
 }
-function closeDetail(){selId=null;document.getElementById('detailPanel').classList.remove('open');renderTree()}
+function closeDetail(){selId=null;document.getElementById('detailPanel').classList.remove('open');renderTree();}
 
 // ════════════════════════════════════════
-//  FASE 2 — Inspectie starten
-//  Sla eerst decompositie op in localStorage
-//  zodat terugnavigeren niets verliest
+//  MODAL
 // ════════════════════════════════════════
-function startInspectie(id){
-  const node=findN(id);if(!node)return;
-  autoSave(); // Bewaar huidige staat EERST
-  const boName=encodeURIComponent(node.label);
-  window.location.href='inspectie.html?bo='+boName;
+function showModal(title,bodyHtml,buttons){
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalBody').innerHTML=bodyHtml;
+  document.getElementById('modalBtns').innerHTML=buttons.map(b=>`<button class="${b.cls}">${esc(b.label)}</button>`).join('');
+  document.getElementById('modalBtns').querySelectorAll('button').forEach((btn,i)=>btn.addEventListener('click',buttons[i].cb));
+  document.getElementById('modal').style.display='flex';
+}
+function closeModal(){document.getElementById('modal').style.display='none';}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeModal();});
+
+// ════════════════════════════════════════
+//  TOAST
+// ════════════════════════════════════════
+let _toastTimer;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
 }
 
 // ════════════════════════════════════════
-//  MODALS
+//  SAVE / LOAD
 // ════════════════════════════════════════
-function openAddModal(type,parentId){
-  document.getElementById('mbox').innerHTML=`
-    <h3>Nieuw ${TLBL[type]||type}</h3>
-    <div class="fr"><label>Naam *</label><input id="mN" type="text" placeholder="${type==='portfolio'?'bijv. Waterschap AGV':type==='complex'?'bijv. Polder Groot-Mijdrecht':'Naam'}"></div>
-    <div class="fr"><label>Code (optioneel)</label><input id="mC" type="text" placeholder="bijv. P01"></div>
-    <div class="mbtns"><button class="btn" onclick="closeModal()">Annuleren</button><button class="btn pr" onclick="doAdd('${type}','${parentId||''}')">Toevoegen</button></div>`;
-  document.getElementById('moverlay').style.display='flex';
-  setTimeout(()=>document.getElementById('mN')?.focus(),50);
+function autoSave(){
+  try{localStorage.setItem('nen2767_tree',JSON.stringify({tree,idC,projectName}));}catch(e){}
 }
-function openAddChildModal(pid){
-  const p=findN(pid);if(!p)return;
-  const ct=KIDS[p.type];if(!ct||!ct.length){toast('Geen kinderen mogelijk voor dit type');return}
-  openAddModal(ct[0],pid);
-}
-function openRenameModal(id){
-  const n=findN(id);if(!n)return;
-  document.getElementById('mbox').innerHTML=`
-    <h3>Naam wijzigen</h3>
-    <div class="fr"><label>Naam</label><input id="rN" type="text" value="${esc(n.label)}"></div>
-    <div class="fr"><label>Code</label><input id="rC" type="text" value="${esc(n.code||'')}"></div>
-    <div class="mbtns"><button class="btn" onclick="closeModal()">Annuleren</button><button class="btn pr" onclick="doRename('${id}')">Opslaan</button></div>`;
-  document.getElementById('moverlay').style.display='flex';
-  setTimeout(()=>document.getElementById('rN')?.focus(),50);
-}
-function doAdd(type,pid){
-  const name=document.getElementById('mN')?.value?.trim();if(!name){toast('Vul een naam in');return}
-  const code=document.getElementById('mC')?.value?.trim()||'';
-  const node={id:mkId(),type,label:name,code,children:[]};
-  if(pid){const p=findN(pid);if(p){addKid(p,node);coll[pid]=false}}else tree.push(node);
-  closeModal();renderTree();autoSave();toast(name+' toegevoegd');
-}
-function doRename(id){
-  const n=findN(id);if(!n)return;
-  const name=document.getElementById('rN')?.value?.trim();if(name)n.label=name;
-  n.code=document.getElementById('rC')?.value?.trim()||n.code;
-  closeModal();if(selId===id)showDetail(id);else renderTree();autoSave();
-}
-function closeModal(){document.getElementById('moverlay').style.display='none'}
-
-// ════════════════════════════════════════
-//  OPSLAAN / LADEN (bestand op laptop)
-// ════════════════════════════════════════
-function saveToFile(){
-  const data=JSON.stringify({version:'2.0',savedAt:new Date().toISOString(),tree,idC},null,2);
+function saveJSON(){
+  const data=JSON.stringify({version:1,projectName,tree,idC},null,2);
   const blob=new Blob([data],{type:'application/json'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download='NEN2767_Decompositie_'+new Date().toISOString().split('T')[0]+'.json';
-  a.click();URL.revokeObjectURL(url);
-  toast('Decompositie opgeslagen als JSON-bestand ✓');
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=(projectName||'decompositie').replace(/[^a-z0-9]/gi,'_')+'.json';
+  a.click();toast('💾 Opgeslagen als JSON');
 }
-
-function loadFromFile(input){
+function loadJSON(input){
   const file=input.files[0];if(!file)return;
   const reader=new FileReader();
-  reader.onload=ev=>{
+  reader.onload=e=>{
     try{
-      const data=JSON.parse(ev.target.result);
-      if(data.tree){tree=data.tree;idC=data.idC||1;renderTree();autoSave();toast('Decompositie geladen: '+file.name);}
-      else toast('Ongeldig bestandsformaat');
-    }catch(e){toast('Fout bij laden: '+e.message);}
+      const data=JSON.parse(e.target.result);
+      tree=data.tree||[];idC=data.idC||1;projectName=data.projectName||'Project';
+      document.getElementById('projectTitle').textContent=projectName;
+      coll={};renderTree();autoSave();toast('📂 '+file.name+' geladen');
+    }catch(err){toast('⚠ Ongeldig bestand');}
   };
   reader.readAsText(file);
   input.value='';
 }
-
+function newProject(){
+  showModal('Nieuw project',`<div class="form-row"><label>Projectnaam</label><input id="projInput" value="${esc(projectName)}" style="font-size:13px"></div>`,
+    [{label:'Annuleren',cls:'btn',cb:closeModal},
+     {label:'Aanmaken',cls:'btn primary',cb:()=>{
+       const v=document.getElementById('projInput').value.trim()||'Nieuw project';
+       projectName=v;tree=[];idC=1;coll={};selId=null;
+       document.getElementById('projectTitle').textContent=v;
+       renderTree();autoSave();closeModal();toast('Nieuw project: '+v);
+     }}]);
+  setTimeout(()=>{const el=document.getElementById('projInput');el&&el.select();},50);
+}
+function clearAll(){
+  if(!tree.length)return;
+  showModal('Alles leegmaken','<p style="font-size:12px;line-height:1.6">Weet je zeker dat je de volledige decompositie wilt wissen? Dit kan niet ongedaan worden gemaakt.</p>',
+    [{label:'Annuleren',cls:'btn',cb:closeModal},
+     {label:'Leegmaken',cls:'btn danger',cb:()=>{tree=[];idC=1;coll={};selId=null;renderTree();autoSave();closeModal();toast('Decompositie geleegd');}}]);
+}
 function exportCSV(){
-  const rows=[['Niveau','Type','Naam','Code','Meenemen','Pad']];
-  function walk(n,path,lvl){const p=path?path+' > '+n.label:n.label;rows.push([lvl,TLBL[n.type]||n.type,n.label,n.code||'',n.meenemen||'',path||'(root)']);(n.children||[]).forEach(c=>walk(c,p,lvl+1));}
-  tree.forEach(n=>walk(n,'',0));
-  const csv=rows.map(r=>r.map(c=>'"'+String(c||'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  const rows=[['Niveau','Type','Naam','Code','Meenemen','Gebrekgroep','Gebreksoort','Belang']];
+  function walk(n,depth){
+    rows.push([depth,LEVEL_LABEL[n.type],n.label,n.code||'',n.meenemen||'',n.gebrekgroep||'',n.gebreksoort||'',n.belang||'']);
+    if(n.children&&!coll[n.id])n.children.forEach(c=>walk(c,depth+1));
+  }
+  tree.forEach(n=>walk(n,0));
+  const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
   const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download='NEN2767_Decompositie_'+new Date().toISOString().split('T')[0]+'.csv';a.click();URL.revokeObjectURL(url);
-  toast('Excel/CSV geëxporteerd ✓');
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=(projectName||'decompositie').replace(/[^a-z0-9]/gi,'_')+'.csv';
+  a.click();toast('⬇ CSV geëxporteerd');
 }
 
 // ════════════════════════════════════════
 //  INIT
 // ════════════════════════════════════════
-document.getElementById('libSearch').addEventListener('input',renderLib);
-document.getElementById('canvas').addEventListener('dragover',e=>e.preventDefault());
-document.getElementById('canvas').addEventListener('drop',e=>{
-  e.preventDefault();
-  if(dragLib&&dragLib.type==='portfolio')openAddModal('portfolio',null);
-});
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeModal();closeDetail();}
-  if((e.metaKey||e.ctrlKey)&&e.key==='s'){e.preventDefault();saveToFile();}
-});
-
-// Laad eerder opgeslagen decompositie uit localStorage bij opstarten
-window.addEventListener('load',()=>{
-  const restored = autoLoad();
+function init(){
+  // Restore from localStorage
+  try{
+    const saved=localStorage.getItem('nen2767_tree');
+    if(saved){
+      const data=JSON.parse(saved);
+      tree=data.tree||[];idC=data.idC||1;projectName=data.projectName||'Nieuw project';
+      document.getElementById('projectTitle').textContent=projectName;
+    }
+  }catch(e){}
   renderLib();
   renderTree();
-  if(restored) toast('Decompositie hersteld ✓ ('+tree.length+' areaal/en)');
-});
-
-// Bewaar ook bij het verlaten van de pagina
-window.addEventListener('beforeunload',()=>autoSave());
+}
+init();
 </script>
 </body>
 </html>
