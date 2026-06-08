@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
 <title>NEN 2767 — Fase 2 Conditiemeting</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a5fa8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <script src="mapping.js"></script>
 <style>
 :root{
@@ -203,6 +208,36 @@ body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--
 .mob-nav-btn{display:none;padding:5px 10px;border:1px solid rgba(255,255,255,.3);border-radius:var(--r);font-size:12px;cursor:pointer;background:rgba(255,255,255,.12);color:#fff;font-family:inherit}
 @media(max-width:768px){.mob-nav-btn{display:flex;align-items:center;gap:4px}}
 
+/* HISTORY */
+.hist-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:border-color .12s}
+.hist-card:hover{border-color:var(--blue)}
+.hist-card.active-hist{border-color:var(--blue);background:var(--blue-l)}
+.hist-score{width:36px;height:36px;border-radius:8px;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.hist-info{flex:1;min-width:0}
+.hist-name{font-size:12px;font-weight:600}
+.hist-meta{font-size:10px;color:var(--tx3)}
+.hist-actions{display:flex;gap:4px;flex-shrink:0}
+.hist-btn{padding:3px 8px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:10px;cursor:pointer;background:var(--sur2);color:var(--tx2);font-family:inherit}
+.hist-btn:hover{background:var(--sur);border-color:var(--blue);color:var(--blue)}
+.hist-btn.danger{border-color:var(--red);color:var(--red)}
+.hist-btn.danger:hover{background:var(--red-l)}
+/* BULK SCORE */
+.bulk-bar{background:var(--sur2);border-radius:var(--r);padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;border:1px solid var(--bdr)}
+.bulk-label{font-size:11px;color:var(--tx2);font-weight:500;flex-shrink:0}
+.bulk-btns{display:flex;gap:3px}
+.bulk-btn{width:30px;height:30px;border:2px solid transparent;border-radius:5px;font-size:13px;font-weight:800;cursor:pointer;color:#fff;transition:all .12s;opacity:.65}
+.bulk-btn:hover{opacity:.9;transform:scale(1.06)}
+/* SIGNATURE */
+.sig-canvas{border:1px solid var(--bdr2);border-radius:var(--r);background:#fff;cursor:crosshair;width:100%;height:80px;display:block;touch-action:none}
+.sig-label{font-size:10px;color:var(--tx3);margin-bottom:4px}
+/* COMPARE */
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:540px){.compare-grid{grid-template-columns:1fr}}
+.compare-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:10px;font-size:11px}
+.compare-header{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;margin-bottom:6px}
+.trend-up{color:#c01020}
+.trend-down{color:#0e6e50}
+.trend-same{color:var(--tx3)}
 /* TOAST */
 .toast{position:fixed;bottom:20px;right:20px;background:var(--tx);color:var(--bg);padding:9px 16px;border-radius:var(--r);font-size:12px;z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none;max-width:320px}
 .toast.show{opacity:1}
@@ -232,6 +267,7 @@ body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--
     <button class="tbtn" id="btnSave" onclick="saveInspectie()" style="display:none">💾 Opslaan</button>
     <button class="tbtn" id="btnSummary" onclick="showSummary()" style="display:none">📊 Samenvatting</button>
     <button class="tbtn accent" id="btnReport" onclick="generateReport()" style="display:none">📄 Rapport</button>
+    <button class="tbtn" id="btnExcel" onclick="exportExcel()" style="display:none">📊 Excel</button>
     <button class="tbtn" onclick="goSetup()" style="font-size:10px;opacity:.7">← Terug</button>
     <button class="tbtn" onclick="window.open('index.html','_blank')" title="Terug naar Fase 1 — Decompositie" style="font-size:10px;opacity:.7">🏗 Fase 1</button>
   </div>
@@ -324,6 +360,47 @@ body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--
         <input type="file" id="objFotoFile" accept="image/*" style="display:none" onchange="loadObjFoto(this)">
       </div>
       <img id="objFotoPreview" style="max-width:100%;max-height:200px;object-fit:cover;border-radius:var(--r);margin-top:10px;display:none;border:1px solid var(--bdr)">
+    </div>
+
+    <!-- HANDTEKENINGEN -->
+    <div class="setup-card">
+      <h2>✍️ Handtekeningen</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <div>
+          <div class="sig-label">Opgesteld door</div>
+          <canvas class="sig-canvas" id="sig1" width="220" height="80"></canvas>
+          <div style="display:flex;gap:4px;margin-top:4px">
+            <button onclick="clearSig(1)" style="font-size:10px;padding:2px 8px;border:1px solid var(--bdr2);border-radius:4px;cursor:pointer;background:var(--sur2);font-family:inherit">Wissen</button>
+          </div>
+        </div>
+        <div>
+          <div class="sig-label">Gecontroleerd door</div>
+          <canvas class="sig-canvas" id="sig2" width="220" height="80"></canvas>
+          <div style="display:flex;gap:4px;margin-top:4px">
+            <button onclick="clearSig(2)" style="font-size:10px;padding:2px 8px;border:1px solid var(--bdr2);border-radius:4px;cursor:pointer;background:var(--sur2);font-family:inherit">Wissen</button>
+          </div>
+        </div>
+        <div>
+          <div class="sig-label">Geautoriseerd door</div>
+          <canvas class="sig-canvas" id="sig3" width="220" height="80"></canvas>
+          <div style="display:flex;gap:4px;margin-top:4px">
+            <button onclick="clearSig(3)" style="font-size:10px;padding:2px 8px;border:1px solid var(--bdr2);border-radius:4px;cursor:pointer;background:var(--sur2);font-family:inherit">Wissen</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY PANEL -->
+    <div class="setup-card" id="cardHistory" style="display:none">
+      <h2 style="display:flex;align-items:center;justify-content:space-between">
+        <span>📚 Eerdere inspecties</span>
+        <button onclick="clearHistory()" style="font-size:10px;color:var(--red);background:none;border:none;cursor:pointer;font-family:inherit">Alles wissen</button>
+      </h2>
+      <div id="histList"></div>
+      <div id="compareSection" style="display:none;margin-top:12px">
+        <div style="font-size:12px;font-weight:600;margin-bottom:8px">📊 Vergelijking</div>
+        <div class="compare-grid" id="compareGrid"></div>
+      </div>
     </div>
 
     <button class="start-btn" id="startBtn" onclick="startInspectie()" disabled>
@@ -446,6 +523,8 @@ function init(){
       toast('↩ Sessie hersteld'+(boName?' — '+boName:'')+' ('+Object.keys(d.inspData||{}).filter(k=>(d.inspData[k].score||0)>0).length+' beoordeeld)');
     }
   }catch(e){}
+  renderHistory();
+  initAllSigPads();
 }
 
 function renderBOGrid(arr){
@@ -467,6 +546,7 @@ function selectBO(name){
   document.querySelectorAll('.bo-card').forEach(c=>c.classList.toggle('sel',c.dataset.name===name));
   document.getElementById('startBtn').disabled=false;
   buildBDList();
+  renderHistory();
 }
 function selectLevel(l){
   reportLevel=l;
@@ -577,6 +657,7 @@ function startInspectie(){
   document.getElementById('btnSave').style.display='';
   document.getElementById('btnSummary').style.display='';
   document.getElementById('btnReport').style.display='';
+  document.getElementById('btnExcel').style.display='';
   document.getElementById('navBoName').textContent=selectedBO;
   currentBdIdx=0;
   renderNav();
@@ -664,7 +745,7 @@ function renderNav(){
 function renderBDCard(idx){
   if(idx<0||idx>=bdList.length)return;
   currentBdIdx=idx;
-  const b=bdList[idx];
+  const b2=bdList[idx];const b=b2;
   const d=inspData[b.bdId];
   renderNav();
 
@@ -944,6 +1025,14 @@ function generateReport(){
 }
 function _generateReport(){
   const m=getMeta()||meta;
+  const sig1=getSigData(1),sig2=getSigData(2),sig3=getSigData(3);
+  const sigHtml=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:20px;padding-top:16px;border-top:2px solid #eee">
+    ${[[sig1,m.opgesteld||m.inspecteur||'Opgesteld door'],[sig2,m.gecontroleerd||'Gecontroleerd door'],[sig3,m.geautoriseerd||'Geautoriseerd door']].map(([sig,lbl])=>`
+    <div style="text-align:center">
+      ${sig?`<img src="${sig}" style="height:50px;object-fit:contain;border-bottom:1px solid #ccc;width:100%">`:'<div style="height:50px;border-bottom:1px solid #ccc"></div>'}
+      <div style="font-size:10px;color:#888;margin-top:4px">${lbl}</div>
+    </div>`).join('')}
+  </div>`;
   // Only scored items
   const scoredBDs=bdList.filter(b=>inspData[b.bdId].score>0);
   const unscoredCount=bdList.length-scoredBDs.length;
@@ -1168,6 +1257,7 @@ function _generateReport(){
     ${m.draaiuren?`<span class="lbl">Draaiurenstand</span><span class="val">${esc(m.draaiuren)}</span>`:''}
     <span class="lbl">Beoordeeld</span><span class="val">${scoredBDs.length} van ${bdList.length} bouwdelen</span>
   </div>
+  ${sigHtml}
   <div class="cover-bar" style="margin-top:24px"></div>
   <div style="font-size:9px;color:#aaa;text-align:center;margin-top:4px">${esc(m.opdrachtgever||'')} | NEN 2767 Conditiemeting | ${now}</div>
 
@@ -1349,12 +1439,229 @@ function openLightbox(src){document.getElementById('lightboxImg').src=src;docume
 function closeLightbox(){document.getElementById('lightbox').style.display='none';}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});
 
+// ════════════════════════════════════════════════
+//  HANDTEKENINGEN
+// ════════════════════════════════════════════════
+const sigPads={};
+function initSigPad(canvasId){
+  const canvas=document.getElementById(canvasId);
+  if(!canvas||sigPads[canvasId])return;
+  const ctx=canvas.getContext('2d');
+  let drawing=false,lastX=0,lastY=0;
+  ctx.strokeStyle='#1a1a18';ctx.lineWidth=1.8;ctx.lineCap='round';
+  function getPos(e){
+    const r=canvas.getBoundingClientRect();
+    const src=e.touches?e.touches[0]:e;
+    return{x:(src.clientX-r.left)*(canvas.width/r.width),y:(src.clientY-r.top)*(canvas.height/r.height)};
+  }
+  function start(e){e.preventDefault();drawing=true;const p=getPos(e);lastX=p.x;lastY=p.y;}
+  function draw(e){
+    e.preventDefault();if(!drawing)return;
+    const p=getPos(e);
+    ctx.beginPath();ctx.moveTo(lastX,lastY);ctx.lineTo(p.x,p.y);ctx.stroke();
+    lastX=p.x;lastY=p.y;
+  }
+  function stop(){drawing=false;}
+  canvas.addEventListener('mousedown',start);canvas.addEventListener('mousemove',draw);
+  canvas.addEventListener('mouseup',stop);canvas.addEventListener('mouseleave',stop);
+  canvas.addEventListener('touchstart',start,{passive:false});
+  canvas.addEventListener('touchmove',draw,{passive:false});
+  canvas.addEventListener('touchend',stop);
+  sigPads[canvasId]=ctx;
+}
+function clearSig(n){
+  const canvas=document.getElementById('sig'+n);
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+function getSigData(n){
+  const canvas=document.getElementById('sig'+n);
+  if(!canvas)return null;
+  const ctx=canvas.getContext('2d');
+  const data=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+  const hasContent=data.some((_,i)=>i%4===3&&data[i]>10);
+  return hasContent?canvas.toDataURL('image/png'):null;
+}
+function initAllSigPads(){setTimeout(()=>{[1,2,3].forEach(n=>initSigPad('sig'+n));},200);}
+
+// ════════════════════════════════════════════════
+//  HISTORY — meerdere inspecties bewaren
+// ════════════════════════════════════════════════
+function getHistory(){
+  try{return JSON.parse(localStorage.getItem('nen2767_history')||'[]');}catch{return[];}
+}
+function saveToHistory(){
+  if(!selectedBO||!bdList.length)return;
+  const m=getMeta();
+  const scored=bdList.filter(b=>inspData[b.bdId].score>0).length;
+  const scores=bdList.map(b=>inspData[b.bdId].score).filter(Boolean);
+  const avg=scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length*10)/10:null;
+  const entry={
+    id:'insp_'+Date.now(),
+    bo:selectedBO,
+    datum:m.datum||new Date().toISOString().split('T')[0],
+    inspecteur:m.inspecteur||'',
+    opdrachtgever:m.opdrachtgever||'',
+    scored,total:bdList.length,avg,
+    meta:m,inspData:JSON.parse(JSON.stringify(inspData)),
+    bdList:JSON.parse(JSON.stringify(bdList)),
+    savedAt:new Date().toISOString(),
+  };
+  const hist=getHistory();
+  // Replace existing entry for same bo+datum or add new
+  const existIdx=hist.findIndex(h=>h.bo===entry.bo&&h.datum===entry.datum);
+  if(existIdx>=0)hist[existIdx]=entry;else hist.unshift(entry);
+  // Keep max 20 entries
+  if(hist.length>20)hist.splice(20);
+  try{localStorage.setItem('nen2767_history',JSON.stringify(hist));}catch(e){toast('⚠ Opslaan mislukt — te veel data');}
+}
+function renderHistory(){
+  const hist=getHistory().filter(h=>!selectedBO||h.bo===selectedBO);
+  const card=document.getElementById('cardHistory');
+  const list=document.getElementById('histList');
+  if(!hist.length){card.style.display='none';return;}
+  card.style.display='block';
+  list.innerHTML=hist.map(h=>{
+    const col=h.avg?SCORE_COLORS[Math.round(h.avg)]:'#ccc';
+    return `<div class="hist-card" onclick="loadHistEntry('${h.id}')">
+      <div class="hist-score" style="background:${col}">${h.avg||'?'}</div>
+      <div class="hist-info">
+        <div class="hist-name">${esc(h.bo)} — ${esc(h.datum)}</div>
+        <div class="hist-meta">${esc(h.inspecteur||'')} | ${h.scored}/${h.total} beoordeeld | ${esc(h.opdrachtgever||'')}</div>
+      </div>
+      <div class="hist-actions">
+        <button class="hist-btn" onclick="event.stopPropagation();compareWithHistory('${h.id}')">📊 Vergelijk</button>
+        <button class="hist-btn danger" onclick="event.stopPropagation();deleteHistEntry('${h.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function loadHistEntry(id){
+  const hist=getHistory();
+  const h=hist.find(x=>x.id===id);
+  if(!h)return;
+  if(!confirm('Laad inspectie van '+h.datum+'? De huidige gegevens worden overschreven.'))return;
+  selectedBO=h.bo;meta=h.meta;inspData=h.inspData;bdList=h.bdList;
+  fillMetaFields();
+  renderBOGrid(BO);
+  document.querySelectorAll('.bo-card').forEach(c=>c.classList.toggle('sel',c.dataset.name===selectedBO));
+  document.getElementById('startBtn').disabled=false;
+  toast('↩ Inspectie geladen: '+h.bo+' ('+h.datum+')');
+}
+function deleteHistEntry(id){
+  const hist=getHistory().filter(h=>h.id!==id);
+  localStorage.setItem('nen2767_history',JSON.stringify(hist));
+  renderHistory();toast('Verwijderd');
+}
+function clearHistory(){
+  if(!confirm('Alle inspecties wissen?'))return;
+  localStorage.removeItem('nen2767_history');
+  renderHistory();toast('Geschiedenis gewist');
+}
+function compareWithHistory(id){
+  const hist=getHistory();
+  const h=hist.find(x=>x.id===id);
+  if(!h||!bdList.length){toast('Geen actieve inspectie om mee te vergelijken');return;}
+  const sec=document.getElementById('compareSection');
+  const grid=document.getElementById('compareGrid');
+  sec.style.display='block';
+  // Compare bd scores
+  const rows=bdList.slice(0,8).map(b=>{
+    const curScore=inspData[b.bdId]?.score||0;
+    const histScore=h.inspData[b.bdId]?.score||0;
+    const diff=curScore-histScore;
+    const trendCls=diff>0?'trend-up':diff<0?'trend-down':'trend-same';
+    return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:11px">
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(b.bdName)}</span>
+      <span style="margin:0 6px">${histScore||'—'} → <b>${curScore||'—'}</b></span>
+      <span class="${trendCls}">${diff>0?'↑ slechter':diff<0?'↓ beter':'='}</span>
+    </div>`;
+  }).join('');
+  grid.innerHTML=`
+    <div class="compare-card">
+      <div class="compare-header">Vorige — ${esc(h.datum)}</div>
+      <div>Gem: <b>${h.avg||'—'}</b> | ${h.scored}/${h.total} beoordeeld</div>
+    </div>
+    <div class="compare-card">
+      <div class="compare-header">Huidig</div>
+      <div>Gem: <b>${bdList.map(b=>inspData[b.bdId].score).filter(Boolean).reduce((a,b,_,arr)=>a+b/arr.length,0).toFixed(1)||'—'}</b></div>
+    </div>
+    <div class="compare-card" style="grid-column:1/-1">
+      <div class="compare-header">Bouwdeel vergelijking (eerste 8)</div>
+      ${rows}
+    </div>`;
+}
+
+// ════════════════════════════════════════════════
+//  BULK SCORE
+// ════════════════════════════════════════════════
+function bulkScore(egName,elName,score){
+  const targets=bdList.filter(b=>b.egName===egName&&b.elName===elName);
+  if(!targets.length)return;
+  const msg=`Score ${score} (${SCORE_LABELS[score]}) geven aan alle ${targets.length} bouwdelen van "${elName}"?`;
+  if(!confirm(msg))return;
+  targets.forEach(b=>{inspData[b.bdId].score=score;});
+  renderBDCard(currentBdIdx);autoSave();
+  toast(`✓ ${targets.length} bouwdelen score ${score} gegeven`);
+}
+
+// ════════════════════════════════════════════════
+//  EXCEL EXPORT
+// ════════════════════════════════════════════════
+function exportExcel(){
+  const m=getMeta();
+  const BOM='﻿';
+  // Sheet 1: Conditiematrix
+  const rows1=[['Elementengroep','Element','Systeem','Bouwdeel','NEN Code','Score','Conditie','Actieve gebreken','CI','Opmerking','Foto count']];
+  for(const b of bdList){
+    const d=inspData[b.bdId];
+    const s=d.score||0;
+    const gbs=d.gebreken.filter(g=>g.actief);
+    const ci=calcCI(d.gebreken);
+    rows1.push([b.egName,b.elName,b.syName,b.bdName,b.bdCode||'',s,s?SCORE_LABELS[s]:'',
+      gbs.map(g=>g.name).join('; '),ci||'',d.opmerking||'',d.photos.length]);
+  }
+  // Sheet 2: Gebreken
+  const rows2=[['Elementengroep','Element','Bouwdeel','Gebrek','Ernst','Omvang (%)','Intensiteit','CI','Gebrekgroep']];
+  for(const b of bdList){
+    const d=inspData[b.bdId];
+    for(const g of d.gebreken.filter(g=>g.actief)){
+      const ci=calcCI([g]);
+      rows2.push([b.egName,b.elName,b.bdName,g.name,g.ernst,g.omvang,g.intensiteit,ci,g.gg]);
+    }
+  }
+  // Build CSV-based XLS (works without library)
+  function rowsToCSV(rows){return rows.map(r=>r.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('
+');}
+  // We'll create two CSV files and zip concept - actually just one combined TSV
+  // For simplicity: create proper CSV with sheet separator
+  const csv1=BOM+'NEN 2767 Conditiemeting — '+selectedBO+'
+'
+    +'Datum: '+m.datum+' | Inspecteur: '+m.inspecteur+' | Opdrachtgever: '+m.opdrachtgever+'
+
+'
+    +'CONDITIEMATRIX
+'+rowsToCSV(rows1)+'
+
+'
+    +'GEBREKENREGISTER
+'+rowsToCSV(rows2);
+  const blob=new Blob([csv1],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  const boStr=(selectedBO||'').replace(/[^a-z0-9]/gi,'_').substring(0,20);
+  const dateStr=(m.datum||'').replace(/-/g,'');
+  a.download='NEN2767_'+boStr+'_'+dateStr+'.csv';a.click();
+  toast('📊 Excel/CSV geëxporteerd');
+}
+
 let _st;
 function autoSave(){
   try{localStorage.setItem('nen2767_inspectie',JSON.stringify({meta,inspData,bdList,selectedBO,logoData:logoData||null,objFotoData:objFotoData||null}));}catch(e){}
   clearTimeout(_st);_st=setTimeout(()=>{},500);
 }
 function saveInspectie(){
+  saveToHistory();
   const blob=new Blob([JSON.stringify({version:1,selectedBO,meta:getMeta(),inspData,bdList},null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   const m2=getMeta();
@@ -1368,6 +1675,15 @@ let _tt;
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),3000);}
 
 init();
+
+// ── PWA SERVICE WORKER ────────────────────────────────────────────────────
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').then(()=>{
+      console.log('SW registered');
+    }).catch(()=>{/* SW optional */});
+  });
+}
 </script>
 </body>
 </html>
