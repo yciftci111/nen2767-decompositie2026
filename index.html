@@ -3,1183 +3,758 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>NEN 2767 — Decompositie Bibliotheek</title>
+<title>NEN 2767 Decompositie Bibliotheek</title>
 <script src="mapping.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
-:root{
-  --bg:#f4f3ef;--sur:#fff;--sur2:#eeede8;--bdr:rgba(0,0,0,.10);--bdr2:rgba(0,0,0,.18);
-  --tx:#1a1a18;--tx2:#5a5a56;--tx3:#9a9a94;
-  --blue:#1a5fa8;--blue-l:#e8f1fb;--blue-d:#134e8a;
-  --green:#0e6e50;--green-l:#e1f4ec;
-  --amber:#b87200;--amber-l:#fdf0d8;
-  --red:#a02828;--red-l:#fbeaea;
-  --purple:#534AB7;--purple-l:#eeecfb;
-  --r:6px;--rl:10px;
-}
-@media(prefers-color-scheme:dark){:root{
-  --bg:#18181a;--sur:#232326;--sur2:#2c2c30;--bdr:rgba(255,255,255,.09);--bdr2:rgba(255,255,255,.18);
-  --tx:#eeeee8;--tx2:#9a9a94;--tx3:#55554e;
-  --blue-l:#0f3d7022;--green-l:#0a4a3522;--amber-l:#5a380022;--red-l:#4a101022;--purple-l:#2a267022;
-}}
+:root{--bg:#f5f4f0;--sur:#fff;--sur2:#f0efe9;--bdr:rgba(0,0,0,.10);--bdr2:rgba(0,0,0,.20);--tx:#1a1a18;--tx2:#5a5a56;--tx3:#9a9a94;--blue:#185FA5;--blue-l:#e6f1fb;--red:#A32D2D;--red-l:#fcebeb;--r:8px;--rl:12px}
+@media(prefers-color-scheme:dark){:root{--bg:#1a1a18;--sur:#242422;--sur2:#2e2e2a;--bdr:rgba(255,255,255,.10);--bdr2:rgba(255,255,255,.20);--tx:#f0efe9;--tx2:#a0a09a;--tx3:#606058;--blue-l:#0c447c22;--red-l:#50131322}}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);font-size:13px;height:100vh;overflow:hidden;display:flex;flex-direction:column}
-
-/* TOP BAR */
-.topbar{height:44px;background:var(--blue);color:#fff;display:flex;align-items:center;gap:6px;padding:0 12px;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.2)}
-.topbar-title{font-size:13px;font-weight:700;letter-spacing:.3px;white-space:nowrap}
-.topbar-sub{font-size:11px;opacity:.7;white-space:nowrap}
-.topbar-sep{width:1px;height:20px;background:rgba(255,255,255,.25);margin:0 2px;flex-shrink:0}
-.topbar-saved{font-size:11px;opacity:.65;white-space:nowrap;flex-shrink:0}
-.topbar-actions{margin-left:auto;display:flex;gap:4px;flex-shrink:0}
-.tbtn{padding:4px 9px;border:1px solid rgba(255,255,255,.3);border-radius:var(--r);font-size:11px;cursor:pointer;background:rgba(255,255,255,.1);color:#fff;font-family:inherit;transition:background .12s;white-space:nowrap}
-.tbtn:hover{background:rgba(255,255,255,.22)}
-.tbtn.accent{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.45);font-weight:600}
-.tbtn:disabled{opacity:.4;cursor:default}
-
-/* SEARCH BAR */
-.searchbar{padding:5px 10px;background:var(--sur);border-bottom:1px solid var(--bdr);display:none;align-items:center;gap:8px;flex-shrink:0}
-.searchbar.open{display:flex}
-.sb-tree-input{flex:1;padding:5px 10px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:12px;background:var(--sur2);color:var(--tx);outline:none;font-family:inherit}
-.sb-tree-input:focus{border-color:var(--blue)}
-.sb-tree-count{font-size:11px;color:var(--tx3);white-space:nowrap}
-.sb-tree-nav{display:flex;gap:3px}
-
-/* LAYOUT */
-.workspace{flex:1;display:flex;overflow:hidden}
-
-/* SIDEBAR */
-.sidebar{width:272px;min-width:200px;background:var(--sur);border-right:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
-.sb-head{padding:10px 12px 8px;border-bottom:1px solid var(--bdr)}
-.sb-brand{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:7px}
-.sb-search{width:100%;padding:5px 9px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:12px;background:var(--sur2);color:var(--tx);outline:none;font-family:inherit}
+body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);font-size:14px;height:100vh;overflow:hidden}
+.app{display:flex;height:100vh}
+/* Sidebar */
+.sidebar{width:300px;min-width:220px;background:var(--sur);border-right:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+.sb-hdr{padding:10px 12px;border-bottom:1px solid var(--bdr)}
+.sb-search{width:100%;padding:6px 10px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:12px;background:var(--sur2);color:var(--tx);outline:none;font-family:inherit;margin-top:7px}
 .sb-search:focus{border-color:var(--blue)}
-.sb-tabs{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-bottom:1px solid var(--bdr)}
-.sbtab{padding:7px 4px 5px;border:none;background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;border-bottom:2px solid transparent;transition:all .1s;font-family:inherit}
-.sbtab:hover:not(.on){background:var(--sur2)}
-.sbtab.on{border-bottom-color:var(--blue)}
-.sbtab-icon{font-size:18px;line-height:1}
-.sbtab-label{font-size:9px;font-weight:700;color:var(--tx2);letter-spacing:.3px}
-.sbtab-count{font-size:9px;color:var(--tx3)}
-.sbtab.on .sbtab-label{color:var(--blue)}
+.sb-tabs{display:flex;border-bottom:1px solid var(--bdr)}
+.stab{flex:1;padding:7px 2px;font-size:10px;font-weight:600;text-align:center;cursor:pointer;border:none;background:transparent;color:var(--tx2);border-bottom:2px solid transparent;font-family:inherit}
+.stab.active{color:var(--blue);border-bottom-color:var(--blue)}.stab:hover:not(.active){background:var(--sur2)}
+.sb-mode{display:flex;gap:4px;padding:6px 8px;border-bottom:1px solid var(--bdr)}
+.mdbtn{flex:1;padding:5px 4px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:10px;font-weight:600;cursor:pointer;background:var(--sur);color:var(--tx2);text-align:center;font-family:inherit}
+.mdbtn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
 .sb-count{font-size:10px;color:var(--tx3);padding:4px 12px;border-bottom:1px solid var(--bdr)}
-.sb-list{flex:1;overflow-y:auto;padding:5px}
-.lib-item{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:var(--r);cursor:grab;font-size:12px;border:1px solid transparent;margin-bottom:2px;background:var(--sur2);user-select:none;transition:border-color .1s,background .1s}
-.lib-item:hover{border-color:var(--bdr2);background:var(--sur)}
-.lib-item.dragging{opacity:.35}
-.lib-icon{font-size:15px;flex-shrink:0;width:22px;text-align:center}
-.lib-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lib-code{font-size:10px;color:var(--tx3);font-family:monospace;background:var(--bg);padding:1px 5px;border-radius:20px;border:1px solid var(--bdr);flex-shrink:0}
-
-/* CANVAS */
-.canvas-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-.canvas-head{padding:7px 12px;border-bottom:1px solid var(--bdr);background:var(--sur);display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap}
-.canvas-title{font-size:12px;font-weight:600;flex:1;min-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
-.canvas-title:hover{color:var(--blue)}
-.btn{padding:4px 8px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:11px;cursor:pointer;background:var(--sur);color:var(--tx);font-family:inherit;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;transition:background .12s}
-.btn:hover{background:var(--sur2)}
-.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
-.btn.primary:hover{background:var(--blue-d)}
-.btn.danger{color:var(--red);border-color:var(--red);background:var(--red-l)}
-.btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.lib-list{flex:1;overflow-y:auto;padding:5px}
+.lib-item{display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:var(--r);cursor:grab;font-size:11px;color:var(--tx);border:1px solid transparent;margin-bottom:2px;background:var(--sur2);user-select:none;-webkit-user-select:none;transition:border-color .1s,background .1s}
+.lib-item:hover{border-color:var(--bdr2);background:var(--sur)}.lib-item.dragging{opacity:.4}
+.lib-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.lib-code{font-size:10px;color:var(--tx3);margin-left:auto;font-family:monospace;background:var(--bg);padding:1px 5px;border-radius:20px;white-space:nowrap;border:1px solid var(--bdr);flex-shrink:0}
+.auto-badge{font-size:9px;background:var(--blue);color:#fff;padding:1px 5px;border-radius:20px;flex-shrink:0}
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.hdr{padding:10px 12px;border-bottom:1px solid var(--bdr);background:var(--sur);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.hdr-title{font-size:12px;font-weight:600;flex:1;min-width:100px}
+.btn{padding:5px 9px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:11px;cursor:pointer;background:var(--sur);color:var(--tx);display:inline-flex;align-items:center;gap:4px;white-space:nowrap;font-family:inherit;transition:background .12s}
+.btn:hover{background:var(--sur2)}.btn.pr{background:var(--blue);color:#fff;border-color:var(--blue)}.btn.pr:hover{background:#134e88}
+.btn.dan{color:var(--red);border-color:var(--red);background:var(--red-l)}
 .canvas{flex:1;overflow:auto;padding:14px}
-#mapView{flex:1;display:none}
-#mapView.show{display:block}
-
-/* STATS BAR */
-.statsbar{padding:4px 14px;background:var(--sur2);border-bottom:1px solid var(--bdr);display:none;gap:12px;font-size:11px;color:var(--tx2);flex-shrink:0;flex-wrap:wrap}
-.statsbar.show{display:flex}
-.stat-item{display:flex;align-items:center;gap:4px}
-.stat-dot{width:7px;height:7px;border-radius:50%}
-
-/* TREE */
-.node-block{user-select:none}
-.node-row{display:flex;align-items:stretch;margin-bottom:2px}
-.node-indent{display:flex;flex-shrink:0}
-.indent-pipe{width:20px;border-right:1px solid var(--bdr);margin-right:4px;flex-shrink:0}
-.node-body{flex:1;display:flex;align-items:center;gap:5px;padding:4px 7px;border-radius:var(--r);border:1px solid transparent;background:var(--sur2);cursor:pointer;min-width:0;transition:border-color .1s,background .1s}
-.node-body:hover{border-color:var(--bdr2)}
-.node-body.sel{border-color:var(--blue)!important;background:var(--blue-l)!important}
-.node-body.drop-ok{border-color:var(--blue)!important;background:var(--blue-l)!important;outline:2px dashed var(--blue);outline-offset:-2px}
-.node-body.drop-no{border-color:var(--red)!important;background:var(--red-l)!important}
-.node-body.search-match{border-color:var(--amber)!important;background:var(--amber-l)!important}
-.node-body.search-current{border-color:var(--amber)!important;background:var(--amber)!important}
-.node-body.search-current .node-label{color:#fff;font-weight:600}
-.node-tog{width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--tx2);border:1px solid var(--bdr);border-radius:3px;background:var(--sur);flex-shrink:0;cursor:pointer;font-family:monospace}
-.node-tog:hover{background:var(--sur2)}
-.node-icon{font-size:14px;flex-shrink:0}
-.node-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.node-label{font-size:12px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.node-wcode{font-size:10px;color:var(--blue);font-family:monospace;flex-shrink:0;background:var(--blue-l);padding:1px 5px;border-radius:20px;border:1px solid rgba(26,95,168,.2)}
-.node-nen{font-size:10px;color:var(--tx3);font-family:monospace;flex-shrink:0}
-.node-count{font-size:10px;background:var(--sur);border:1px solid var(--bdr);color:var(--tx3);padding:0 4px;border-radius:20px;flex-shrink:0}
-.node-badge{font-size:9px;padding:1px 5px;border-radius:20px;flex-shrink:0;border:1px solid}
-.badge-ja{background:var(--green-l);color:var(--green);border-color:var(--green)}
-.badge-opt{background:var(--amber-l);color:var(--amber);border-color:var(--amber)}
-.node-status{font-size:9px;padding:1px 5px;border-radius:20px;flex-shrink:0;border:1px solid;font-weight:600}
-.status-actief{background:var(--green-l);color:var(--green);border-color:var(--green)}
-.status-onderhoud{background:var(--amber-l);color:var(--amber);border-color:var(--amber)}
-.status-buiten{background:var(--red-l);color:var(--red);border-color:var(--red)}
-.node-photo-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);flex-shrink:0}
-.node-note-dot{width:6px;height:6px;border-radius:50%;background:var(--purple);flex-shrink:0}
-.node-actions{display:flex;gap:2px;opacity:0;flex-shrink:0}
-.node-body:hover .node-actions,.node-body.sel .node-actions{opacity:1}
-.na{width:20px;height:20px;border:none;background:transparent;cursor:pointer;color:var(--tx2);font-size:12px;display:flex;align-items:center;justify-content:center;border-radius:3px;flex-shrink:0}
-.na:hover{background:var(--sur);color:var(--tx)}
-
-/* EMPTY */
 .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:10px;color:var(--tx2);text-align:center}
-
-/* DETAIL PANEL */
-.detail{width:292px;background:var(--sur);border-left:1px solid var(--bdr);overflow-y:auto;flex-shrink:0;display:none;flex-direction:column}
-.detail.open{display:flex}
-.dp-head{padding:10px 13px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;flex-shrink:0;gap:8px}
-.dp-type-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;color:#fff;flex-shrink:0}
-.dp-title{font-size:12px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dp-body{overflow-y:auto;flex:1}
-.dp-section{padding:10px 13px;border-bottom:1px solid var(--bdr)}
-.dp-section:last-child{border-bottom:none}
-.dp-section-title{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;display:flex;align-items:center;gap:5px}
-.dp-field{margin-bottom:7px}
-.dp-field:last-child{margin-bottom:0}
-.dp-label{font-size:10px;color:var(--tx3);margin-bottom:2px}
-.dp-value{font-size:12px;line-height:1.5}
-.dp-value.mono{font-family:monospace;font-size:11px}
-.dp-value.muted{color:var(--tx2);font-size:11px}
-.dp-tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
-.belang-gering{background:#e8f4ec;color:#0e6e50;border:1px solid #0e6e5044}
-.belang-serieus{background:#fdf0d8;color:#b87200;border:1px solid #b8720044}
-.belang-ernstig{background:#fbeaea;color:#a02828;border:1px solid #a0282844}
-.dp-input{width:100%;padding:5px 9px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:12px;background:var(--sur2);color:var(--tx);outline:none;font-family:inherit;margin-bottom:4px}
-.dp-input:focus{border-color:var(--blue)}
-.dp-input.mono{font-family:monospace;color:var(--blue)}
-.dp-input.mono::placeholder{font-family:-apple-system,system-ui,sans-serif;color:var(--tx3);font-style:italic}
-.dp-textarea{width:100%;padding:5px 9px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:12px;background:var(--sur2);color:var(--tx);outline:none;font-family:inherit;resize:vertical;min-height:64px;line-height:1.5}
-.dp-textarea:focus{border-color:var(--blue)}
-.dp-select{width:100%;padding:5px 9px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:12px;background:var(--sur2);color:var(--tx);outline:none;font-family:inherit}
-.dp-select:focus{border-color:var(--blue)}
-.dp-save-row{display:flex;gap:5px;margin-top:6px}
-.dp-save-row .btn{flex:1;justify-content:center}
-
-/* FOTO */
-.photo-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:6px}
-.photo-thumb{position:relative;aspect-ratio:1;border-radius:var(--r);overflow:hidden;border:1px solid var(--bdr);background:var(--sur2);cursor:pointer}
-.photo-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .15s}
-.photo-thumb:hover img{transform:scale(1.05)}
-.photo-del{position:absolute;top:3px;right:3px;background:rgba(160,40,40,.85);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;display:none;align-items:center;justify-content:center;line-height:1}
-.photo-thumb:hover .photo-del{display:flex}
-.photo-add{aspect-ratio:1;border-radius:var(--r);border:2px dashed var(--bdr2);background:var(--sur2);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:3px;transition:all .12s;color:var(--tx3)}
-.photo-add:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-l)}
-.photo-add-icon{font-size:20px}
-.photo-add-lbl{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
-
-/* LIGHTBOX */
-.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;z-index:2000;cursor:zoom-out}
-.lightbox img{max-width:90vw;max-height:88vh;border-radius:var(--r);box-shadow:0 8px 40px rgba(0,0,0,.5)}
-.lightbox-close{position:absolute;top:16px;right:20px;color:#fff;font-size:28px;cursor:pointer;background:none;border:none;opacity:.8}
-.lightbox-close:hover{opacity:1}
-.lightbox-caption{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.8);font-size:12px;background:rgba(0,0,0,.5);padding:4px 12px;border-radius:20px;white-space:nowrap;max-width:80vw;overflow:hidden;text-overflow:ellipsis}
-
-/* MAP */
-.popup-title{font-weight:700;font-size:13px;margin-bottom:4px}
-.popup-code{font-family:monospace;font-size:10px;color:#666;margin-bottom:2px}
-.popup-addr{font-size:11px;color:#555;margin-bottom:2px}
-.popup-wcode{font-size:11px;color:#1a5fa8;font-family:monospace}
-
-/* FILTER */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000}
-.fbox{background:var(--sur);border-radius:var(--rl);padding:20px;width:360px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.2)}
-.fbox h3{font-size:14px;font-weight:600;margin-bottom:5px}
-.fbox p{font-size:12px;color:var(--tx2);margin-bottom:14px;line-height:1.5}
-.fopts{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
-.fopt{display:flex;align-items:center;gap:12px;padding:10px 13px;border:2px solid var(--bdr);border-radius:var(--r);cursor:pointer;transition:all .12s}
-.fopt:hover{border-color:var(--bdr2)}
-.fopt.sel{border-color:var(--blue);background:var(--blue-l)}
-.fopt-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.fopt-lbl{font-size:12px;font-weight:600}
-.fopt-sub{font-size:11px;color:var(--tx2);margin-top:1px}
-
-/* MODAL */
-.mbox{background:var(--sur);border-radius:var(--rl);padding:18px;width:420px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.18)}
-.mbox h3{font-size:14px;font-weight:600;margin-bottom:14px}
-.form-row{margin-bottom:9px}
-.form-row label{font-size:11px;color:var(--tx2);display:block;margin-bottom:3px}
-.form-row input,.form-row select,.form-row textarea{width:100%;padding:6px 9px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:12px;background:var(--sur2);color:var(--tx);outline:none;font-family:inherit}
-.form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--blue)}
-.mbtns{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
-
-/* UNDO indicator */
-.undo-hint{font-size:10px;color:rgba(255,255,255,.55);white-space:nowrap}
-
-/* TOAST */
-.toast{position:fixed;bottom:16px;right:16px;background:var(--tx);color:var(--bg);padding:8px 14px;border-radius:var(--r);font-size:12px;z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none;max-width:320px}
+/* Tree nodes */
+.node-block{user-select:none;-webkit-user-select:none}
+.node-row{display:flex;align-items:stretch}
+.node-indent{display:flex}
+.ip{width:20px;border-right:1px solid var(--bdr);margin-right:4px;flex-shrink:0}
+.node-body{flex:1;display:flex;align-items:center;gap:5px;padding:5px 7px;border-radius:var(--r);border:1px solid transparent;background:var(--sur2);cursor:pointer;min-width:0;margin-bottom:2px;transition:border-color .1s,background .1s}
+.node-body:hover{border-color:var(--bdr2)}.node-body.sel{border-color:var(--blue);background:var(--blue-l)}
+.node-body.dov{border-color:var(--blue)!important;background:var(--blue-l)!important;outline:2px dashed var(--blue);outline-offset:-2px}
+.node-body.dinv{border-color:var(--red)!important;background:var(--red-l)!important}
+.ntog{width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--tx2);cursor:pointer;flex-shrink:0;border-radius:4px;border:1px solid var(--bdr);background:var(--sur);font-family:monospace}
+.ntog:hover{background:var(--sur2)}
+.nico{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.nlab{font-size:11px;color:var(--tx);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ncod{font-size:10px;color:var(--tx3);font-family:monospace;flex-shrink:0}
+.ncnt{font-size:10px;background:var(--sur);border:1px solid var(--bdr);color:var(--tx3);padding:0 4px;border-radius:20px;flex-shrink:0}
+.mbadge{font-size:9px;padding:1px 5px;border-radius:20px;flex-shrink:0;border:1px solid}
+.mbadge.opt{background:#faeeda;color:#854F0B;border-color:#BA7517}
+.mbadge.nee{background:var(--red-l);color:var(--red);border-color:var(--red)}
+.nact{display:flex;gap:2px;opacity:0}.node-body:hover .nact{opacity:1}
+.na{width:20px;height:20px;border:none;background:transparent;cursor:pointer;color:var(--tx2);font-size:12px;display:flex;align-items:center;justify-content:center;border-radius:4px;padding:0}
+.na:hover{background:var(--sur);color:var(--tx)}
+/* Detail */
+.detail{width:290px;background:var(--sur);border-left:1px solid var(--bdr);overflow-y:auto;flex-shrink:0;display:none}
+.detail.open{display:block}
+.dp-hdr{padding:11px 13px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.dp-ttl{font-size:12px;font-weight:600}
+.dp-body{padding:13px}
+.dpf{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--bdr)}.dpf:last-child{border:none}
+.dpl{font-size:10px;color:var(--tx3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
+.dpv{font-size:12px;color:var(--tx);line-height:1.5}
+.tbadge{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:500}
+.dp-acts{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+/* Modal */
+.moverlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000}
+.mbox{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rl);padding:20px;width:400px;max-width:95vw;box-shadow:0 4px 20px rgba(0,0,0,.15)}
+.mbox h3{font-size:14px;font-weight:600;margin-bottom:13px}
+.fr{margin-bottom:9px}.fr label{font-size:11px;color:var(--tx2);display:block;margin-bottom:3px}
+.fr input,.fr select,.fr textarea{width:100%;padding:7px 10px;border:1px solid var(--bdr2);border-radius:var(--r);font-size:12px;background:var(--sur2);color:var(--tx);outline:none;font-family:inherit}
+.fr input:focus,.fr select:focus{border-color:var(--blue)}
+.mbtns{display:flex;gap:8px;justify-content:flex-end;margin-top:13px}
+/* Toast */
+.toast{position:fixed;bottom:18px;right:18px;background:var(--tx);color:var(--bg);padding:9px 15px;border-radius:var(--r);font-size:12px;z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none;max-width:340px}
 .toast.show{opacity:1}
+/* Loading */
+.loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2000;gap:14px}
+.spinner{width:36px;height:36px;border:3px solid var(--bdr2);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px}
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <span class="topbar-title">NEN 2767</span>
-  <span class="topbar-sub">Fase 1 — Decompositie</span>
-  <div class="topbar-sep"></div>
-  <span class="topbar-saved" id="topSaved"></span>
-  <div class="topbar-actions">
-    <button class="tbtn" onclick="newProject()">＋ Nieuw</button>
-    <button class="tbtn" onclick="saveJSON()">\\ud83d\\udcbe Opslaan</button>
-    <button class="tbtn" onclick="document.getElementById('loadFile').click()">\\ud83d\\udcc2 Laden</button>
-    <input type="file" id="loadFile" accept=".json" style="display:none" onchange="loadJSON(this)">
-    <button class="tbtn" onclick="exportCSV()">⬇ CSV</button>
-    <button class="tbtn" onclick="exportPDF()">\\ud83d\\udcc4 PDF</button>
-    <button class="tbtn" id="mapToggleBtn" onclick="toggleMapView()">\\ud83d\\uddfa Kaart</button>
-    <button class="tbtn" id="undoBtn" onclick="undo()" title="Ongedaan maken (Ctrl+Z)" disabled>↩ Ongedaan</button>
-    <button class="tbtn" onclick="goToFase2()" title="Naar Fase 2 Conditiemeting" style="background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.5);font-weight:700">📋 Fase 2 Conditioning →</button>
-    <button class="tbtn accent" onclick="clearAll()">\\ud83d\\uddd1 Leegmaken</button>
-  </div>
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <div style="font-size:14px;font-weight:600">NEN 2767 Decompositie Bibliotheek</div>
+  <div style="font-size:12px;color:var(--tx3)">64 beheerobjecten · 245 elementen · 760 bouwdelen · 166 gebreken</div>
 </div>
 
-<!-- TREE SEARCH BAR -->
-<div class="searchbar" id="searchBar">
-  <span style="font-size:12px;color:var(--tx2);flex-shrink:0">\\ud83d\\udd0d</span>
-  <input class="sb-tree-input" id="treeSearchInput" placeholder="Zoeken in decompositie…" oninput="doTreeSearch()" autocomplete="off">
-  <span class="sb-tree-count" id="treeSearchCount"></span>
-  <div class="sb-tree-nav">
-    <button class="btn" onclick="searchNav(-1)" title="Vorige">↑</button>
-    <button class="btn" onclick="searchNav(1)" title="Volgende">↓</button>
-  </div>
-  <button class="btn" onclick="closeTreeSearch()">✕</button>
-</div>
+<div class="app" id="app" style="display:none">
 
-<!-- STATS BAR -->
-<div class="statsbar" id="statsBar"></div>
-
-<div class="workspace">
-
-  <!-- SIDEBAR -->
+  <!-- ═══ SIDEBAR ═══ -->
   <div class="sidebar">
-    <div class="sb-head">
-      <div class="sb-brand">NEN 2767 Bibliotheek</div>
-      <input class="sb-search" id="sbSearch" type="text" placeholder="Zoeken op naam of code…" oninput="renderLib()" autocomplete="off">
+    <div class="sb-hdr">
+      <div style="font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px">
+        📚 NEN 2767 Bibliotheek
+      </div>
+      <input class="sb-search" id="libSearch" type="text" placeholder="Zoeken op naam of code…" autocomplete="off">
     </div>
     <div class="sb-tabs">
-      <button class="sbtab on" id="tab-bo" onclick="setTab('bo')">
-        <span class="sbtab-icon">\\ud83c\\udfd7</span><span class="sbtab-label">Objecten</span><span class="sbtab-count">64</span>
-      </button>
-      <button class="sbtab" id="tab-el" onclick="setTab('el')">
-        <span class="sbtab-icon">\\ud83d\\udd27</span><span class="sbtab-label">Elementen</span><span class="sbtab-count">245</span>
-      </button>
-      <button class="sbtab" id="tab-bd" onclick="setTab('bd')">
-        <span class="sbtab-icon">\\ud83e\\uddf1</span><span class="sbtab-label">Bouwdelen</span><span class="sbtab-count">760</span>
-      </button>
-      <button class="sbtab" id="tab-gb" onclick="setTab('gb')">
-        <span class="sbtab-icon">⚠️</span><span class="sbtab-label">Gebreken</span><span class="sbtab-count">166</span>
-      </button>
+      <button class="stab active" id="tab-bo" onclick="switchTab('bo')">Objecten<br><span style="font-weight:400;opacity:.7">64</span></button>
+      <button class="stab" id="tab-el" onclick="switchTab('el')">Elementen<br><span style="font-weight:400;opacity:.7">245</span></button>
+      <button class="stab" id="tab-bd" onclick="switchTab('bd')">Bouwdelen<br><span style="font-weight:400;opacity:.7">760</span></button>
+      <button class="stab" id="tab-gb" onclick="switchTab('gb')">Gebreken<br><span style="font-weight:400;opacity:.7">166</span></button>
     </div>
-    <div class="sb-count" id="sbCount"></div>
-    <div class="sb-list" id="sbList"></div>
+    <div class="sb-mode">
+      <button class="mdbtn active" id="mode-auto" onclick="setMode('auto')" title="Sleep een Beheerobject — volledige hiërarchie wordt automatisch opgebouwd">🔗 Automatisch</button>
+      <button class="mdbtn" id="mode-hand" onclick="setMode('hand')" title="Voeg items één voor één handmatig toe">✋ Handmatig</button>
+    </div>
+    <div class="sb-count" id="libCount"></div>
+    <div class="lib-list" id="libList"></div>
   </div>
 
-  <!-- CANVAS -->
-  <div class="canvas-wrap">
-    <div class="canvas-head">
-      <span class="canvas-title" id="projectTitle" onclick="renameProject()" title="Klik om naam te wijzigen">Nieuw project</span>
-      <button class="btn" onclick="addAreaal()">＋ Areaal</button>
-      <button class="btn" id="searchToggleBtn" onclick="toggleTreeSearch()">\\ud83d\\udd0d</button>
-      <button class="btn" onclick="expandAll()">↕ Uit</button>
-      <button class="btn" onclick="collapseAll()">↕ In</button>
-      <button class="btn" id="statsToggleBtn" onclick="toggleStats()">\\ud83d\\udcca</button>
-      <button class="btn" id="mapViewBtn" onclick="toggleMapView()" style="display:none">\\ud83d\\uddfa Kaart</button>
+  <!-- ═══ MAIN ═══ -->
+  <div class="main">
+    <div class="hdr">
+      <span class="hdr-title">🏗 NEN 2767 Decompositie Bibliotheek &nbsp;<span style="font-weight:400;color:var(--tx3);font-size:11px">Fase 1</span></span>
+      <button class="btn pr" onclick="openAddModal('portfolio',null)">＋ Nieuw Areaal</button>
+      <button class="btn" onclick="expandAll()">▾ Uitvouwen</button>
+      <button class="btn" onclick="collapseAll()">▴ Invouwen</button>
+      <button class="btn" onclick="exportJSON()">⬇ JSON</button>
+      <button class="btn" onclick="exportCSV()">⬇ Excel/CSV</button>
+      <button class="btn" onclick="importJSON()">⬆ Importeer</button>
     </div>
-    <div class="canvas" id="canvas" ondragover="e=>e.preventDefault()" ondrop="canvasDrop(event)">
+    <div class="canvas" id="canvas">
       <div id="treeRoot"></div>
     </div>
-    <div id="mapView"></div>
   </div>
 
-  <!-- DETAIL PANEL -->
+  <!-- ═══ DETAIL ═══ -->
   <div class="detail" id="detailPanel">
-    <div class="dp-head">
-      <span class="dp-type-badge" id="dpBadge"></span>
-      <span class="dp-title" id="dpTitle"></span>
-      <button class="na" onclick="closeDetail()">✕</button>
+    <div class="dp-hdr">
+      <span class="dp-ttl" id="dpTitle">Details</span>
+      <button class="btn" onclick="closeDetail()" style="padding:2px 7px">✕</button>
     </div>
     <div class="dp-body" id="dpBody"></div>
   </div>
-
 </div>
 
-<!-- LIGHTBOX -->
-<div class="lightbox" id="lightbox" style="display:none" onclick="closeLightbox()">
-  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
-  <img id="lightboxImg" src="" alt="">
-  <div class="lightbox-caption" id="lightboxCaption"></div>
+<div class="moverlay" id="moverlay" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="mbox" id="mbox"></div>
 </div>
-
-<!-- FILTER DIALOG -->
-<div class="overlay" id="filterDlg" style="display:none" onclick="if(event.target===this)cancelFilter()">
-  <div class="fbox">
-    <h3 id="filterTitle"></h3>
-    <p>Welke elementen wil je meenemen in de decompositie?</p>
-    <div class="fopts">
-      <div class="fopt sel" id="fopt-ja" onclick="selFilter('ja')">
-        <div class="fopt-dot" style="background:var(--green)"></div>
-        <div><div class="fopt-lbl">Alleen kritische elementen</div><div class="fopt-sub" id="fcnt-ja"></div></div>
-      </div>
-      <div class="fopt" id="fopt-ja_opt" onclick="selFilter('ja_opt')">
-        <div class="fopt-dot" style="background:var(--amber)"></div>
-        <div><div class="fopt-lbl">Kritisch + optioneel</div><div class="fopt-sub" id="fcnt-ja_opt"></div></div>
-      </div>
-      <div class="fopt" id="fopt-all" onclick="selFilter('all')">
-        <div class="fopt-dot" style="background:var(--tx3)"></div>
-        <div><div class="fopt-lbl">Alle elementen</div><div class="fopt-sub" id="fcnt-all"></div></div>
-      </div>
-    </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button class="btn" onclick="cancelFilter()">Annuleren</button>
-      <button class="btn primary" onclick="confirmFilter()">Toevoegen ›</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL -->
-<div class="overlay" id="modalOverlay" style="display:none" onclick="if(event.target===this)closeModal()">
-  <div class="mbox"><h3 id="mTitle"></h3><div id="mBody"></div><div class="mbtns" id="mBtns"></div></div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <script>
-// ══════════════════════════════════════════════════════════
-//  BO ICONS & COLORS
-// ══════════════════════════════════════════════════════════
-const BO_ICONS={'Aanleginrichting':'⚓','Aquaduct':'\\ud83c\\udf09','Begraafplaats':'\\ud83e\\udea6','Beheerobject Overstijgende Voorziening':'\\ud83c\\udfe2','Beluchtingstank':'\\ud83d\\udca8','Bezinkbassin':'\\ud83e\\udea3','Bosgebied':'\\ud83c\\udf32','Brug (beweegbaar)':'\\ud83c\\udfd7','Brug (vast)':'\\ud83c\\udf01','Bunker':'\\ud83c\\udff0','Coupure':'\\ud83d\\udea7','Dam':'\\ud83c\\udfde','Dijk':'\\ud83d\\udee1','Drinkwaterinlaat':'\\ud83d\\udeb0','Duiker':'\\ud83d\\udd35','Duingebied':'\\ud83c\\udfd6','Ecoduct':'\\ud83e\\udd8c','Faunatunnel':'\\ud83e\\udd8a','Gemaal':'⚙️','Gistingstank':'\\ud83e\\uddea','Grondkering':'\\ud83e\\udea8','Haven':'⚓','Hevel':'\\ud83c\\udf0a','Individuele Behandeling van Afvalwater systeem (IBA-systeem)':'♻️','Infragebonden gebouw':'\\ud83c\\udfed','Kabel en leiding':'\\ud83d\\udd0c','Kade':'\\ud83d\\udea2','Kanaal':'\\ud83d\\udef6','Keersluis':'\\ud83d\\udeaa','Landbouwgebied':'\\ud83c\\udf3e','Meer':'\\ud83c\\udfde','Natuurgebied':'\\ud83c\\udf3f','Onderdoorgang':'\\ud83d\\ude87','Ontvangst- en verdeelwerk':'\\ud83c\\udfed','Open tunnelbak':'\\ud83d\\ude87','Opslagtank':'\\ud83d\\udee2','Overkluizing':'\\ud83c\\udf09','Park':'\\ud83c\\udf33','Persleiding':'\\ud83d\\udd29','Procesbassin':'\\ud83e\\uddeb','Recreatief gebied':'\\ud83c\\udfaf','Riolering':'\\ud83d\\udd73','Rivier':'\\ud83c\\udf0a','Schutsluis':'\\ud83d\\udeaa','Sifon':'〰️','Spoorweg':'\\ud83d\\ude86','Sport- en spelvoorziening':'⚽','Spuisluis':'\\ud83d\\udeaa','Stormvloedkering':'\\ud83c\\udf0a','Stuw':'\\ud83c\\udf0a','Terrein':'\\ud83d\\udfeb','Tunnel':'\\ud83d\\ude87','Uiterwaard':'\\ud83c\\udf3e','Verkeerscentrale':'\\ud83c\\udf9b','Verzorgingsplaats':'\\ud83d\\udee3','Viaduct':'\\ud83c\\udf09','Water en watergang (lijnvormig), overig':'〰️','Water en watergang (niet lijnvormig), overig':'\\ud83d\\udca7','Waterbuffer':'\\ud83d\\udca7','Waterreguleringswerk':'\\ud83d\\udd27','Weg':'\\ud83d\\udee3','Windmolen':'\\ud83c\\udf2c','Zandfilterbassin':'\\ud83e\\udea8','Zee':'\\ud83c\\udf0a'};
-const BO_COLORS={'Gemaal':'#1a5fa8','Brug (beweegbaar)':'#b87200','Brug (vast)':'#b87200','Dijk':'#0e6e50','Stuw':'#0e6e50','Keersluis':'#0e6e50','Schutsluis':'#0e6e50','Tunnel':'#534AB7','Viaduct':'#534AB7','Aquaduct':'#534AB7','Riolering':'#5B8C5A','Kanaal':'#2e86cc','Rivier':'#2e86cc','Meer':'#2e86cc','Zee':'#2e86cc','Weg':'#cc3a3a','Spoorweg':'#cc3a3a'};
-const boIcon=n=>BO_ICONS[n]||'\\ud83c\\udfd7';
-const boColor=n=>BO_COLORS[n]||'#1a5fa8';
+// ════════════════════════════════════════════════════════
+//  TYPE CONFIG
+// ════════════════════════════════════════════════════════
+const TLBL = {
+  portfolio: 'Areaal Portefeuille',
+  complex:   'Complex',
+  bo:        'Beheerobject',
+  el:        'Element',
+  bd:        'Bouwdeel',
+  comp:      'Component',
+  gb:        'Gebrek'
+};
+const TCOL = {
+  portfolio: '#534AB7',
+  complex:   '#185FA5',
+  bo:        '#378ADD',
+  el:        '#0D7A6E',
+  bd:        '#BA7517',
+  comp:      '#888888'
+};
+// Valid child types per parent type
+const KIDS = {
+  portfolio: ['complex'],
+  complex:   ['bo'],
+  bo:        ['el'],
+  el:        ['bd'],
+  bd:        ['comp'],
+  comp:      []
+};
+// Library data arrays (from mapping.js: BO, EL, BD, GB)
+const LIB = { bo: BO, el: EL, bd: BD, gb: GB };
 
-// ══════════════════════════════════════════════════════════
-//  CONSTANTS
-// ══════════════════════════════════════════════════════════
-const LBL={areaal:'Areaal',complex:'Complex',bo:'Beheerobject',el:'Element',bd:'Bouwdeel',comp:'Component'};
-const COL={areaal:'#534AB7',complex:'#1a5fa8',bo:'#2e86cc',el:'#0e6e50',bd:'#b87200',comp:'#888888'};
-const KIDS={areaal:['complex'],complex:['bo'],bo:['el'],el:['bd'],bd:['comp'],comp:[]};
-const WCODE_LEVELS=new Set(['areaal','complex','bo','el','bd','comp']);
-const PHOTO_LEVELS=new Set(['bo','el','bd','gb']);
-const MAX_PHOTOS=5,MAX_PX=800,JPEG_Q=0.78;
-const MAX_UNDO=10;
-
-// ══════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════
 //  STATE
-// ══════════════════════════════════════════════════════════
-let tree=[],idC=1,projectName='Nieuw project';
-let selId=null,coll={},libTab='bo';
-let dragLib=null,dragNid=null;
-let filterPending=null,filterChoice='ja';
-let mapVisible=false,leafletMap=null,mapMarkers=[];
-let undoStack=[],redoStack=[];
-let treeSearchMatches=[],treeSearchIdx=-1;
+// ════════════════════════════════════════════════════════
+let tree = [], idC = 1, activeTab = 'bo', libMode = 'auto';
+let selId = null, coll = {}, dragLib = null, dragNid = null;
 
-const mkId=()=>'n'+(idC++);
-const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const deepCopy=o=>JSON.parse(JSON.stringify(o));
+const mkId = () => 'n' + (idC++);
+const esc  = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-// ══════════════════════════════════════════════════════════
-//  UNDO / REDO
-// ══════════════════════════════════════════════════════════
-function pushUndo(){
-  undoStack.push(deepCopy({tree,idC}));
-  if(undoStack.length>MAX_UNDO)undoStack.shift();
-  redoStack=[];
-  document.getElementById('undoBtn').disabled=false;
+function findN(id, ns = tree) {
+  for (const n of ns) {
+    if (n.id === id) return n;
+    if (n.children) { const r = findN(id, n.children); if (r) return r; }
+  }
+  return null;
 }
-function undo(){
-  if(!undoStack.length)return;
-  redoStack.push(deepCopy({tree,idC}));
-  const s=undoStack.pop();
-  tree=s.tree;idC=s.idC;
-  document.getElementById('undoBtn').disabled=undoStack.length===0;
-  renderTree();autoSave();toast('↩ Ongedaan gemaakt ('+undoStack.length+' stap'+(undoStack.length!==1?'pen':'')+' over)');
+function findP(id, ns = tree, p = null) {
+  for (const n of ns) {
+    if (n.id === id) return p;
+    if (n.children) { const r = findP(id, n.children, n); if (r) return r; }
+  }
+  return null;
 }
-document.addEventListener('keydown',e=>{
-  if((e.ctrlKey||e.metaKey)&&e.key==='z'&&!e.shiftKey){e.preventDefault();undo();}
-  if((e.ctrlKey||e.metaKey)&&e.key==='f'){e.preventDefault();toggleTreeSearch();}
-  if(e.key==='Escape'){closeTreeSearch();closeLightbox();}
-});
-
-// ══════════════════════════════════════════════════════════
-//  TREE HELPERS
-// ══════════════════════════════════════════════════════════
-function findN(id,ns=tree){for(const n of ns){if(n.id===id)return n;if(n.children){const r=findN(id,n.children);if(r)return r;}}return null;}
-function findP(id,ns=tree,p=null){for(const n of ns){if(n.id===id)return p;if(n.children){const r=findP(id,n.children,n);if(r)return r;}}return null;}
-function addKid(p,c){if(!p.children)p.children=[];p.children.push(c);}
-function findFirst(type,ns=tree){for(const n of ns){if(n.type===type)return n;if(n.children){const r=findFirst(type,n.children);if(r)return r;}}return null;}
-function findAll(type,ns=tree,res=[]){for(const n of ns){if(n.type===type)res.push(n);if(n.children)findAll(type,n.children,res);}return res;}
-function countAll(ns=tree){let t=0;for(const n of ns){t++;if(n.children)t+=countAll(n.children);}return t;}
-function nenCode(type,name){
-  if(type==='bo')return BO.find(x=>x.n===name)?.c||'';
-  if(type==='el')return EL.find(x=>x.n===name)?.c||'';
-  if(type==='bd')return BD.find(x=>x.n===name)?.c||'';
-  if(type==='gb')return GB.find(x=>x.n===name)?.c||'';
-  return '';
+function countD(n) {
+  let c = (n.children||[]).length;
+  (n.children||[]).forEach(x => c += countD(x));
+  return c;
+}
+function addKid(par, child) {
+  if (!par.children) par.children = [];
+  par.children.push(child);
+}
+function findFirstOfType(type, ns = tree) {
+  for (const n of ns) {
+    if (n.type === type) return n;
+    if (n.children) { const r = findFirstOfType(type, n.children); if (r) return r; }
+  }
+  return null;
+}
+function libCode(type, name) {
+  return LIB[type]?.find(x => x.n === name)?.c || '';
 }
 
-// ══════════════════════════════════════════════════════════
-//  BUILD BO TREE
-// ══════════════════════════════════════════════════════════
-function buildBoTree(boName,filter='ja'){
-  const bo=BO.find(x=>x.n===boName);
-  const boNode={id:mkId(),type:'bo',label:boName,nenCode:bo?.c||'',def:bo?.d||'',
-    wcode:'',adres:'',stad:'',lat:'',lon:'',status:'actief',bouwjaar:'',levensduur:'',notitie:'',photos:[],children:[]};
-  const allowed=filter==='ja'?['ja']:filter==='ja_opt'?['ja','optioneel']:['ja','optioneel','nee'];
-  // New structure: MAP_BO_EL[boName] = {pf, els:[{el,m,fta}]}
-  const boMapping=MAP_BO_EL[boName];
-  const elRows=boMapping?boMapping.els.filter(r=>allowed.includes(r.m)):[];
-  for(const r of elRows){
-    const el=EL.find(x=>x.n===r.el);
-    const elNode={id:mkId(),type:'el',label:r.el,nenCode:el?.c||'',
-      eg:el?.eg||'',vakdiscipline:el?.v||'',reden:el?.r||'',functie:el?.f||'',
-      meenemen:r.m,fta_m:r.m,fta_r:r.fta||'',
-      pf:MAP_EL_BD[r.el]?.pf||'',
-      wcode:'',notitie:'',photos:[],children:[]};
-    // New structure: MAP_EL_BD[elName] = {pf, bds:[{bd,m,fta}]}
-    const elMapping=MAP_EL_BD[r.el];
-    const bdRows=elMapping?elMapping.bds.filter(b=>allowed.includes(b.m)):[];
-    for(const br of bdRows){
-      const bd=BD.find(x=>x.n===br.bd);
-      const bdNode={id:mkId(),type:'bd',label:br.bd,nenCode:bd?.c||'',def:bd?.d||'',
-        vakdiscipline:bd?.v||'',fta_class:bd?.fta||'',fta_reden:bd?.fr||'',
-        meenemen:br.m,fta_m:br.m,fta_r:br.fta||'',
-        wcode:'',notitie:'',photos:[],children:[]};
-      elNode.children.push(bdNode);
+// ════════════════════════════════════════════════════════
+//  SMART TREE BUILDER — one BO → full hierarchy
+// ════════════════════════════════════════════════════════
+function buildBoTree(boName, filter) {
+  filter = filter || 'ja';
+  const bo = BO.find(x => x.n === boName);
+  const boNode = {
+    id: mkId(), type: 'bo', label: boName,
+    code: bo?.c || '', def: bo?.d || '',
+    wcode: '', adres: '', stad: '', lat: '', lon: '',
+    status: 'actief', bouwjaar: '', levensduur: '',
+    notitie: '', photos: [], children: []
+  };
+  const boMap = MAP_BO_EL[boName];
+  if (!boMap) return boNode;
+  const allowed = filter === 'ja' ? ['ja'] : filter === 'ja_opt' ? ['ja','optioneel'] : ['ja','optioneel','nee'];
+  const elRows = boMap.els.filter(r => allowed.includes(r.m));
+  for (const r of elRows) {
+    const el = EL.find(x => x.n === r.el);
+    const elNode = {
+      id: mkId(), type: 'el', label: r.el,
+      code: el?.c || '', eg: el?.eg || '',
+      vakdiscipline: el?.v || '', functie: el?.f || '', reden: el?.r || '',
+      meenemen: r.m, fta_m: r.m, fta_r: r.fta || '',
+      pf: MAP_EL_BD[r.el]?.pf || '',
+      wcode: '', notitie: '', photos: [], children: []
+    };
+    const elMap = MAP_EL_BD[r.el];
+    if (elMap) {
+      const bdRows = elMap.bds.filter(b => allowed.includes(b.m));
+      for (const br of bdRows) {
+        const bd = BD.find(x => x.n === br.bd);
+        const bdNode = {
+          id: mkId(), type: 'bd', label: br.bd,
+          code: bd?.c || '', def: bd?.d || '',
+          vakdiscipline: bd?.v || '', fta_class: bd?.fta || '', fta_reden: bd?.fr || '',
+          meenemen: br.m, fta_m: br.m, fta_r: br.fta || '',
+          wcode: '', notitie: '', photos: [], children: []
+        };
+        elNode.children.push(bdNode);
+      }
     }
     boNode.children.push(elNode);
   }
   return boNode;
 }
-function countEls(boName,f){const mapping=MAP_BO_EL[boName];const rows=mapping?mapping.els:[];if(f==='ja')return rows.filter(r=>r.m==='ja').length;if(f==='ja_opt')return rows.filter(r=>r.m==='ja'||r.m==='optioneel').length;return rows.length;}
 
-// ══════════════════════════════════════════════════════════
-//  FILTER DIALOG
-// ══════════════════════════════════════════════════════════
-function showFilter(boName,target){
-  filterPending={boName,target};filterChoice='ja';
-  document.getElementById('filterTitle').textContent=boName+' toevoegen';
-  document.getElementById('fcnt-ja').textContent=countEls(boName,'ja')+' elementen (alleen kritisch)';
-  document.getElementById('fcnt-ja_opt').textContent=countEls(boName,'ja_opt')+' elementen (kritisch + optioneel)';
-  document.getElementById('fcnt-all').textContent=countEls(boName,'all')+' elementen (alles)';
-  selFilter('ja');document.getElementById('filterDlg').style.display='flex';
+// ════════════════════════════════════════════════════════
+//  LIBRARY PANEL
+// ════════════════════════════════════════════════════════
+function switchTab(t) {
+  activeTab = t;
+  ['bo','el','bd','gb'].forEach(x =>
+    document.getElementById('tab-' + x).classList.toggle('active', x === t));
+  renderLib();
 }
-function selFilter(f){filterChoice=f;['ja','ja_opt','all'].forEach(x=>document.getElementById('fopt-'+x).classList.toggle('sel',x===f));}
-function cancelFilter(){document.getElementById('filterDlg').style.display='none';filterPending=null;}
-function confirmFilter(){
-  if(!filterPending)return;
-  const{boName,target}=filterPending;
-  pushUndo();
-  const node=buildBoTree(boName,filterChoice);
-  addKid(target,node);coll[target.id]=false;
-  renderTree();autoSave();toast('✓ '+boName+' — '+countEls(boName,filterChoice)+' elementen ('+filterChoice+')');
-  document.getElementById('filterDlg').style.display='none';filterPending=null;
+function setMode(m) {
+  libMode = m;
+  document.getElementById('mode-auto').classList.toggle('active', m === 'auto');
+  document.getElementById('mode-hand').classList.toggle('active', m === 'hand');
+  renderLib();
 }
 
-// ══════════════════════════════════════════════════════════
-//  LIBRARY
-// ══════════════════════════════════════════════════════════
-function setTab(t){libTab=t;['bo','el','bd','gb'].forEach(x=>document.getElementById('tab-'+x).classList.toggle('on',x===t));renderLib();}
-function renderLib(){
-  const q=document.getElementById('sbSearch').value.toLowerCase().trim();
-  const arr=libTab==='bo'?BO:libTab==='el'?EL:libTab==='bd'?BD:GB;
-  const items=q?arr.filter(x=>x.n.toLowerCase().includes(q)||(x.c||'').toLowerCase().includes(q)):arr;
-  document.getElementById('sbCount').textContent=items.length+' van '+arr.length+' items';
-  const list=document.getElementById('sbList');
-  list.innerHTML=items.map(i=>{
-    const icon=libTab==='bo'?boIcon(i.n):libTab==='el'?'\\ud83d\\udd27':libTab==='bd'?'\\ud83e\\uddf1':'⚠️';
-    return `<div class="lib-item" draggable="true" data-type="${libTab}" data-name="${esc(i.n)}" title="${esc(i.n)}${i.d?' — '+i.d:''}">
-      <span class="lib-icon">${icon}</span><span class="lib-name">${esc(i.n)}</span><span class="lib-code">${esc(i.c||'')}</span>
-    </div>`;
-  }).join('');
-  list.querySelectorAll('.lib-item').forEach(el=>{
-    el.addEventListener('dragstart',e=>{if(dragNid){e.preventDefault();return;}dragLib={type:e.currentTarget.dataset.type,name:e.currentTarget.dataset.name};e.dataTransfer.effectAllowed='copy';e.dataTransfer.setData('text/plain',JSON.stringify(dragLib));setTimeout(()=>e.currentTarget.classList.add('dragging'),0);});
-    el.addEventListener('dragend',e=>{e.currentTarget.classList.remove('dragging');setTimeout(()=>{dragLib=null;},50);});
-    el.addEventListener('dblclick',e=>quickInsert(e.currentTarget.dataset.type,e.currentTarget.dataset.name));
+function renderLib() {
+  const q   = (document.getElementById('libSearch').value || '').toLowerCase();
+  const arr = LIB[activeTab];
+  const items = arr.filter(i =>
+    !q || i.n.toLowerCase().includes(q) || (i.c && i.c.toString().toLowerCase().includes(q))
+  );
+  const cl = { bo:'#378ADD', el:'#1D9E75', bd:'#BA7517', gb:'#E24B4A' }[activeTab];
+  const isAuto = libMode === 'auto' && activeTab === 'bo';
+
+  document.getElementById('libCount').textContent =
+    isAuto
+      ? `🔗 Automatisch — versleep een beheerobject voor volledige hiërarchie`
+      : `${items.length} van ${arr.length} items`;
+
+  const list = document.getElementById('libList');
+  if (!items.length) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;font-size:11px;color:var(--tx3)">Geen resultaten</div>';
+    return;
+  }
+  list.innerHTML = items.map(i => `
+    <div class="lib-item" draggable="true" data-type="${activeTab}" data-name="${esc(i.n)}"
+      title="${esc(i.n)}${isAuto ? ' → volledige decompositie automatisch' : ''}">
+      <span class="lib-dot" style="background:${cl}"></span>
+      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(i.n)}</span>
+      ${isAuto ? '<span class="auto-badge">auto</span>' : ''}
+      <span class="lib-code">${esc(i.c)}</span>
+    </div>`).join('');
+
+  list.querySelectorAll('.lib-item').forEach(el => {
+    el.addEventListener('dragstart', e => {
+      dragLib = { type: e.currentTarget.dataset.type, name: e.currentTarget.dataset.name, auto: isAuto };
+      dragNid = null;
+      e.dataTransfer.effectAllowed = 'copy';
+      setTimeout(() => e.currentTarget.classList.add('dragging'), 0);
+    });
+    el.addEventListener('dragend', e => {
+      e.currentTarget.classList.remove('dragging');
+      dragLib = null;
+    });
+    el.addEventListener('dblclick', e => quickInsert(activeTab, e.currentTarget.dataset.name, isAuto));
   });
 }
-function quickInsert(type,name){
-  if(!tree.length){toast('Maak eerst een Areaal aan');return;}
-  const PARENT={complex:'areaal',bo:'complex',eg:'bo',el:'eg',sy:'el',bd:'sy',gb:'bd'};
-  if(type==='bo'){const cplx=findFirst('complex');if(!cplx){toast('Voeg eerst een Complex toe');return;}showFilter(name,cplx);return;}
-  const par=findFirst(PARENT[type]);if(!par){toast('Geen '+LBL[PARENT[type]]+' gevonden');return;}
-  pushUndo();
-  addKid(par,{id:mkId(),type,label:name,nenCode:nenCode(type,name),wcode:'',notitie:'',photos:[],children:[]});
-  coll[par.id]=false;renderTree();autoSave();toast(name+' toegevoegd');
-}
 
-// ══════════════════════════════════════════════════════════
-//  TREE SEARCH
-// ══════════════════════════════════════════════════════════
-function toggleTreeSearch(){
-  const bar=document.getElementById('searchBar');
-  const open=bar.classList.toggle('open');
-  document.getElementById('searchToggleBtn').classList.toggle('active',open);
-  if(open)setTimeout(()=>document.getElementById('treeSearchInput').focus(),50);
-  else{clearTreeSearch();}
-}
-function closeTreeSearch(){
-  document.getElementById('searchBar').classList.remove('open');
-  document.getElementById('searchToggleBtn').classList.remove('active');
-  clearTreeSearch();
-}
-function clearTreeSearch(){
-  treeSearchMatches=[];treeSearchIdx=-1;
-  document.getElementById('treeSearchInput').value='';
-  document.getElementById('treeSearchCount').textContent='';
-  renderTree();
-}
-function doTreeSearch(){
-  const q=document.getElementById('treeSearchInput').value.toLowerCase().trim();
-  treeSearchMatches=[];treeSearchIdx=-1;
-  if(q){
-    function walk(n){if(n.label.toLowerCase().includes(q)||((n.nenCode||'').toLowerCase().includes(q))||((n.wcode||'').toLowerCase().includes(q)))treeSearchMatches.push(n.id);if(n.children)n.children.forEach(walk);}
-    tree.forEach(walk);
+function quickInsert(type, name, auto = false) {
+  if (!tree.length) { toast('Maak eerst een Areaal Portefeuille aan'); return; }
+  if (auto && type === 'bo') {
+    const cplx = findFirstOfType('complex');
+    if (!cplx) { toast('Voeg eerst een Complex toe aan het Areaal'); return; }
+    const node = buildBoTree(name);
+    if (node) { addKid(cplx, node); coll[cplx.id] = false; renderTree(); toast('✓ ' + name + ' + volledige hiërarchie toegevoegd'); }
+    return;
   }
-  document.getElementById('treeSearchCount').textContent=treeSearchMatches.length?`${treeSearchMatches.length} gevonden`:(q?'Niets gevonden':'');
-  if(treeSearchMatches.length){treeSearchIdx=0;scrollToMatch();}
+  const PARENT = { complex:'portfolio', bo:'complex', eg:'bo', el:'eg', sy:'el', bd:'sy', gb:'bd' };
+  const par = findFirstOfType(PARENT[type]);
+  if (!par) { toast('Geen ' + TLBL[PARENT[type]] + ' gevonden. Voeg er eerst één toe.'); return; }
+  addKid(par, { id: mkId(), type, label: name, code: libCode(type, name), children: [] });
+  coll[par.id] = false;
   renderTree();
-}
-function searchNav(dir){
-  if(!treeSearchMatches.length)return;
-  treeSearchIdx=(treeSearchIdx+dir+treeSearchMatches.length)%treeSearchMatches.length;
-  scrollToMatch();renderTree();
-}
-function scrollToMatch(){
-  const id=treeSearchMatches[treeSearchIdx];
-  // Expand path to match
-  function expandPath(id,ns=tree){for(const n of ns){if(n.id===id){coll[n.id]=false;return true;}if(n.children&&expandPath(id,n.children)){coll[n.id]=false;return true;}}return false;}
-  expandPath(id);
-  renderTree();
-  setTimeout(()=>{const el=document.getElementById('nb-'+id);if(el)el.scrollIntoView({block:'center',behavior:'smooth'});},50);
+  toast(name + ' toegevoegd aan ' + par.label);
 }
 
-// ══════════════════════════════════════════════════════════
-//  STATS
-// ══════════════════════════════════════════════════════════
-let statsVisible=false;
-function toggleStats(){
-  statsVisible=!statsVisible;
-  document.getElementById('statsToggleBtn').classList.toggle('active',statsVisible);
-  renderStats();
-}
-function renderStats(){
-  const bar=document.getElementById('statsBar');
-  if(!statsVisible||!tree.length){bar.classList.remove('show');return;}
-  const bos=findAll('bo'),els=findAll('el'),bds=findAll('bd'),gbs=findAll('gb');
-  const withPhotos=[...bos,...els,...bds,...gbs].filter(n=>n.photos?.length).length;
-  const withCoords=bos.filter(n=>n.lat&&n.lon).length;
-  const statusCount={actief:0,onderhoud:0,buiten:0};
-  bos.forEach(n=>{if(n.status)statusCount[n.status.replace(' ','')]=(statusCount[n.status]||0)+1;});
-  bar.classList.add('show');
-  bar.innerHTML=`
-    <span class="stat-item"><span class="stat-dot" style="background:${COL.bo}"></span><b>${bos.length}</b> beheerobjecten</span>
-    <span class="stat-item"><span class="stat-dot" style="background:${COL.el}"></span><b>${els.length}</b> elementen</span>
-    <span class="stat-item"><span class="stat-dot" style="background:${COL.bd}"></span><b>${bds.length}</b> bouwdelen</span>
-    <span class="stat-item"><span class="stat-dot" style="background:${COL.gb}"></span><b>${gbs.length}</b> gebreken</span>
-    <span class="stat-item">\\ud83d\\udcf7 <b>${withPhotos}</b> met foto's</span>
-    <span class="stat-item">\\ud83d\\uddfa <b>${withCoords}</b> met coördinaten</span>
-    <span class="stat-item">\\ud83d\\udfe2 <b>${bos.filter(n=>n.status==='actief').length}</b> actief</span>
-    <span class="stat-item">\\ud83d\\udfe1 <b>${bos.filter(n=>n.status==='onderhoud').length}</b> in onderhoud</span>
-    <span class="stat-item">\\ud83d\\udd34 <b>${bos.filter(n=>n.status==='buiten').length}</b> buiten gebruik</span>`;
-}
-
-// ══════════════════════════════════════════════════════════
-//  RENDER TREE
-// ══════════════════════════════════════════════════════════
-function renderTree(){
-  const root=document.getElementById('treeRoot');
-  if(!tree.length){
-    root.innerHTML=`<div class="empty">
-      <div style="font-size:48px;opacity:.15">\\ud83c\\udfd7</div>
-      <div style="font-size:14px;font-weight:600;margin-bottom:6px">Nog geen decompositie</div>
-      <div style="font-size:12px;color:var(--tx3);max-width:280px;line-height:1.6">Klik <b>+ Areaal</b> of sleep een Beheerobject vanuit de bibliotheek.</div>
+// ════════════════════════════════════════════════════════
+//  TREE RENDER
+// ════════════════════════════════════════════════════════
+function renderTree() {
+  const root = document.getElementById('treeRoot');
+  if (!tree.length) {
+    root.innerHTML = `<div class="empty">
+      <div style="font-size:48px;opacity:.2">🏗</div>
+      <div style="font-size:13px;font-weight:500">Nog geen decompositie</div>
+      <div style="font-size:12px;color:var(--tx3);max-width:280px">
+        Klik <strong>+ Nieuw Areaal</strong>, voeg een <strong>Complex</strong> toe,<br>
+        en sleep een <strong>Beheerobject</strong> (automatisch = volledige hiërarchie)
+      </div>
     </div>`;
-    renderStats();return;
+    return;
   }
-  root.innerHTML=tree.map(n=>renderNode(n,0)).join('');
+  root.innerHTML = tree.map(n => renderNode(n, 0)).join('');
   attachEvents();
-  renderStats();
-  document.getElementById('mapViewBtn').style.display=findAll('bo').length?'':'none';
 }
 
-function renderNode(node,depth){
-  const col=COL[node.type]||'#888';
-  const hasKids=node.children?.length>0;
-  const collapsed=!!coll[node.id];
-  const isSearchMatch=treeSearchMatches.includes(node.id);
-  const isSearchCurrent=treeSearchMatches[treeSearchIdx]===node.id;
-  const pipes=Array.from({length:depth},()=>`<div class="indent-pipe"></div>`).join('');
-  const icon=node.type==='bo'?`<span class="node-icon">${boIcon(node.label)}</span>`:`<div class="node-dot" style="background:${col}"></div>`;
-  const wcHtml=node.wcode?`<span class="node-wcode">${esc(node.wcode)}</span>`:'';
-  const nenHtml=node.nenCode?`<span class="node-nen">${esc(node.nenCode)}</span>`:'';
-  let badge='';
-  if(node.meenemen==='ja')badge=`<span class="node-badge badge-ja">ja</span>`;
-  else if(node.meenemen==='optioneel')badge=`<span class="node-badge badge-opt">opt</span>`;
-  // Status badge for BO
-  let statusHtml='';
-  if(node.type==='bo'&&node.status&&node.status!=='actief'){
-    const sc=node.status==='onderhoud'?'onderhoud':node.status==='buiten gebruik'?'buiten':'';
-    if(sc)statusHtml=`<span class="node-status status-${sc}">${node.status}</span>`;
-  }
-  const photoDot=node.photos?.length?`<span class="node-photo-dot" title="${node.photos.length} foto('s)"></span>`:'';
-  const noteDot=node.notitie?`<span class="node-note-dot" title="Notitie aanwezig"></span>`:'';
-  const selCls=selId===node.id?' sel':'';
-  const searchCls=isSearchCurrent?' search-current':isSearchMatch?' search-match':'';
-  const canAdd=(KIDS[node.type]||[]).length>0;
-  const canDup=node.type!=='areaal';
-  return `<div class="node-block" id="blk-${node.id}">
+function renderNode(node, depth) {
+  const hasKids = node.children && node.children.length > 0;
+  const isCollapsed = coll[node.id];
+  const col = TCOL[node.type] || '#888';
+  const pipes = Array.from({length: depth}, () => '<div class="ip"></div>').join('');
+  const mBadge = node.meenemen && node.meenemen !== 'ja'
+    ? `<span class="mbadge ${node.meenemen === 'optioneel' ? 'opt' : 'nee'}">${esc(node.meenemen)}</span>` : '';
+  const canHaveKids = (KIDS[node.type] || []).length > 0;
+
+  return `<div class="node-block" id="blk-${node.id}" data-id="${node.id}" data-type="${node.type}">
     <div class="node-row">
       <div class="node-indent">${pipes}</div>
-      <div class="node-body${selCls}${searchCls}" id="nb-${node.id}" data-id="${node.id}" data-type="${node.type}" draggable="true">
-        ${hasKids?`<span class="node-tog" data-tog="${node.id}">${collapsed?'+':'−'}</span>`:`<span style="width:16px;flex-shrink:0"></span>`}
-        ${icon}
-        <span class="node-label" title="${esc(node.label)}">${esc(node.label)}</span>
-        ${wcHtml}${nenHtml}${badge}${statusHtml}${photoDot}${noteDot}
-        ${hasKids?`<span class="node-count">${node.children.length}</span>`:''}
-        <div class="node-actions">
-          ${canAdd?`<button class="na" data-act="add" data-id="${node.id}" title="Kind toevoegen">＋</button>`:''}
-          ${canDup?`<button class="na" data-act="dup" data-id="${node.id}" title="Dupliceren">⧉</button>`:''}
-          <button class="na" data-act="up" data-id="${node.id}" title="Omhoog">↑</button>
-          <button class="na" data-act="dn" data-id="${node.id}" title="Omlaag">↓</button>
+      <div class="node-body ${selId === node.id ? 'sel' : ''}" id="nb-${node.id}" data-id="${node.id}" data-type="${node.type}">
+        ${hasKids
+          ? `<span class="ntog" data-tog="${node.id}">${isCollapsed ? '+' : '−'}</span>`
+          : `<span style="width:16px;flex-shrink:0"></span>`}
+        <span class="nico" style="background:${col}"></span>
+        <span class="nlab" title="${esc(node.label)}">${esc(node.label)}</span>
+        ${node.code ? `<span class="ncod">${esc(node.code)}</span>` : ''}
+        ${mBadge}
+        ${hasKids ? `<span class="ncnt">${node.children.length}</span>` : ''}
+        <span class="nact">
+          ${canHaveKids ? `<button class="na" data-act="add" data-id="${node.id}" title="Kind toevoegen">＋</button>` : ''}
+          <button class="na" data-act="up"  data-id="${node.id}" title="Omhoog">↑</button>
+          <button class="na" data-act="dn"  data-id="${node.id}" title="Omlaag">↓</button>
           <button class="na" data-act="ren" data-id="${node.id}" title="Naam wijzigen">✎</button>
           <button class="na" data-act="del" data-id="${node.id}" title="Verwijderen">✕</button>
-        </div>
+        </span>
       </div>
     </div>
-    ${hasKids&&!collapsed?`<div>${node.children.map(c=>renderNode(c,depth+1)).join('')}</div>`:''}
+    ${hasKids && !isCollapsed
+      ? `<div class="node-children">${node.children.map(c => renderNode(c, depth + 1)).join('')}</div>`
+      : ''}
   </div>`;
 }
 
-function attachEvents(){
-  document.querySelectorAll('[data-tog]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();coll[el.dataset.tog]=!coll[el.dataset.tog];renderTree();}));
-  document.querySelectorAll('.node-body').forEach(el=>{
-    el.addEventListener('click',e=>{if(e.target.closest('[data-act]')||e.target.closest('[data-tog]'))return;showDetail(el.dataset.id);});
-  });
-  document.querySelectorAll('[data-act]').forEach(el=>el.addEventListener('click',e=>{
-    e.stopPropagation();const{id,act}=el.dataset;
-    if(act==='add')openAddChild(id);if(act==='ren')openRename(id);
-    if(act==='del')deleteNode(id);if(act==='up')moveNode(id,-1);if(act==='dn')moveNode(id,1);
-    if(act==='dup')duplicateNode(id);
-  }));
-  document.querySelectorAll('.node-body').forEach(el=>{
-    el.addEventListener('dragstart',e=>{if(dragLib){e.preventDefault();return;}dragNid=el.dataset.id;dragLib=null;e.dataTransfer.effectAllowed='move';setTimeout(()=>el.classList.add('dragging'),0);});
-    el.addEventListener('dragend',()=>{document.querySelectorAll('.node-body.dragging,.node-body.drop-ok,.node-body.drop-no').forEach(x=>x.classList.remove('dragging','drop-ok','drop-no'));dragNid=null;});
-    el.addEventListener('dragover',e=>{
-      e.preventDefault();e.stopPropagation();e.dataTransfer.dropEffect=dragLib?'copy':'move';
-      document.querySelectorAll('.node-body.drop-ok,.node-body.drop-no').forEach(x=>x.classList.remove('drop-ok','drop-no'));
-      const tt=el.dataset.type;
-      if(dragLib){const ok=(dragLib.type==='bo'&&tt==='complex')||(KIDS[tt]||[]).includes(dragLib.type);el.classList.add(ok?'drop-ok':'drop-no');}
-      else if(dragNid&&dragNid!==el.dataset.id){const n=findN(dragNid);el.classList.add((KIDS[tt]||[]).includes(n?.type)?'drop-ok':'drop-no');}
+function attachEvents() {
+  // Toggle collapse
+  document.querySelectorAll('[data-tog]').forEach(el =>
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = el.dataset.tog;
+      coll[id] = !coll[id];
+      renderTree();
+    })
+  );
+  // Select node → detail
+  document.querySelectorAll('.node-body').forEach(el =>
+    el.addEventListener('click', e => {
+      if (e.target.closest('[data-act]') || e.target.closest('[data-tog]')) return;
+      showDetail(el.dataset.id);
+    })
+  );
+  // Action buttons
+  document.querySelectorAll('[data-act]').forEach(el =>
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const { id, act } = el.dataset;
+      if (act === 'add') openAddChildModal(id);
+      if (act === 'ren') openRenameModal(id);
+      if (act === 'del') deleteNode(id);
+      if (act === 'up')  moveNode(id, -1);
+      if (act === 'dn')  moveNode(id,  1);
+    })
+  );
+  // Drag tree nodes
+  document.querySelectorAll('.node-body').forEach(el => {
+    el.setAttribute('draggable', 'true');
+    el.addEventListener('dragstart', e => {
+      dragNid = el.dataset.id;
+      dragLib = null;
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(() => el.classList.add('dragging'), 0);
     });
-    el.addEventListener('dragleave',e=>{if(!el.contains(e.relatedTarget))el.classList.remove('drop-ok','drop-no');});
-    el.addEventListener('drop',e=>{
-      e.preventDefault();e.stopPropagation();el.classList.remove('drop-ok','drop-no');
-      const tnode=findN(el.dataset.id);if(!tnode)return;
-      if(dragLib){
-        const{type,name}=dragLib;
-        if(type==='bo'&&tnode.type==='complex')showFilter(name,tnode);
-        else if((KIDS[tnode.type]||[]).includes(type)){pushUndo();addKid(tnode,{id:mkId(),type,label:name,nenCode:nenCode(type,name),wcode:'',notitie:'',photos:[],children:[]});coll[tnode.id]=false;renderTree();autoSave();toast(name+' toegevoegd');}
-        else toast('⚠ '+LBL[type]+' past niet onder '+LBL[tnode.type]);
-      }else if(dragNid&&dragNid!==tnode.id){
-        const n=findN(dragNid);if(!n)return;
-        if(!(KIDS[tnode.type]||[]).includes(n.type)){toast('⚠ Kan hier niet plaatsen');return;}
-        pushUndo();const op=findP(dragNid);
-        if(op)op.children=op.children.filter(c=>c.id!==dragNid);else tree=tree.filter(x=>x.id!==dragNid);
-        addKid(tnode,n);coll[tnode.id]=false;renderTree();autoSave();toast(n.label+' verplaatst');
+    el.addEventListener('dragend', () => {
+      document.querySelectorAll('.node-body.dragging,.node-body.dov,.node-body.dinv')
+        .forEach(x => x.classList.remove('dragging','dov','dinv'));
+      dragNid = null;
+    });
+    el.addEventListener('dragover', e => {
+      e.preventDefault(); e.stopPropagation();
+      document.querySelectorAll('.node-body.dov,.node-body.dinv')
+        .forEach(x => x.classList.remove('dov','dinv'));
+      const tt = el.dataset.type;
+      if (dragLib) {
+        const ok = (dragLib.auto && dragLib.type === 'bo' && tt === 'complex')
+          || (KIDS[tt] || []).includes(dragLib.type);
+        el.classList.add(ok ? 'dov' : 'dinv');
+      } else if (dragNid && dragNid !== el.dataset.id) {
+        const n = findN(dragNid);
+        el.classList.add((KIDS[tt]||[]).includes(n?.type) ? 'dov' : 'dinv');
+      }
+    });
+    el.addEventListener('dragleave', e => {
+      if (!el.contains(e.relatedTarget)) el.classList.remove('dov','dinv');
+    });
+    el.addEventListener('drop', e => {
+      e.preventDefault(); e.stopPropagation();
+      el.classList.remove('dov','dinv');
+      const tnode = findN(el.dataset.id);
+      if (!tnode) return;
+      if (dragLib) {
+        const { type, name, auto } = dragLib;
+        if (auto && type === 'bo' && tnode.type === 'complex') {
+          const node = buildBoTree(name);
+          if (node) { addKid(tnode, node); coll[tnode.id] = false; renderTree(); toast('✓ ' + name + ' + volledige decompositie toegevoegd'); }
+        } else if ((KIDS[tnode.type]||[]).includes(type)) {
+          addKid(tnode, { id: mkId(), type, label: name, code: libCode(type, name), children: [] });
+          coll[tnode.id] = false; renderTree(); toast(name + ' toegevoegd');
+        } else {
+          toast('⚠ ' + TLBL[type] + ' past niet onder ' + TLBL[tnode.type]);
+        }
+      } else if (dragNid && dragNid !== tnode.id) {
+        const n = findN(dragNid);
+        if (!n || !(KIDS[tnode.type]||[]).includes(n.type)) { toast('⚠ Kan hier niet plaatsen'); return; }
+        const op = findP(dragNid);
+        if (op) op.children = op.children.filter(c => c.id !== dragNid);
+        else tree = tree.filter(x => x.id !== dragNid);
+        addKid(tnode, n); coll[tnode.id] = false; renderTree(); toast(n.label + ' verplaatst');
       }
     });
   });
 }
-function canvasDrop(e){if(e.target.closest('.node-body'))return;e.preventDefault();if(dragLib&&dragLib.type==='areaal'){pushUndo();tree.push({id:mkId(),type:'areaal',label:dragLib.name||'Areaal',nenCode:'',wcode:'',notitie:'',children:[]});renderTree();autoSave();}}
 
-// ══════════════════════════════════════════════════════════
-//  DUPLICATE
-// ══════════════════════════════════════════════════════════
-function duplicateNode(id){
-  const n=findN(id);if(!n)return;
-  pushUndo();
-  function cloneNode(src){
-    const clone=deepCopy(src);
-    function reId(nd){nd.id=mkId();if(nd.children)nd.children.forEach(reId);}
-    reId(clone);
-    clone.label=clone.label+' (kopie)';
-    return clone;
-  }
-  const clone=cloneNode(n);
-  const par=findP(id);const list=par?par.children:tree;
-  const idx=list.findIndex(x=>x.id===id);
-  list.splice(idx+1,0,clone);
-  renderTree();autoSave();toast('⧉ '+n.label+' gedupliceerd');
+// ════════════════════════════════════════════════════════
+//  TREE ACTIONS
+// ════════════════════════════════════════════════════════
+function moveNode(id, dir) {
+  const par = findP(id);
+  const list = par ? par.children : tree;
+  const idx = list.findIndex(n => n.id === id);
+  if (idx === -1) return;
+  const ni = idx + dir;
+  if (ni < 0 || ni >= list.length) return;
+  [list[idx], list[ni]] = [list[ni], list[idx]];
+  renderTree();
 }
-
-// ══════════════════════════════════════════════════════════
-//  DETAIL PANEL
-// ══════════════════════════════════════════════════════════
-function showDetail(id){
-  selId=id;const n=findN(id);if(!n){closeDetail();return;}
-  document.getElementById('detailPanel').classList.add('open');
-  const badge=document.getElementById('dpBadge');
-  badge.textContent=n.type==='bo'?boIcon(n.label)+' '+LBL[n.type]:LBL[n.type];
-  badge.style.background=COL[n.type];
-  document.getElementById('dpTitle').textContent=n.label;
-
-  let html='';
-
-  // ── Werkcode + adres + status + bouwjaar ──
-  if(WCODE_LEVELS.has(n.type)){
-    html+=`<div class="dp-section"><div class="dp-section-title">⚙️ Maximo / Locatie</div>
-      <div class="dp-field"><div class="dp-label">Werkcode / Objectnummer</div>
-        <input class="dp-input mono" id="inp-wcode" type="text" value="${esc(n.wcode||'')}" placeholder="bijv. KGM000041"></div>`;
-    if(n.type==='bo'){
-      html+=`<div class="dp-field"><div class="dp-label">Status</div>
-        <select class="dp-select" id="inp-status">
-          <option value="actief"${n.status==='actief'?' selected':''}>\\ud83d\\udfe2 Actief</option>
-          <option value="onderhoud"${n.status==='onderhoud'?' selected':''}>\\ud83d\\udfe1 In onderhoud</option>
-          <option value="buiten gebruik"${n.status==='buiten gebruik'?' selected':''}>\\ud83d\\udd34 Buiten gebruik</option>
-        </select></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
-        <div class="dp-field"><div class="dp-label">Bouwjaar</div>
-          <input class="dp-input" id="inp-bouwjaar" type="text" value="${esc(n.bouwjaar||'')}" placeholder="bijv. 1985"></div>
-        <div class="dp-field"><div class="dp-label">Levensduur (jaar)</div>
-          <input class="dp-input" id="inp-levensduur" type="text" value="${esc(n.levensduur||'')}" placeholder="bijv. 40"></div>
-      </div>
-      <div class="dp-field"><div class="dp-label">Adres</div>
-        <input class="dp-input" id="inp-adres" type="text" value="${esc(n.adres||'')}" placeholder="Ringvaartweg 1"></div>
-      <div class="dp-field"><div class="dp-label">Stad / Gemeente</div>
-        <input class="dp-input" id="inp-stad" type="text" value="${esc(n.stad||'')}" placeholder="Aalsmeer"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
-        <div><div class="dp-label">Breedtegraad (lat)</div>
-          <input class="dp-input mono" id="inp-lat" type="text" value="${esc(n.lat||'')}" placeholder="52.3676"></div>
-        <div><div class="dp-label">Lengtegraad (lon)</div>
-          <input class="dp-input mono" id="inp-lon" type="text" value="${esc(n.lon||'')}" placeholder="4.9041"></div>
-      </div>`;
-    }
-    html+=`<div class="dp-save-row">
-      <button class="btn" onclick="showDetail('${n.id}')">Annuleren</button>
-      <button class="btn primary" onclick="saveFields('${n.id}')">✓ Opslaan</button>
-    </div></div>`;
-  }
-
-  // ── Notitie ──
-  html+=`<div class="dp-section"><div class="dp-section-title">\\ud83d\\udcdd Notitie</div>
-    <textarea class="dp-textarea" id="inp-notitie" placeholder="Vrije notitie, aandachtspunten…">${esc(n.notitie||'')}</textarea>
-    <div class="dp-save-row">
-      <button class="btn primary" onclick="saveNotitie('${n.id}')" style="width:100%">✓ Notitie opslaan</button>
-    </div></div>`;
-
-  // ── Foto's ──
-  if(PHOTO_LEVELS.has(n.type)){
-    const photos=n.photos||[];
-    html+=`<div class="dp-section"><div class="dp-section-title">\\ud83d\\udcf7 Foto's <span style="font-weight:400;color:var(--tx3)">(${photos.length}/${MAX_PHOTOS})</span></div>
-      <div class="photo-grid">`;
-    photos.forEach((p,i)=>{
-      html+=`<div class="photo-thumb" onclick="openLightbox('${n.id}',${i})">
-        <img src="${p.data}" alt="${esc(p.name||'')}">
-        <button class="photo-del" onclick="deletePhoto(event,'${n.id}',${i})">✕</button>
-      </div>`;
-    });
-    if(photos.length<MAX_PHOTOS){
-      html+=`<label class="photo-add">
-        <input type="file" accept="image/*" multiple style="display:none" onchange="addPhotos(event,'${n.id}')">
-        <span class="photo-add-icon">\\ud83d\\udcf7</span>
-        <span class="photo-add-lbl">Toevoegen</span>
-      </label>`;
-    }
-    html+=`</div></div>`;
-  }
-
-  // ── Identificatie ──
-  html+=`<div class="dp-section"><div class="dp-section-title">\\ud83d\\udccb Identificatie</div>`;
-  html+=`<div class="dp-field"><div class="dp-label">Naam</div><div class="dp-value">${esc(n.label)}</div></div>`;
-  if(n.nenCode)html+=`<div class="dp-field"><div class="dp-label">NEN 2767 Code</div><div class="dp-value mono">${esc(n.nenCode)}</div></div>`;
-  if(n.wcode)html+=`<div class="dp-field"><div class="dp-label">Maximo Werkcode</div><div class="dp-value mono" style="color:var(--blue)">${esc(n.wcode)}</div></div>`;
-  if(n.type==='bo'){
-    if(n.status)html+=`<div class="dp-field"><div class="dp-label">Status</div><div class="dp-value">${n.status==='actief'?'\\ud83d\\udfe2':n.status==='onderhoud'?'\\ud83d\\udfe1':'\\ud83d\\udd34'} ${esc(n.status)}</div></div>`;
-    if(n.bouwjaar)html+=`<div class="dp-field"><div class="dp-label">Bouwjaar</div><div class="dp-value">${esc(n.bouwjaar)}${n.levensduur?' — levensduur: '+n.levensduur+' jaar':''}</div></div>`;
-    if(n.adres||n.stad)html+=`<div class="dp-field"><div class="dp-label">Adres</div><div class="dp-value">${[n.adres,n.stad].filter(Boolean).join(', ')}</div></div>`;
-    if(n.lat&&n.lon)html+=`<div class="dp-field"><div class="dp-label">Coördinaten</div><div class="dp-value mono">${esc(n.lat)}, ${esc(n.lon)}</div></div>`;
-  }
-  html+=`</div>`;
-
-  // ── Beschrijving ──
-  const hasD=n.def||n.functie||n.vakdiscipline||n.reden||n.omschrijving||n.eenheid;
-  if(hasD){
-    html+=`<div class="dp-section"><div class="dp-section-title">\\ud83d\\udcd6 Beschrijving</div>`;
-    if(n.def)html+=`<div class="dp-field"><div class="dp-label">Werkdefinitie</div><div class="dp-value muted">${esc(n.def)}</div></div>`;
-    if(n.functie)html+=`<div class="dp-field"><div class="dp-label">Functie</div><div class="dp-value">${esc(n.functie)}</div></div>`;
-    if(n.vakdiscipline)html+=`<div class="dp-field"><div class="dp-label">Vakdiscipline</div><div class="dp-value">${esc(n.vakdiscipline)}</div></div>`;
-    if(n.reden)html+=`<div class="dp-field"><div class="dp-label">Reden opname</div><div class="dp-value muted">${esc(n.reden)}</div></div>`;
-    if(n.omschrijving)html+=`<div class="dp-field"><div class="dp-label">Omschrijving</div><div class="dp-value muted">${esc(n.omschrijving)}</div></div>`;
-    if(n.eenheid)html+=`<div class="dp-field"><div class="dp-label">Eenheid</div><div class="dp-value">${esc(n.eenheid)}</div></div>`;
-    html+=`</div>`;
-  }
-
-  // ── NEN Eigenschappen ──
-  const hasP=n.meenemen||n.gebrekgroep||n.gebreksoort||n.belang||n.type_gb||n.afkorting||n.toelichting||n.intensiteit;
-  if(hasP){
-    html+=`<div class="dp-section"><div class="dp-section-title">\\ud83d\\udd0d NEN 2767 Eigenschappen</div>`;
-    if(n.meenemen||n.fta_m){
-      const ftaM=n.fta_m||n.meenemen||'';
-      const ftaColor=getFtaColor(ftaM);
-      const ftaLbl=getFtaLabel(ftaM);
-      html+=`<div class="dp-field"><div class="dp-label">FTA Analyse</div>
-        <div class="dp-value">
-          <div style="background:${ftaColor}18;border:1px solid ${ftaColor}44;border-radius:6px;padding:6px 8px;margin-bottom:4px">
-            <div style="font-size:11px;font-weight:700;color:${ftaColor}">${ftaLbl}</div>
-            ${n.fta_r?`<div style="font-size:10px;color:#555;margin-top:3px">${esc(n.fta_r)}</div>`:''}
-          </div>
-          <div style="display:flex;gap:4px;margin-top:4px">
-            ${['ja','optioneel','nee'].map(v=>`<button onclick="updateFta('${n.id}','${v}')" 
-              style="flex:1;padding:3px 4px;border:1px solid ${getFtaColor(v)}44;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;background:${ftaM===v?getFtaColor(v)+'22':'transparent'};color:${getFtaColor(v)}">${v==='ja'?'🟢 JA':v==='optioneel'?'🟡 OPT':'🔴 NEE'}</button>`).join('')}
-          </div>
-        </div></div>`;
-    }
-    if(n.eg)html+=`<div class="dp-field"><div class="dp-label">Elementengroep</div><div class="dp-value">${esc(n.eg)}</div></div>`;
-    if(n.pf)html+=`<div class="dp-field"><div class="dp-label">Primaire functie</div><div class="dp-value muted">${esc(n.pf)}</div></div>`;
-    if(n.type_gb)html+=`<div class="dp-field"><div class="dp-label">Gebrektype</div><div class="dp-value">${esc(n.type_gb)}</div></div>`;
-    if(n.gebrekgroep)html+=`<div class="dp-field"><div class="dp-label">Gebrekgroep</div><div class="dp-value">${esc(n.gebrekgroep)}</div></div>`;
-    if(n.gebreksoort)html+=`<div class="dp-field"><div class="dp-label">Gebreksoort</div><div class="dp-value muted">${esc(n.gebreksoort)}</div></div>`;
-    if(n.belang)html+=`<div class="dp-field"><div class="dp-label">Belang</div><div class="dp-value"><span class="dp-tag belang-${n.belang}">${esc(n.belang)}</span></div></div>`;
-    if(n.afkorting)html+=`<div class="dp-field"><div class="dp-label">Afkorting</div><div class="dp-value mono">${esc(n.afkorting)}</div></div>`;
-    if(n.intensiteit)html+=`<div class="dp-field"><div class="dp-label">Intensiteit</div><div class="dp-value">${esc(n.intensiteit)}</div></div>`;
-    if(n.toelichting)html+=`<div class="dp-field"><div class="dp-label">Toelichting</div><div class="dp-value muted">${esc(n.toelichting)}</div></div>`;
-    html+=`</div>`;
-  }
-
-  // ── Component specifieke velden ────────────────────────────────────────
-  if(n.type==='comp'){
-    html+=`<div class="dp-section"><div class="dp-section-title">⚙ Component details</div>
-      <div class="dp-field"><div class="dp-label">Serienummer</div>
-        <input class="dp-input mono" id="inp-serienr" type="text" value="${esc(n.serienr||'')}" placeholder="S/N"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
-        <div class="dp-field"><div class="dp-label">Merk</div>
-          <input class="dp-input" id="inp-merk" type="text" value="${esc(n.merk||'')}" placeholder="bijv. Grundfos"></div>
-        <div class="dp-field"><div class="dp-label">Type/Model</div>
-          <input class="dp-input" id="inp-model" type="text" value="${esc(n.model||'')}" placeholder="bijv. CM5-4"></div>
-      </div></div>`;
-  }
-
-  // ── Structuur & acties ────────────────────────────────────────────────
-  html+=`<div class="dp-section"><div class="dp-section-title">🌳 Structuur</div>`;
-  if(n.children?.length)html+=`<div class="dp-field"><div class="dp-label">Directe kinderen</div><div class="dp-value">${n.children.length} items</div></div>`;
-  html+=`<div style="display:flex;flex-direction:column;gap:5px;margin-top:6px">
-    <button class="btn" onclick="openRename('${n.id}')" style="width:100%">✎ Naam wijzigen</button>
-    ${n.type!=='areaal'?`<button class="btn" onclick="duplicateNode('${n.id}')" style="width:100%">⧉ Dupliceren</button>`:''}
-    <button class="btn danger" onclick="deleteNode('${n.id}')" style="width:100%">✕ Verwijderen</button>
-  </div></div>`;
-
-  document.getElementById('dpBody').innerHTML=html;
+function expandAll()  { function w(ns){ns.forEach(n=>{coll[n.id]=false;if(n.children)w(n.children)})} w(tree); renderTree(); }
+function collapseAll(){ function w(ns){ns.forEach(n=>{if(n.children?.length)coll[n.id]=true;if(n.children)w(n.children)})} w(tree); renderTree(); }
+function deleteNode(id) {
+  if (!confirm('Verwijder dit item en alle onderliggende items?')) return;
+  const p = findP(id);
+  if (p) p.children = p.children.filter(c => c.id !== id);
+  else tree = tree.filter(n => n.id !== id);
+  if (selId === id) closeDetail();
   renderTree();
 }
 
-function saveFields(id){
-  const n=findN(id);if(!n)return;
-  pushUndo();
-  const get=x=>{const el=document.getElementById('inp-'+x);return el?el.value.trim():'';};
-  n.wcode=get('wcode');
-  if(n.type==='bo'){
-    const sel=document.getElementById('inp-status');
-    n.status=sel?sel.value:'actief';
-    n.bouwjaar=get('bouwjaar');n.levensduur=get('levensduur');
-    n.adres=get('adres');n.stad=get('stad');n.lat=get('lat');n.lon=get('lon');
+// ════════════════════════════════════════════════════════
+//  DETAIL PANEL
+// ════════════════════════════════════════════════════════
+function showDetail(id) {
+  const node = findN(id);
+  if (!node) return;
+  selId = id;
+  document.getElementById('detailPanel').classList.add('open');
+  document.getElementById('dpTitle').textContent = TLBL[node.type] || node.type;
+  const col = TCOL[node.type] || '#888';
+
+  // Extra info from library
+  let libInfo = '';
+  if (node.type === 'bo') {
+    const b = BO.find(x => x.n === node.label);
+    if (b?.d) libInfo += `<div class="dpf"><div class="dpl">Definitie</div><div class="dpv">${esc(b.d)}</div></div>`;
+    const boMap = MAP_BO_EL[node.label];
+    if (boMap?.pf) libInfo += `<div class="dpf"><div class="dpl">Primaire functie</div><div class="dpv">${esc(boMap.pf)}</div></div>`;
+  } else if (node.type === 'el') {
+    const e = EL.find(x => x.n === node.label);
+    if (node.eg || e?.eg) libInfo += `<div class="dpf"><div class="dpl">Elementengroep</div><div class="dpv">${esc(node.eg || e?.eg)}</div></div>`;
+    if (node.pf) libInfo += `<div class="dpf"><div class="dpl">Primaire functie (FTA)</div><div class="dpv">${esc(node.pf)}</div></div>`;
+    if (e?.f) libInfo += `<div class="dpf"><div class="dpl">Functie</div><div class="dpv">${esc(e.f)}</div></div>`;
+    if (e?.v) libInfo += `<div class="dpf"><div class="dpl">Vakdiscipline</div><div class="dpv">${esc(e.v)}</div></div>`;
+    if (e?.r) libInfo += `<div class="dpf"><div class="dpl">Reden opname</div><div class="dpv" style="font-size:11px;color:var(--tx3)">${esc(e.r)}</div></div>`;
+    // FTA
+    const ftaM = node.fta_m || node.meenemen || '';
+    const ftaCol = {ja:'#0e6e50',optioneel:'#b87200',nee:'#cc3a3a'}[ftaM] || '#9a9a94';
+    const ftaLbl = {ja:'Kritisch (JA)',optioneel:'Optioneel',nee:'Niet relevant'}[ftaM] || 'Onbekend';
+    libInfo += `<div class="dpf"><div class="dpl">FTA Analyse</div><div class="dpv">
+      <span style="background:${ftaCol}22;color:${ftaCol};border:1px solid ${ftaCol}44;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600">${ftaLbl}</span>
+      ${node.fta_r ? `<div style="font-size:10px;color:var(--tx3);margin-top:3px">${esc(node.fta_r)}</div>` : ''}
+    </div></div>`;
+  } else if (node.type === 'bd') {
+    const b = BD.find(x => x.n === node.label);
+    if (b?.d) libInfo += `<div class="dpf"><div class="dpl">Definitie</div><div class="dpv">${esc(b.d)}</div></div>`;
+    if (b?.v) libInfo += `<div class="dpf"><div class="dpl">Vakdiscipline</div><div class="dpv">${esc(b.v)}</div></div>`;
+    if (b?.fta) libInfo += `<div class="dpf"><div class="dpl">FTA Classificatie</div><div class="dpv">${esc(b.fta)}</div></div>`;
+    // FTA
+    const ftaM = node.fta_m || node.meenemen || '';
+    const ftaCol = {ja:'#0e6e50',optioneel:'#b87200',nee:'#cc3a3a'}[ftaM] || '#9a9a94';
+    const ftaLbl = {ja:'Kritisch (JA)',optioneel:'Optioneel',nee:'Niet relevant'}[ftaM] || 'Onbekend';
+    libInfo += `<div class="dpf"><div class="dpl">FTA Analyse</div><div class="dpv">
+      <span style="background:${ftaCol}22;color:${ftaCol};border:1px solid ${ftaCol}44;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600">${ftaLbl}</span>
+    </div></div>`;
+  } else if (node.type === 'comp') {
+    if (node.serienr) libInfo += `<div class="dpf"><div class="dpl">Serienummer</div><div class="dpv" style="font-family:monospace">${esc(node.serienr)}</div></div>`;
+    if (node.merk) libInfo += `<div class="dpf"><div class="dpl">Merk</div><div class="dpv">${esc(node.merk)}</div></div>`;
+    if (node.model) libInfo += `<div class="dpf"><div class="dpl">Type/Model</div><div class="dpv">${esc(node.model)}</div></div>`;
   }
-  if(n.type==='comp'){
-    n.serienr=get('serienr');n.merk=get('merk');n.model=get('model');
-  }
-  renderTree();autoSave();toast('✓ Opgeslagen');showDetail(id);
-}
-function saveNotitie(id){
-  const n=findN(id);if(!n)return;
-  const el=document.getElementById('inp-notitie');if(!el)return;
-  n.notitie=el.value.trim();
-  renderTree();autoSave();toast('✓ Notitie opgeslagen');showDetail(id);
-}
-function closeDetail(){selId=null;document.getElementById('detailPanel').classList.remove('open');renderTree();}
 
-// ══════════════════════════════════════════════════════════
-//  FOTO
-// ══════════════════════════════════════════════════════════
-function compressImage(file){
-  return new Promise(resolve=>{
-    const reader=new FileReader();
-    reader.onload=e=>{
-      const img=new Image();
-      img.onload=()=>{
-        let w=img.width,h=img.height;
-        if(w>MAX_PX||h>MAX_PX){if(w>h){h=Math.round(h*MAX_PX/w);w=MAX_PX;}else{w=Math.round(w*MAX_PX/h);h=MAX_PX;}}
-        const c=document.createElement('canvas');c.width=w;c.height=h;
-        c.getContext('2d').drawImage(img,0,0,w,h);
-        resolve({data:c.toDataURL('image/jpeg',JPEG_Q),name:file.name,w,h});
-      };img.src=e.target.result;
-    };reader.readAsDataURL(file);
-  });
-}
-async function addPhotos(e,nodeId){
-  const n=findN(nodeId);if(!n)return;
-  if(!n.photos)n.photos=[];
-  const files=Array.from(e.target.files);
-  const slots=MAX_PHOTOS-n.photos.length;
-  if(!slots){toast('⚠ Maximum van '+MAX_PHOTOS+' foto\\'s bereikt');return;}
-  const toAdd=files.slice(0,slots);
-  toast('\\ud83d\\udcf7 Foto\\'s verwerken…');
-  for(const f of toAdd){const c=await compressImage(f);n.photos.push(c);}
-  if(files.length>slots)toast(`⚠ ${slots} van ${files.length} foto('s) toegevoegd (max ${MAX_PHOTOS})`);
-  else toast(`✓ ${toAdd.length} foto('s) toegevoegd`);
-  autoSave();showDetail(nodeId);
-}
-function deletePhoto(e,nodeId,idx){
-  e.stopPropagation();const n=findN(nodeId);if(!n?.photos)return;
-  pushUndo();n.photos.splice(idx,1);autoSave();renderTree();showDetail(nodeId);toast('Foto verwijderd');
-}
-function openLightbox(nodeId,idx){
-  const n=findN(nodeId);if(!n?.photos?.[idx])return;
-  const p=n.photos[idx];
-  document.getElementById('lightboxImg').src=p.data;
-  document.getElementById('lightboxCaption').textContent=(p.name||'Foto '+(idx+1))+' — '+n.label;
-  document.getElementById('lightbox').style.display='flex';
-  document.addEventListener('keydown',lightboxKey);
-}
-function closeLightbox(){document.getElementById('lightbox').style.display='none';document.removeEventListener('keydown',lightboxKey);}
-function lightboxKey(e){if(e.key==='Escape')closeLightbox();}
+  const canHaveKids = (KIDS[node.type] || []).length > 0;
 
-// ══════════════════════════════════════════════════════════
-//  KAART
-// ══════════════════════════════════════════════════════════
-function toggleMapView(){
-  mapVisible=!mapVisible;
-  document.getElementById('canvas').style.display=mapVisible?'none':'';
-  document.getElementById('mapView').classList.toggle('show',mapVisible);
-  document.getElementById('mapViewBtn').classList.toggle('active',mapVisible);
-  if(mapVisible)renderMap();
+  document.getElementById('dpBody').innerHTML = `
+    <div class="dpf"><div class="dpl">Naam</div><div class="dpv" style="font-weight:500">${esc(node.label)}</div></div>
+    <div class="dpf"><div class="dpl">Type</div><div class="dpv">
+      <span class="tbadge" style="background:${col}22;color:${col}">
+        <span style="width:6px;height:6px;border-radius:50%;background:${col};display:inline-block"></span>
+        ${TLBL[node.type] || node.type}
+      </span>
+    </div></div>
+    ${node.code ? `<div class="dpf"><div class="dpl">NEN 2767 Code</div><div class="dpv" style="font-family:monospace">${esc(node.code)}</div></div>` : ''}
+    ${libInfo}
+    <div class="dpf"><div class="dpl">Onderliggende items</div><div class="dpv">${countD(node)}</div></div>
+    <div class="dp-acts">
+      ${canHaveKids ? `<button class="btn" onclick="openAddChildModal('${id}')">+ Kind toevoegen</button>` : ''}
+      <button class="btn" onclick="openRenameModal('${id}')">Naam wijzigen</button>
+      <button class="btn" onclick="moveNode('${id}',-1)">Omhoog</button>
+      <button class="btn" onclick="moveNode('${id}',1)">Omlaag</button>
+      <button class="btn dan" onclick="deleteNode('${id}')">Verwijderen</button>
+    </div>`;
+  renderTree();
 }
-function renderMap(){
-  const mapEl=document.getElementById('mapView');
-  if(!leafletMap){
-    mapEl.style.height='100%';
-    leafletMap=L.map(mapEl).setView([52.3,5.3],8);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',maxZoom:19}).addTo(leafletMap);
-  }
-  mapMarkers.forEach(m=>m.remove());mapMarkers=[];
-  const bos=findAll('bo');const bounds=[];
-  for(const bo of bos){
-    const lat=parseFloat(bo.lat),lon=parseFloat(bo.lon);
-    if(!bo.lat||!bo.lon||isNaN(lat)||isNaN(lon))continue;
-    const color=boColor(bo.label),icon=boIcon(bo.label);
-    const divIcon=L.divIcon({className:'',html:`<div style="background:${color};border:2px solid #fff;border-radius:50% 50% 50% 0;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 2px 8px rgba(0,0,0,.35);transform:rotate(-45deg);cursor:pointer"><span style="transform:rotate(45deg)">${icon}</span></div>`,iconSize:[34,34],iconAnchor:[17,34],popupAnchor:[0,-36]});
-    const adresStr=[bo.adres,bo.stad].filter(Boolean).join(', ');
-    const statusIcon=bo.status==='onderhoud'?'\\ud83d\\udfe1':bo.status==='buiten gebruik'?'\\ud83d\\udd34':'\\ud83d\\udfe2';
-    const popup=`<div class="popup-title">${icon} ${bo.label}</div>
-      ${bo.nenCode?`<div class="popup-code">NEN: ${bo.nenCode}</div>`:''}
-      ${adresStr?`<div class="popup-addr">\\ud83d\\udccd ${adresStr}</div>`:''}
-      ${bo.wcode?`<div class="popup-wcode">⚙ ${bo.wcode}</div>`:''}
-      ${bo.bouwjaar?`<div style="font-size:11px;color:#555">\\ud83c\\udfd7 Bouwjaar: ${bo.bouwjaar}${bo.levensduur?' ('+bo.levensduur+'jr)':''}</div>`:''}
-      <div style="font-size:11px;margin-top:4px">${statusIcon} ${bo.status||'actief'}</div>
-      <div style="font-size:10px;color:#999;margin-top:3px">${lat.toFixed(5)}, ${lon.toFixed(5)}</div>`;
-    const marker=L.marker([lat,lon],{icon:divIcon}).addTo(leafletMap).bindPopup(popup);
-    mapMarkers.push(marker);bounds.push([lat,lon]);
-  }
-  if(bounds.length===1)leafletMap.setView(bounds[0],14);
-  else if(bounds.length>1)leafletMap.fitBounds(bounds,{padding:[40,40]});
-  if(!bounds.length)toast('⚠ Geen coördinaten. Voeg lat/lon toe via het detail paneel.');
-  else toast(`\\ud83d\\uddfa ${bounds.length} object${bounds.length>1?'en':''} op kaart`);
-  setTimeout(()=>leafletMap.invalidateSize(),100);
+function closeDetail() {
+  selId = null;
+  document.getElementById('detailPanel').classList.remove('open');
+  renderTree();
 }
 
-// ══════════════════════════════════════════════════════════
-//  PDF EXPORT
-// ══════════════════════════════════════════════════════════
-function exportPDF(){
-  if(!tree.length){toast('Geen decompositie om te exporteren');return;}
-  const w=window.open('','_blank');
-  let rows='';
-  function walk(n,depth){
-    const indent='&nbsp;'.repeat(depth*4);
-    const col=COL[n.type]||'#888';
-    const icon=n.type==='bo'?boIcon(n.label):'';
-    const wc=n.wcode?` <span style="color:#1a5fa8;font-family:monospace;font-size:11px">[${n.wcode}]</span>`:'';
-    const nc=n.nenCode?` <span style="color:#999;font-size:10px;font-family:monospace">${n.nenCode}</span>`:'';
-    const st=n.status&&n.status!=='actief'?` <span style="font-size:10px;color:${n.status==='onderhoud'?'#b87200':'#a02828'}">(${n.status})</span>`:'';
-    const nt=n.notitie?`<div style="margin-left:${(depth+1)*20}px;font-size:11px;color:#666;font-style:italic;margin-bottom:2px">\\ud83d\\udcdd ${n.notitie}</div>`:'';
-    rows+=`<tr>
-      <td style="padding:3px 6px;border-bottom:1px solid #eee">
-        ${indent}<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${col};margin-right:5px;vertical-align:middle"></span>
-        ${icon?`<span style="font-size:13px;margin-right:3px">${icon}</span>`:''}
-        <strong style="font-size:${12-Math.min(depth,3)}px">${n.label}</strong>${wc}${nc}${st}
-      </td>
-      <td style="padding:3px 6px;border-bottom:1px solid #eee;font-size:11px;color:#555">${LBL[n.type]}</td>
-      <td style="padding:3px 6px;border-bottom:1px solid #eee;font-size:11px;color:#555">${n.nenCode||''}</td>
-      <td style="padding:3px 6px;border-bottom:1px solid #eee;font-size:11px;color:#1a5fa8;font-family:monospace">${n.wcode||''}</td>
-    </tr>${nt?`<tr><td colspan="4" style="padding:0">${nt}</td></tr>`:''}`;
-    if(n.children&&!coll[n.id])n.children.forEach(c=>walk(c,depth+1));
-  }
-  tree.forEach(n=>walk(n,0));
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${projectName} — NEN 2767 Decompositie</title>
-  <style>body{font-family:-apple-system,'Segoe UI',sans-serif;margin:20px;color:#222}h1{font-size:16px;color:#1a5fa8;border-bottom:2px solid #1a5fa8;padding-bottom:8px;margin-bottom:16px}table{width:100%;border-collapse:collapse}th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888;padding:4px 6px;border-bottom:2px solid #ddd}tr:hover td{background:#f8f8f8}@media print{body{margin:10px}.no-print{display:none}}</style>
-  </head><body>
-  <div class="no-print" style="margin-bottom:16px"><button onclick="window.print()" style="padding:7px 18px;background:#1a5fa8;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:13px">\\ud83d\\udda8 Afdrukken / Opslaan als PDF</button></div>
-  <h1>\\ud83d\\udccb ${projectName} — NEN 2767 Decompositie Bibliotheek</h1>
-  <p style="font-size:11px;color:#888;margin-bottom:16px">Gegenereerd op ${new Date().toLocaleDateString('nl-NL',{day:'2-digit',month:'long',year:'numeric'})}</p>
-  <table><thead><tr><th>Naam</th><th>Type</th><th>NEN Code</th><th>Werkcode</th></tr></thead><tbody>${rows}</tbody></table>
-  
-// ── OPSLAAN / LADEN ──────────────────────────────────────────────────────
-function saveJSON(){
-  const blob=new Blob([JSON.stringify({version:4,projectName,tree,idC},null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download=(projectName||'NEN2767').replace(/[^a-z0-9]/gi,'_')+'_'+new Date().toISOString().split('T')[0].replace(/-/g,'')+'.json';
-  a.click();toast('💾 Project opgeslagen');
+// ════════════════════════════════════════════════════════
+//  MODALS
+// ════════════════════════════════════════════════════════
+function openAddModal(type, parentId) {
+  document.getElementById('mbox').innerHTML = `
+    <h3>Nieuw ${TLBL[type] || type}</h3>
+    <div class="fr"><label>Naam *</label>
+      <input id="mN" type="text" placeholder="${
+        type==='portfolio' ? 'bijv. Waterschap AGV' :
+        type==='complex'   ? 'bijv. Polder Groot-Mijdrecht' : 'Naam'
+      }">
+    </div>
+    <div class="fr"><label>Code (optioneel)</label><input id="mC" type="text" placeholder="bijv. P01"></div>
+    <div class="mbtns">
+      <button class="btn" onclick="closeModal()">Annuleren</button>
+      <button class="btn pr" onclick="doAdd('${type}','${parentId||''}')">Toevoegen</button>
+    </div>`;
+  document.getElementById('moverlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('mN')?.focus(), 50);
 }
-function loadJSON(inp){
-  const f=inp.files[0];if(!f)return;
-  const r=new FileReader();
-  r.onload=e=>{
-    try{
-      const d=JSON.parse(e.target.result);
-      if(d.tree){
-        pushUndo();tree=d.tree;idC=d.idC||idC;
-        projectName=d.projectName||'Project';
-        document.getElementById('projectTitle').textContent=projectName;
-        renderTree();closeDetail();autoSave();
-        toast('✓ Project geladen: '+projectName);
-      }
-    }catch{toast('⚠ Kan bestand niet lezen');}
-  };
-  r.readAsText(f);inp.value='';
+function openAddChildModal(pid) {
+  const p = findN(pid);
+  if (!p) return;
+  const ct = KIDS[p.type];
+  if (!ct || !ct.length) { toast('Geen kinderen mogelijk voor dit type'); return; }
+  openAddModal(ct[0], pid);
 }
-
-// ── AUTO SAVE ────────────────────────────────────────────────────────────
-function autoSave(){
-  try{localStorage.setItem('nen2767_v4',JSON.stringify({version:4,projectName,tree,idC}));}catch(e){}
-  const el=document.getElementById('topSaved');
-  if(el){el.textContent='✓ Automatisch opgeslagen';setTimeout(()=>{el.textContent='';},2000);}
+function openRenameModal(id) {
+  const n = findN(id);
+  if (!n) return;
+  document.getElementById('mbox').innerHTML = `
+    <h3>Naam wijzigen</h3>
+    <div class="fr"><label>Naam</label><input id="rN" type="text" value="${esc(n.label)}"></div>
+    <div class="fr"><label>Code</label><input id="rC" type="text" value="${esc(n.code||'')}"></div>
+    <div class="mbtns">
+      <button class="btn" onclick="closeModal()">Annuleren</button>
+      <button class="btn pr" onclick="doRename('${id}')">Opslaan</button>
+    </div>`;
+  document.getElementById('moverlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('rN')?.focus(), 50);
 }
-
-// ── DELETE NODE ──────────────────────────────────────────────────────────
-function deleteNode(id){
-  const n=findN(id);if(!n)return;
-  if(!confirm('Verwijder "'+n.label+'" en alle kinderen?'))return;
-  pushUndo();
-  function rem(arr){
-    const i=arr.findIndex(x=>x.id===id);
-    if(i>=0){arr.splice(i,1);return true;}
-    return arr.some(x=>x.children&&rem(x.children));
-  }
-  rem(tree);
-  closeDetail();renderTree();autoSave();toast('Verwijderd');
-}
-
-// ── RENAME NODE ──────────────────────────────────────────────────────────
-function openRename(id){
-  const n=findN(id);if(!n)return;
-  const name=prompt('Nieuwe naam:',n.label);
-  if(name?.trim()){pushUndo();n.label=name.trim();renderTree();showDetail(id);autoSave();}
-}
-
-// ── DUPLICATE NODE ───────────────────────────────────────────────────────
-function duplicateNode(id){
-  const n=findN(id);if(!n)return;
-  const parent=findP(id);if(!parent)return;
-  pushUndo();
-  const clone=cloneNode(JSON.parse(JSON.stringify(n)));
-  clone.label+=' (kopie)';
-  const idx=parent.children.indexOf(n);
-  parent.children.splice(idx+1,0,clone);
-  renderTree();autoSave();toast('✓ Gedupliceerd');
-}
-function cloneNode(n){n.id=mkId();if(n.children)n.children=n.children.map(cloneNode);return n;}
-
-// ── EXPORT CSV ───────────────────────────────────────────────────────────
-function exportCSV(){
-  const rows=[['Type','Naam','NEN Code','Werkcode','EG','FTA','Bouwjaar','Status','Adres','Notitie']];
-  function walk(n){
-    rows.push([n.type,n.label,n.nenCode||'',n.wcode||'',n.eg||'',n.fta_m||n.meenemen||'',n.bouwjaar||'',n.status||'',n.adres||'',n.notitie||'']);
-    (n.children||[]).forEach(walk);
-  }
-  tree.forEach(walk);
-  const BOM='﻿';
-  const csv=BOM+rows.map(r=>r.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('
-');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
-  a.download=(projectName||'NEN2767').replace(/[^a-z0-9]/gi,'_')+'.csv';a.click();
-  toast('⬇ CSV geëxporteerd');
-}
-
-// ── CLEAR ALL ────────────────────────────────────────────────────────────
-function clearAll(){
-  if(!confirm('Alles wissen en opnieuw beginnen?'))return;
-  pushUndo();tree=[];idC=1;projectName='Nieuw project';
-  document.getElementById('projectTitle').textContent=projectName;
-  closeDetail();renderTree();autoSave();toast('Leeggemaakt');
-}
-
-// ── NEW PROJECT ──────────────────────────────────────────────────────────
-function newProject(){
-  if(tree.length&&!confirm('Huidig project wissen?'))return;
-  pushUndo();tree=[];idC=1;
-  closeDetail();renderTree();autoSave();toast('Nieuw project gestart');
-}
-
-// ── MKID ─────────────────────────────────────────────────────────────────
-function mkId(){return 'n'+(idC++);}
-const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-
-// ── INIT ─────────────────────────────────────────────────────────────────
-(function init(){
-  try{
-    const s=localStorage.getItem('nen2767_v4');
-    if(s){
-      const d=JSON.parse(s);
-      if(d.tree&&d.tree.length){
-        tree=d.tree;idC=d.idC||idC;
-        projectName=d.projectName||'Project';
-        const pt=document.getElementById('projectTitle');
-        if(pt)pt.textContent=projectName;
-        toast('↩ Sessie hersteld: '+projectName);
-      }
-    }
-  }catch(e){}
-  renderLib();renderTree();
-})();
-</body></html>
-
-// ── UPDATE FTA ──────────────────────────────────────────────────────────
-function updateFta(nodeId,val){
-  const n=findN(nodeId);if(!n)return;
-  n.fta_m=val;n.meenemen=val;
-  autoSave();showDetail(nodeId);renderTree();
-  toast('FTA ingesteld op: '+val);
-}
-
-// ── FASE 2 NAVIGATIE ────────────────────────────────────────────────────
-function goToFase2(){
-  const hasData = tree.length > 0;
-  if(!hasData){window.open('inspectie.html','_blank');return;}
-  if(confirm('Sla het project op als JSON voor gebruik in Fase 2?\nKlik OK om op te slaan en Fase 2 te openen.\nKlik Annuleren om alleen Fase 2 te openen.')){
-    saveJSON();
-    setTimeout(()=>window.open('inspectie.html','_blank'),600);
-    toast('💾 Opgeslagen — Fase 2 opent...');
+function doAdd(type, pid) {
+  const name = document.getElementById('mN')?.value?.trim();
+  if (!name) { toast('Vul een naam in'); return; }
+  const code = document.getElementById('mC')?.value?.trim() || '';
+  const node = { id: mkId(), type, label: name, code, children: [] };
+  if (pid) {
+    const p = findN(pid);
+    if (p) { addKid(p, node); coll[pid] = false; }
   } else {
-    window.open('inspectie.html','_blank');
+    tree.push(node);
+  }
+  closeModal(); renderTree(); toast(name + ' toegevoegd');
+}
+function doRename(id) {
+  const n = findN(id);
+  if (!n) return;
+  const name = document.getElementById('rN')?.value?.trim();
+  if (name) n.label = name;
+  n.code = document.getElementById('rC')?.value?.trim() || n.code;
+  closeModal();
+  if (selId === id) showDetail(id); else renderTree();
+}
+function closeModal() { document.getElementById('moverlay').style.display = 'none'; }
+
+// ════════════════════════════════════════════════════════
+//  EXPORT / IMPORT
+// ════════════════════════════════════════════════════════
+function exportJSON() {
+  const data = JSON.stringify({
+    version: '2.0', fase: 'Fase-1-Decompositie',
+    created: new Date().toISOString(), tree
+  }, null, 2);
+  dl('NEN2767_decompositie.json', data, 'application/json');
+  toast('JSON geëxporteerd');
+}
+function exportCSV() {
+  const rows = [['Niveau','Type','Naam','Code','FTA/Meenemen','EG','Pad']];
+  function walk(n, path, lvl) {
+    const p = path ? path + ' > ' + n.label : n.label;
+    rows.push([lvl, TLBL[n.type]||n.type, n.label, n.code||'', n.meenemen||'', n.gebrekgroep||'', path||'(root)']);
+    (n.children||[]).forEach(c => walk(c, p, lvl + 1));
+  }
+  tree.forEach(n => walk(n, '', 0));
+  const csv = rows.map(r => r.map(c => '"' + String(c||'').replace(/"/g,'""') + '"').join(',')).join('\r\n');
+  dl('NEN2767_decompositie.csv', '\uFEFF' + csv, 'text/csv;charset=utf-8');
+  toast('Excel/CSV geëxporteerd');
+}
+function importJSON() {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json';
+  inp.onchange = e => {
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (data.tree) { tree = data.tree; renderTree(); toast('Import geslaagd!'); }
+        else toast('Ongeldig bestandsformaat');
+      } catch (err) { toast('Fout bij importeren: ' + err.message); }
+    };
+    r.readAsText(f);
+  };
+  inp.click();
+}
+function dl(name, content, type) {
+  const b = new Blob([content], { type });
+  const u = URL.createObjectURL(b);
+  const a = document.createElement('a');
+  a.href = u; a.download = name; a.click();
+  URL.revokeObjectURL(u);
+}
+function toast(msg, ms = 3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), ms);
+}
+
+// ════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════
+document.getElementById('libSearch').addEventListener('input', renderLib);
+document.getElementById('canvas').addEventListener('dragover', e => e.preventDefault());
+document.getElementById('canvas').addEventListener('drop', e => {
+  e.preventDefault();
+  if (dragLib && dragLib.type === 'portfolio') openAddModal('portfolio', null);
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModal(); closeDetail(); }
+});
+window.addEventListener('load', () => {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  renderLib();
+  renderTree();
+});
+
+// ── FASE 2 NAVIGATIE ─────────────────────────────────────────────────────
+function goToFase2() {
+  if (tree.length && confirm('Sla het project op voor gebruik in Fase 2?\nOK = opslaan + Fase 2 openen\nAnnuleren = alleen Fase 2 openen')) {
+    exportJSON();
+    setTimeout(() => window.open('inspectie.html', '_blank'), 600);
+  } else {
+    window.open('inspectie.html', '_blank');
   }
 }
 
-// ── FTA HELPERS ─────────────────────────────────────────────────────────
-function getFtaColor(m){
-  if(m==='ja')return '#0e6e50';
-  if(m==='optioneel')return '#b87200';
-  if(m==='nee')return '#cc3a3a';
-  return '#9a9a94';
-}
-function getFtaLabel(m){
-  if(m==='ja')return '🟢 Kritisch (JA)';
-  if(m==='optioneel')return '🟡 Optioneel';
-  if(m==='nee')return '🔴 Niet relevant';
-  return '⚪ Onbekend';
+// ── FTA HELPER ────────────────────────────────────────────────────────────
+function setFtaNode(id, val) {
+  const n = findN(id);
+  if (!n) return;
+  n.fta_m = val;
+  n.meenemen = val;
+  showDetail(id);
+  toast('FTA ingesteld: ' + val);
 }
 
+</script>
+</body>
+</html>
