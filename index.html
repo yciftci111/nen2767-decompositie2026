@@ -6,12 +6,11 @@
 <title>NEN 2767 — Decompositie Bibliotheek</title>
 <script src="mapping.js">
 function goToFase2(){
-  if(tree.length){
-    if(confirm('Sla het project op voor gebruik in Fase 2?\nOK = opslaan + Fase 2 openen')){
-      saveJSON();setTimeout(()=>window.open('inspectie.html','_blank'),500);return;
-    }
+  if(tree.length&&confirm('Sla het project op voor gebruik in Fase 2?\nOK = opslaan + openen, Annuleren = alleen openen')){
+    saveJSON();setTimeout(()=>window.open('inspectie.html','_blank'),500);
+  }else{
+    window.open('inspectie.html','_blank');
   }
-  window.open('inspectie.html','_blank');
 }
 </script>
 <style>
@@ -172,12 +171,12 @@ body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--
   <span style="font-size:11px;opacity:.65" id="topSaved"></span>
   <div class="topbar-actions">
     <button class="tbtn" onclick="newProject()">＋ Nieuw</button>
-      <button class="btn" onclick="goToFase2()" style="background:#1a5fa8;color:#fff;border-color:#1a5fa8;font-weight:600">📋 Fase 2 →</button>
     <button class="tbtn" onclick="saveJSON()">💾 Opslaan</button>
     <button class="tbtn" onclick="document.getElementById('loadFile').click()">📂 Laden</button>
     <input type="file" id="loadFile" accept=".json" style="display:none" onchange="loadJSON(this)">
     <button class="tbtn" onclick="exportCSV()">⬇ CSV</button>
     <button class="tbtn accent" onclick="clearAll()">🗑 Leegmaken</button>
+    <button class="tbtn" onclick="goToFase2()" style="background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.5);font-weight:700">📋 Fase 2 →</button>
   </div>
 </div>
 
@@ -282,7 +281,7 @@ const boIcon=n=>BO_ICONS[n]||'🏗';
 const COL = {areaal:'#534AB7',complex:'#1a5fa8',bo:'#2e86cc',el:'#0e6e50',bd:'#b87200',comp:'#888888'};
 const KIDS = {areaal:['complex'],complex:['bo'],bo:['el'],el:['bd'],bd:['comp'],comp:[]};
 // Levels that get Maximo workcodes
-const WCODE_LEVELS = new Set(['areaal','complex','bo','el','bd']);
+const WCODE_LEVELS = new Set(['areaal','complex','bo','el','bd','comp']);
 
 // ══════════════════════════════════════════════
 //  STATE
@@ -321,7 +320,7 @@ function buildBoTree(boName,filter='ja'){
   for(const r of elRows){
     const el=EL.find(x=>x.n===r.el);
     const elNode={id:mkId(),type:'el',label:r.el,nenCode:el?.c||'',
-      eg:el?.eg||'',functie:el?.f||'',vakdiscipline:el?.v||'',reden:el?.r||'',
+      eg:r.eg||el?.eg||'',functie:r.f||el?.f||'',vakdiscipline:el?.v||'',reden:el?.r||'',
       meenemen:r.m,fta_r:r.r||'',wcode:'',children:[]};
     const bdRows=(MAP_EL_BD[r.el]||[]).filter(b=>allowed.includes(b.m));
     for(const br of bdRows){
@@ -335,10 +334,10 @@ function buildBoTree(boName,filter='ja'){
   return boNode;
 }
 
-function countEls(boName,f){
+function countEls(boName,filter){
   const rows=MAP_BO_EL[boName]||[];
-  if(f==='ja')return rows.filter(r=>r.m==='ja').length;
-  if(f==='ja_opt')return rows.filter(r=>r.m==='ja'||r.m==='optioneel').length;
+  if(filter==='ja')return rows.filter(r=>r.m==='ja').length;
+  if(filter==='ja_opt')return rows.filter(r=>r.m==='ja'||r.m==='optioneel').length;
   return rows.length;
 }
 
@@ -551,50 +550,120 @@ function canvasDrop(e){
 //  DETAIL PANEL — rich info + werkcode
 // ══════════════════════════════════════════════
 function showDetail(id){
-  const node=findN(id);if(!node)return;
   selId=id;
-  document.getElementById('detailPanel').classList.add('open');
-  document.getElementById('dpTitle').textContent=LBL[node.type]||node.type;
-  const col=COL[node.type]||'#888';
-  let libInfo='';
-  if(node.type==='bo'){
-    const b=BO.find(x=>x.n===node.label);
-    if(b?.d)libInfo+=`<div class="dpf"><div class="dpl">Werkdefinitie</div><div class="dpv">${esc(b.d)}</div></div>`;
-    const rows=MAP_BO_EL[node.label]||[];
-    if(rows.length){const ja=rows.filter(r=>r.m==='ja').length;libInfo+=`<div class="dpf"><div class="dpl">FTA elementen</div><div class="dpv">${ja} kritisch · ${rows.length-ja} overig</div></div>`;}
-  }else if(node.type==='el'){
-    const e=EL.find(x=>x.n===node.label);
-    if(node.eg)libInfo+=`<div class="dpf"><div class="dpl">Elementengroep</div><div class="dpv">${esc(node.eg)}</div></div>`;
-    if(node.functie||e?.f)libInfo+=`<div class="dpf"><div class="dpl">Functie</div><div class="dpv">${esc(node.functie||e?.f||'')}</div></div>`;
-    if(node.vakdiscipline||e?.v)libInfo+=`<div class="dpf"><div class="dpl">Vakdiscipline</div><div class="dpv">${esc(node.vakdiscipline||e?.v||'')}</div></div>`;
-    const m=node.meenemen||'';
-    const fc=m==='ja'?'#0e6e50':m==='optioneel'?'#b87200':'#cc3a3a';
-    const fl=m==='ja'?'🟢 Kritisch (JA)':m==='optioneel'?'🟡 Optioneel':'🔴 Niet relevant';
-    libInfo+=`<div class="dpf"><div class="dpl">FTA Analyse</div><div class="dpv"><span style="background:${fc}22;color:${fc};border:1px solid ${fc}44;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">${fl}</span>${node.fta_r?`<div style="font-size:10px;color:var(--tx3);margin-top:3px">${esc(node.fta_r)}</div>`:''}</div></div>`;
-  }else if(node.type==='bd'){
-    const b=BD.find(x=>x.n===node.label);
-    if(node.def||b?.d)libInfo+=`<div class="dpf"><div class="dpl">Definitie</div><div class="dpv">${esc(node.def||b?.d||'')}</div></div>`;
-    const m=node.meenemen||'';
-    if(m){const fc=m==='ja'?'#0e6e50':m==='optioneel'?'#b87200':'#cc3a3a';const fl=m==='ja'?'🟢 Kritisch (JA)':m==='optioneel'?'🟡 Optioneel':'🔴 Niet relevant';libInfo+=`<div class="dpf"><div class="dpl">FTA Analyse</div><div class="dpv"><span style="background:${fc}22;color:${fc};border:1px solid ${fc}44;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">${fl}</span>${node.fta_r?`<div style="font-size:10px;color:var(--tx3);margin-top:3px">${esc(node.fta_r)}</div>`:''}</div></div>`;}
-  }else if(node.type==='comp'){
-    if(node.serienr)libInfo+=`<div class="dpf"><div class="dpl">Serienummer</div><div class="dpv" style="font-family:monospace">${esc(node.serienr)}</div></div>`;
-    if(node.merk)libInfo+=`<div class="dpf"><div class="dpl">Merk</div><div class="dpv">${esc(node.merk)}</div></div>`;
-    if(node.model)libInfo+=`<div class="dpf"><div class="dpl">Model</div><div class="dpv">${esc(node.model)}</div></div>`;
-  }
-  const canHaveKids=(KIDS[node.type]||[]).length>0;
-  document.getElementById('dpBody').innerHTML=`
-    <div class="dpf"><div class="dpl">Naam</div><div class="dpv" style="font-weight:500">${esc(node.label)}</div></div>
-    <div class="dpf"><div class="dpl">Type</div><div class="dpv"><span class="tbadge" style="background:${col}22;color:${col}"><span style="width:6px;height:6px;border-radius:50%;background:${col};display:inline-block"></span> ${LBL[node.type]||node.type}</span></div></div>
-    ${node.nenCode?`<div class="dpf"><div class="dpl">NEN 2767 Code</div><div class="dpv" style="font-family:monospace">${esc(node.nenCode)}</div></div>`:''}
-    ${libInfo}
-    <div class="dpf"><div class="dpl">Onderliggende items</div><div class="dpv">${countD(node)}</div></div>
-    <div class="dp-acts">
-      ${canHaveKids?`<button class="btn" onclick="openAddChild('${id}')">＋ Kind toevoegen</button>`:''}
-      <button class="btn" onclick="openRename('${id}')">✎ Naam wijzigen</button>
-      <button class="btn" onclick="moveNode('${id}',-1)">↑ Omhoog</button>
-      <button class="btn" onclick="moveNode('${id}',1)">↓ Omlaag</button>
-      <button class="btn dan" onclick="deleteNode('${id}')">✕ Verwijderen</button>
+  const n=findN(id);if(!n){closeDetail();return;}
+  const panel=document.getElementById('detailPanel');
+  panel.classList.add('open');
+
+  // Badge
+  const badge=document.getElementById('dpBadge');
+  badge.textContent=LBL[n.type];
+  badge.style.background=COL[n.type];
+
+  document.getElementById('dpTitle').textContent=n.label;
+
+  let html='';
+
+  // ── Werkcode sectie (for relevant levels) ──
+  if(WCODE_LEVELS.has(n.type)){
+    html+=`<div class="dp-section">
+      <div class="dp-section-title">⚙ Maximo Werkcode</div>
+      <div class="dp-field">
+        <div class="dp-label">Werkcode / Objectnummer</div>
+        <input class="wcode-input" id="wcodeInput" type="text" value="${esc(n.wcode||'')}"
+          placeholder="bijv. KGM000041"
+          oninput="previewWcode()"
+          onkeydown="if(event.key==='Enter')saveWcode('${n.id}')">
+        <button class="wcode-save" id="wcodeSaveBtn" onclick="saveWcode('${n.id}')">Opslaan</button>
+      </div>
     </div>`;
+  }
+
+  // ── Identificatie ──
+  html+=`<div class="dp-section">
+    <div class="dp-section-title">📋 Identificatie</div>
+    <div class="dp-field">
+      <div class="dp-label">Type</div>
+      <div class="dp-value"><span class="dp-tag" style="background:${COL[n.type]}22;color:${COL[n.type]};border:1px solid ${COL[n.type]}55">${LBL[n.type]}</span></div>
+    </div>
+    <div class="dp-field">
+      <div class="dp-label">Naam</div>
+      <div class="dp-value">${esc(n.label)}</div>
+    </div>`;
+  if(n.nenCode)html+=`<div class="dp-field">
+      <div class="dp-label">NEN 2767 Code</div>
+      <div class="dp-value mono">${esc(n.nenCode)}</div>
+    </div>`;
+  if(n.wcode)html+=`<div class="dp-field">
+      <div class="dp-label">Maximo Werkcode</div>
+      <div class="dp-value mono" style="color:var(--blue)">${esc(n.wcode)}</div>
+    </div>`;
+  html+=`</div>`;
+
+  // ── Beschrijving ──
+  const hasDesc=n.def||n.functie||n.vakdiscipline||n.reden||n.omschrijving||n.eenheid;
+  if(hasDesc){
+    html+=`<div class="dp-section"><div class="dp-section-title">📖 Beschrijving</div>`;
+    if(n.eg)html+=`<div class="dp-field"><div class="dp-label">Elementengroep</div><div class="dp-value">${esc(n.eg)}</div></div>`;
+    if(n.def)html+=`<div class="dp-field"><div class="dp-label">Werkdefinitie</div><div class="dp-value muted">${esc(n.def)}</div></div>`;
+    if(n.functie)html+=`<div class="dp-field"><div class="dp-label">Functie element</div><div class="dp-value">${esc(n.functie)}</div></div>`;
+    if(n.vakdiscipline)html+=`<div class="dp-field"><div class="dp-label">Vakdiscipline</div><div class="dp-value">${esc(n.vakdiscipline)}</div></div>`;
+    if(n.reden)html+=`<div class="dp-field"><div class="dp-label">Reden opname</div><div class="dp-value muted">${esc(n.reden)}</div></div>`;
+    if(n.omschrijving)html+=`<div class="dp-field"><div class="dp-label">Omschrijving</div><div class="dp-value muted">${esc(n.omschrijving)}</div></div>`;
+    if(n.eenheid)html+=`<div class="dp-field"><div class="dp-label">Eenheid</div><div class="dp-value">${esc(n.eenheid)}</div></div>`;
+    html+=`</div>`;
+  }
+
+  // ── FTA Analyse ──
+  if((n.type==='el'||n.type==='bd')&&n.meenemen){
+    const fc=n.meenemen==='ja'?'#0e6e50':n.meenemen==='optioneel'?'#b87200':'#cc3a3a';
+    const fl=n.meenemen==='ja'?'🟢 Kritisch (JA)':n.meenemen==='optioneel'?'🟡 Optioneel':'🔴 Niet relevant';
+    html+=`<div class="dp-section"><div class="dp-section-title">⚡ FTA Analyse</div>
+      <div class="dp-field"><div class="dp-label">Classificatie</div><div class="dp-value">
+        <span style="background:${fc}22;color:${fc};border:1px solid ${fc}44;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">${fl}</span>
+        ${n.fta_r?`<div style="font-size:10px;color:var(--tx3);margin-top:3px">${esc(n.fta_r)}</div>`:''}
+      </div></div></div>`;
+  }
+
+  // ── Decompositie info ──
+  const hasDecomp=n.meenemen||n.gebrekgroep||n.gebreksoort||n.belang||n.afkorting||n.type_gb||n.toelichting||n.intensiteit;
+  if(hasDecomp){
+    html+=`<div class="dp-section"><div class="dp-section-title">🔍 NEN 2767 Eigenschappen</div>`;
+    if(n.meenemen){
+      const cls=n.meenemen==='ja'?'badge-ja':n.meenemen==='optioneel'?'badge-opt':'';
+      html+=`<div class="dp-field"><div class="dp-label">Meenemen (conditiemeting)</div><div class="dp-value"><span class="node-badge ${cls}" style="font-size:11px;padding:2px 8px">${esc(n.meenemen)}</span></div></div>`;
+    }
+    if(n.type_gb)html+=`<div class="dp-field"><div class="dp-label">Gebrektype</div><div class="dp-value">${esc(n.type_gb)}</div></div>`;
+    if(n.gebrekgroep)html+=`<div class="dp-field"><div class="dp-label">Gebrekgroep</div><div class="dp-value">${esc(n.gebrekgroep)}</div></div>`;
+    if(n.gebreksoort)html+=`<div class="dp-field"><div class="dp-label">Gebreksoort</div><div class="dp-value muted" style="font-size:11px">${esc(n.gebreksoort)}</div></div>`;
+    if(n.belang){
+      const bcls='belang-'+n.belang;
+      html+=`<div class="dp-field"><div class="dp-label">Belang</div><div class="dp-value"><span class="dp-tag ${bcls}">${esc(n.belang)}</span></div></div>`;
+    }
+    if(n.afkorting)html+=`<div class="dp-field"><div class="dp-label">Afkorting</div><div class="dp-value mono">${esc(n.afkorting)}</div></div>`;
+    if(n.intensiteit)html+=`<div class="dp-field"><div class="dp-label">Intensiteit</div><div class="dp-value">${esc(n.intensiteit)}</div></div>`;
+    if(n.toelichting)html+=`<div class="dp-field"><div class="dp-label">Toelichting</div><div class="dp-value muted">${esc(n.toelichting)}</div></div>`;
+    html+=`</div>`;
+  }
+
+  // ── Structuur ──
+  html+=`<div class="dp-section"><div class="dp-section-title">🌳 Structuur</div>`;
+  if(n.children&&n.children.length)html+=`<div class="dp-field"><div class="dp-label">Directe kinderen</div><div class="dp-value">${n.children.length} items</div></div>`;
+  html+=`<div style="display:flex;flex-direction:column;gap:5px;margin-top:6px">
+    <button class="btn" onclick="openRename('${n.id}')" style="width:100%">✎ Naam wijzigen</button>
+    <button class="btn danger" onclick="deleteNode('${n.id}')" style="width:100%">✕ Verwijderen</button>
+  </div></div>`;
+
+  document.getElementById('dpBody').innerHTML=html;
+
+  // Wire up werkcode save button visibility
+  if(WCODE_LEVELS.has(n.type)){
+    const inp=document.getElementById('wcodeInput');
+    const btn=document.getElementById('wcodeSaveBtn');
+    inp.addEventListener('input',()=>{btn.style.display='block';});
+    inp.addEventListener('keydown',e=>{if(e.key==='Escape'){inp.value=n.wcode||'';btn.style.display='none';}});
+  }
+
   renderTree();
 }
 
