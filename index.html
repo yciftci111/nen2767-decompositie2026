@@ -289,6 +289,7 @@ main{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column
       </div>
     </div>
   </main>
+  <div class="resize-handle" id="rh-right" title="Versleep om paneel te vergroten"></div>
   <div class="detail-panel closed" id="detail-panel">
     <div class="dp-head">
       <span class="dp-title" id="dp-title">—</span>
@@ -1045,11 +1046,12 @@ function renderElementDetail(boId, elName){
 
     // Wire bouwdeel checkboxes
     // Restore scroll after re-render
-    var bdListEl = document.querySelector('.bd-list');
-    var scrollPos = bdListEl ? bdListEl.scrollTop : 0;
+    var bdListEl = document.getElementById('dp-body') ?
+      document.getElementById('dp-body').querySelector ? null : null : null;
+    var _savedScroll = 0;
+    try { _savedScroll = document.querySelector('.bd-list').scrollTop || 0; } catch(e){}
     requestAnimationFrame(function(){
-      var bl = document.querySelector('.bd-list');
-      if(bl) bl.scrollTop = scrollPos;
+      try { document.querySelector('.bd-list').scrollTop = _savedScroll; } catch(e){}
     });
 
     document.querySelectorAll('.bd-check').forEach(function(cb){
@@ -1072,18 +1074,7 @@ function renderElementDetail(boId, elName){
   buildBody();
 }
 
-/* Delegated element row click — set up once */
-(function(){
-  var treeArea = document.getElementById('tree-area');
-  if(treeArea){
-    treeArea.addEventListener('click', function(e){
-      var row = e.target.closest('.bo-el-row');
-      if(!row) return;
-      e.stopPropagation();
-      renderElementDetail(row.dataset.boid, row.dataset.el);
-    });
-  }
-})();
+
 
 
 // ── MAP ──────────────────────────────────────────────────────────
@@ -1145,7 +1136,7 @@ function setupDPTabs(boId){
 
 
 // ── PANEL RESIZE ──────────────────────────────────────────────
-(function(){
+function setupResizeHandles(){
   function makeResizable(handleId, getEl, side){
     var handle = document.getElementById(handleId);
     if(!handle) return;
@@ -1185,13 +1176,22 @@ function setupDPTabs(boId){
 
   makeResizable('rh-left',  function(){ return document.querySelector('aside'); },         'left');
   makeResizable('rh-right', function(){ return document.getElementById('detail-panel'); }, 'right');
-})();
+}
 
 /* Boot */
 document.addEventListener('DOMContentLoaded', function(){
   initData();
   renderLib();
   render();
+  // Delegated element row click — registered once after DOM exists
+  document.getElementById('tree-area').addEventListener('click', function(e){
+    var row = e.target.closest('.bo-el-row');
+    if(!row) return;
+    e.stopPropagation();
+    renderElementDetail(row.dataset.boid, row.dataset.el);
+  });
+  // Delegated resize handle setup
+  setupResizeHandles();
 });
 </script>
 </body>
