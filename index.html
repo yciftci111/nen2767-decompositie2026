@@ -23,7 +23,7 @@ header{height:54px;background:var(--acc);color:#fff;display:flex;align-items:cen
 .hbadge{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:rgba(255,255,255,.18);padding:3px 8px;border-radius:4px}
 .htitle{font-size:15px;font-weight:600}.hsub{font-size:11px;opacity:.6;margin-top:1px}
 .hstats{display:flex;gap:16px;margin-left:auto}
-.hstat{text-align:right;font-size:10px;opacity:.65}
+.hstat{text-align:center;font-size:10px;opacity:.65}
 .hstat strong{display:block;font-size:16px;font-weight:700;opacity:1;line-height:1.1}
 .wrap{display:flex;flex:1;overflow:hidden}
 
@@ -2071,12 +2071,26 @@ function generatePDF(){
     touchDrag=null;
   });
 
-  // Tap on bo-item = dblclick equivalent (add to first complex)
-  document.addEventListener('touchend', function(e){
-    if(touchDrag) return; // was a drag
+  // Tap on bo-item = add to first complex
+  // Only fires if finger moved < 8px (to avoid triggering during scroll)
+  var _tapStart = null;
+  document.addEventListener('touchstart', function(e){
     var item = e.target.closest('.bo-item');
     if(!item) return;
-    var code = item.dataset.code;
+    var t = e.touches[0];
+    _tapStart = {x: t.clientX, y: t.clientY, code: item.dataset.code};
+  }, {passive: true});
+
+  document.addEventListener('touchend', function(e){
+    if(touchDrag){ _tapStart = null; return; }
+    if(!_tapStart) return;
+    var t = e.changedTouches[0];
+    var dx = Math.abs(t.clientX - _tapStart.x);
+    var dy = Math.abs(t.clientY - _tapStart.y);
+    var code = _tapStart.code;
+    _tapStart = null;
+    // Only add if finger barely moved (tap, not scroll)
+    if(dx > 8 || dy > 8) return;
     if(!code) return;
     var cx = firstType(tree,'complex');
     if(!cx){ return; }
