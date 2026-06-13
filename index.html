@@ -28,7 +28,7 @@ header{height:54px;background:var(--acc);color:#fff;display:flex;align-items:cen
 .wrap{display:flex;flex:1;overflow:hidden}
 
 /* SIDEBAR */
-aside{width:272px;min-width:272px;background:var(--sur);border-right:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden}
+aside{width:272px;min-width:160px;background:var(--sur);border-right:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden}
 .sb-head{padding:10px 12px 6px;border-bottom:1px solid var(--bdr)}
 .sb-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
 .sb-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tm);flex:1}
@@ -40,7 +40,7 @@ aside{width:272px;min-width:272px;background:var(--sur);border-right:1px solid v
 .sb-tabs{display:flex;gap:4px;padding:6px 10px;border-bottom:1px solid var(--bdr)}
 .stab{flex:1;padding:3px 0;border:1px solid var(--bdr);border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;text-align:center;background:var(--s2);color:var(--tm);transition:.15s}
 .stab.on{border-color:var(--acc);background:var(--asf);color:var(--acc)}
-.stab.on-ja{border-color:var(--ja);background:var(--jab);color:var(--ja)}
+.stab.on-ja{border-color:var(--ne);background:var(--neb);color:var(--ne)}
 .stab.on-op{border-color:var(--op);background:var(--opb);color:var(--op)}
 .stab.on-ne{border-color:var(--ne);background:var(--neb);color:var(--ne)}
 .bo-list{flex:1;overflow-y:auto;padding:4px 0}
@@ -81,9 +81,9 @@ main{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column
 .nd-sub{font-size:10px;color:var(--tm);font-style:italic}
 .nd-badges{display:flex;gap:3px;align-items:center;flex-shrink:0}
 .badge{font-size:10px;font-weight:700;padding:2px 5px;border-radius:10px}
-.bja{background:var(--jab);color:var(--ja)}.bop{background:var(--opb);color:var(--op)}.bne{background:var(--neb);color:var(--ne)}
+.bja{background:var(--neb);color:var(--ne)}.bop{background:var(--opb);color:var(--op)}.bne{background:var(--bg);color:var(--tm)}
 .pbar{height:3px;background:var(--bdr);border-radius:2px;width:40px;overflow:hidden}
-.pbar-f{height:100%;background:var(--ja);border-radius:2px}
+.pbar-f{height:100%;background:var(--ne);border-radius:2px}
 .nd-acts{display:flex;gap:2px;flex-shrink:0}
 .nact{padding:3px 7px;border:none;background:rgba(0,0,0,.05);cursor:pointer;border-radius:3px;color:var(--tb);font-size:11px;font-weight:600;transition:.15s;white-space:nowrap;line-height:1.4}
 .nact:hover{background:var(--asf);color:var(--acc)}
@@ -109,8 +109,8 @@ main{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column
 .drop-strip.ov{border-color:var(--acc);background:var(--asf);color:var(--acc)}
 
 /* DETAIL PANEL */
-.detail-panel{width:var(--panel);min-width:var(--panel);background:var(--sur);border-left:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden;transition:width .2s,min-width .2s}
-.detail-panel.closed{width:0;min-width:0;border:none;overflow:hidden}
+.detail-panel{width:var(--panel);min-width:var(--panel);background:var(--sur);border-left:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden}
+.detail-panel.closed{width:0 !important;min-width:0 !important;border:none;overflow:hidden}
 .dp-head{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--bdr);background:var(--acc);color:#fff;flex-shrink:0}
 .dp-title{font-size:13px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dp-close{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:0 2px;opacity:.8;line-height:1}
@@ -138,7 +138,7 @@ main{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column
 .el-fbar2{display:flex;gap:5px;padding:8px 14px;border-bottom:1px solid var(--bdr);background:var(--s2);flex-wrap:wrap;align-items:center}
 .eftab2{padding:2px 8px;border:1px solid var(--bdr);border-radius:10px;font-size:10px;font-weight:700;cursor:pointer;background:var(--sur);color:var(--tm);transition:.15s}
 .eftab2.a{border-color:var(--acc);background:var(--asf);color:var(--acc)}
-.eftab2.ja{border-color:var(--ja);background:var(--jab);color:var(--ja)}
+.eftab2.ja{border-color:var(--ne);background:var(--neb);color:var(--ne)}
 .eftab2.op{border-color:var(--op);background:var(--opb);color:var(--op)}
 .eftab2.ne{border-color:var(--ne);background:var(--neb);color:var(--ne)}
 .el-list2{padding:6px 14px 10px;display:flex;flex-direction:column;gap:2px}
@@ -146,8 +146,8 @@ main{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column
 .el-row2:hover{background:var(--asf)}
 .el-row2.off{opacity:.45}
 .el-check{width:14px;height:14px;flex-shrink:0;margin-top:2px;accent-color:var(--acc);cursor:pointer}
-.echip2{font-size:9px;font-weight:700;padding:2px 5px;border-radius:10px;flex-shrink:0;white-space:nowrap;margin-top:1px}
-.cja{background:var(--jab);color:var(--ja)}.cop{background:var(--opb);color:var(--op)}.cne{background:var(--neb);color:var(--ne)}
+.echip2{font-size:9px;font-weight:700;padding:2px 5px;border-radius:10px;flex-shrink:0;white-space:nowrap;margin-top:1px;min-width:36px;text-align:center}
+.cja{background:var(--neb);color:var(--ne)}.cop{background:var(--opb);color:var(--op)}.cne{background:var(--bg);color:var(--tm)}
 .el-name2{color:var(--th);flex:1;font-weight:500;line-height:1.3}
 .el-rsn2{color:var(--tm);font-size:10px;line-height:1.4;margin-top:1px}
 
@@ -200,8 +200,15 @@ main{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column
 .dp-tab{flex:1;padding:8px 0;text-align:center;font-size:11px;font-weight:700;cursor:pointer;color:var(--tm);border-bottom:2px solid transparent;transition:.15s}
 .dp-tab.active{color:var(--acc);border-bottom-color:var(--acc);background:var(--sur)}
 .dp-tab:hover{color:var(--acc)}
-#map-container{display:none;height:220px;flex-shrink:0;min-height:180px}
+#map-container{display:none;height:220px;flex-shrink:0;min-height:120px;position:relative}
 #map-container.vis{display:block}
+.resize-handle-v{
+  height:5px;flex-shrink:0;cursor:row-resize;
+  background:var(--bdr);transition:background .15s;
+  display:none;
+}
+.resize-handle-v.vis{display:block}
+.resize-handle-v:hover,.resize-handle-v.dragging{background:var(--acc)}
 
 /* ── ELEMENT DETAIL IN RIGHT PANEL ── */
 .el-detail-section{padding:10px 14px;border-bottom:1px solid var(--bdr)}
@@ -237,8 +244,32 @@ main{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column
   width:3px;height:32px;border-radius:2px;
   background:rgba(0,0,0,.15);
 }
+
+/* ── MAP FILTER OVERLAY ── */
+.map-overlay{
+  position:absolute;top:8px;right:8px;z-index:1000;
+  background:rgba(255,255,255,.95);border-radius:6px;
+  padding:8px 10px;box-shadow:0 2px 8px rgba(0,0,0,.15);
+  min-width:140px;max-width:180px;
+}
+.map-overlay-title{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--tm);margin-bottom:6px}
+.map-filter-row{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:11px;cursor:pointer}
+.map-filter-row input{accent-color:var(--acc);cursor:pointer;flex-shrink:0}
+.map-filter-icon{width:20px;height:20px;flex-shrink:0}
+.map-filter-label{flex:1;color:var(--th);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── PDF BUTTON ── */
+.pdf-btn{
+  display:flex;align-items:center;gap:5px;
+  padding:5px 10px;border:1px solid var(--bdr);
+  background:var(--sur);border-radius:var(--r);
+  font-size:11px;color:var(--tb);cursor:pointer;transition:.15s;
+  white-space:nowrap;
+}
+.pdf-btn:hover{border-color:#C0392B;background:#FDECEB;color:#C0392B}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 </head>
 <body>
@@ -281,6 +312,10 @@ main{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column
       <button class="tbtn" id="btn-save">💾 Opslaan</button>
       <button class="tbtn" id="btn-load">📂 Laden</button>
       <span class="tinfo" id="tinfo">Voeg een Areaal / Portefeuille toe</span>
+      <button class="pdf-btn" id="btn-pdf">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        PDF Rapport
+      </button>
     </div>
     <div class="tree-area" id="tree-area">
       <div class="empty" id="empty-msg">
@@ -300,6 +335,7 @@ main{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column
       <div class="dp-tab" data-tab="map">🗺 Kaart</div>
     </div>
     <div id="map-container"></div>
+    <div class="resize-handle-v" id="rh-map" title="Versleep om kaart groter te maken"></div>
     <div class="dp-body" id="dp-body">
       <div class="dp-empty"><p>Klik op een beheerobject<br>om details te tonen</p></div>
     </div>
@@ -490,8 +526,8 @@ function loadJSON(){
 function selectBO(id){
   var n = findNode(id);
   if(!n) return;
+  selectedEl = null; // Clear element selection when BO header is clicked
   if(selectedId===id){
-    // Toggle open/close when clicking same BO again
     n.open = !n.open;
     if(!n.open){ closeDetail(); return; }
   } else {
@@ -505,6 +541,7 @@ function selectBO(id){
 }
 function closeDetail(){
   selectedId=null;
+  selectedEl=null;
   document.getElementById('detail-panel').classList.add('closed');
   render();
 }
@@ -804,8 +841,7 @@ function render(){
   area.innerHTML = tree.map(function(n){ return renderNode(n); }).join('') + rootStrip;
 
   attachTreeEvents();
-  if(selectedId) renderDetail(selectedId);
-  if(selectedEl) renderElementDetail(selectedEl.boId, selectedEl.elName);
+  if(selectedId && !selectedEl) renderDetail(selectedId);
   updateStats(); renderLib();
 }
 
@@ -815,6 +851,7 @@ function attachTreeEvents(){
   document.querySelectorAll('.nd-hd').forEach(function(hd){
     hd.addEventListener('click', function(e){
       if(e.target.closest('.nd-acts')) return;
+      if(e.target.closest('.bo-el-row')) return; // element row handles its own click
       var id = hd.dataset.id;
       var type = hd.dataset.type;
       if(type==='bo'){ selectBO(id); } else { toggleNode(id); }
@@ -963,6 +1000,7 @@ document.getElementById('btn-clear').addEventListener('click',   clearAll);
 document.getElementById('btn-save').addEventListener('click',    saveJSON);
 document.getElementById('btn-load').addEventListener('click',    loadJSON);
 document.getElementById('dp-close').addEventListener('click',    closeDetail);
+document.getElementById('btn-pdf').addEventListener('click', generatePDF);
 
 function updateStats(){
   var ap=0, cx=0, bo=0;
@@ -978,97 +1016,132 @@ function updateStats(){
 // ── ELEMENT DETAIL ──────────────────────────────────────────────
 function renderElementDetail(boId, elName){
   selectedEl = {boId:boId, elName:elName};
-  var n   = findNode(boId);
-  var bo  = n ? BOMAP[n.boCode] : null;
-  var elInfo = EG[elName] || {};
-  var bds    = BD[elName] || [];
-  var disabledBDs = (n && n.disabledBDs) ? (n.disabledBDs[elName] || []) : [];
 
   var panel = document.getElementById('detail-panel');
   panel.classList.remove('closed');
-  var tabs=document.getElementById('dp-tabs'); if(tabs) tabs.style.display='none';
+  var dtabs = document.getElementById('dp-tabs');
+  if(dtabs) dtabs.style.display = 'none';
   document.getElementById('map-container').classList.remove('vis');
-  document.getElementById('dp-body').style.display='';
+  document.getElementById('dp-body').style.display = '';
   document.getElementById('dp-title').textContent = elName;
 
-  var cls1f = ['all','J','O','N'];
-  var cls1l = ['Alle','JA','Opt','NEE'];
-  var cls1c = ['a','ja','op','ne'];
-  var curF  = 'all';
+  var elInfo = EG ? (EG[elName] || {}) : {};
+  var bds    = BD ? (BD[elName] || []) : [];
+  var curF   = 'all';
+
+  function getDisabled(){
+    var n2 = findNode(boId);
+    return (n2 && n2.disabledBDs && n2.disabledBDs[elName]) ? n2.disabledBDs[elName] : [];
+  }
 
   function buildBody(){
+    var disabled = getDisabled();   // always fresh from state
     var filtered = bds.filter(function(b){
-      return curF==='all' || b[1]===curF;
+      return curF === 'all' || b[1] === curF;
     });
 
-    var tabs = cls1f.map(function(fv,i){
-      return '<span class="eftab2'+(curF===fv?' '+cls1c[i]:'')+'" data-ef2="'+fv+'">'+cls1l[i]+'</span>';
+    // Save scroll
+    var savedScroll = 0;
+    var bdListEl = document.querySelector('.bd-list');
+    if(bdListEl) savedScroll = bdListEl.scrollTop;
+
+    var filterTabs = ['all','J','O','N'].map(function(fv, fi){
+      var lbls = ['Alle','JA','Opt','NEE'];
+      var clss = ['a','ja','op','ne'];
+      var active = curF === fv ? (' ' + clss[fi]) : '';
+      return '<span class="eftab2'+active+'" data-ef2="'+fv+'">'+lbls[fi]+'</span>';
     }).join('');
 
     var bdRows = filtered.map(function(b){
-      var off  = disabledBDs.indexOf(b[0]) >= 0;
-      var cls  = b[1]==='J'?'cja':b[1]==='O'?'cop':'cne';
-      var lbl  = b[1]==='J'?'JA':b[1]==='O'?'OPT':'NEE';
-      return '<div class="bd-row'+(off?' off':'')+'">'+
-        '<input type="checkbox" class="bd-check"'+(off?'':' checked')+
-          ' data-boid="'+boId+'" data-el="'+elName.replace(/"/g,'&quot;')+'" data-bd="'+b[0].replace(/"/g,'&quot;')+'">'+
-        '<span class="bd-chip '+cls+'">'+lbl+'</span>'+
-        '<div><div class="bd-name">'+b[0]+'</div>'+
-        '<div class="bd-rsn">'+b[2]+'</div></div>'+
+      var isOff = disabled.indexOf(b[0]) >= 0;
+      var chip  = b[1]==='J' ? 'cja' : b[1]==='O' ? 'cop' : 'cne';
+      var lbl   = b[1]==='J' ? 'JA'  : b[1]==='O' ? 'OPT' : 'NEE';
+      return '<div class="bd-row' + (isOff ? ' off' : '') + '">' +
+        '<input type="checkbox" class="bd-check"' + (isOff ? '' : ' checked') +
+          ' data-boid="' + boId + '"' +
+          ' data-el="'   + elName.replace(/"/g, '&quot;') + '"' +
+          ' data-bd="'   + b[0].replace(/"/g,   '&quot;') + '">' +
+        '<span class="bd-chip ' + chip + '">' + lbl + '</span>' +
+        '<div>' +
+          '<div class="bd-name">' + b[0] + '</div>' +
+          '<div class="bd-rsn">'  + b[2] + '</div>' +
+        '</div>' +
       '</div>';
     }).join('');
 
     document.getElementById('dp-body').innerHTML =
-      '<div class="el-detail-section">'+
-        '<div class="el-groep-badge">'+(elInfo.groep||'Onbekend')+'</div>'+
-        '<div style="font-size:10px;color:var(--tm);font-weight:700;margin-bottom:3px">Code: '+(elInfo.code||'—')+'</div>'+
-        '<div class="el-werkdef">'+(elInfo.werkdefinitie||'')+'</div>'+
-        (elInfo.toelichting?'<div class="el-toelichting">'+elInfo.toelichting+'</div>':'')+
-      '</div>'+
-      '<div class="dp-sec" style="padding:8px 14px 4px">'+
-        '<div class="dp-sec-title">FTA Redenering (dit element in context beheerobject)</div>'+
-        '<div class="el-fta-box">'+(REDEN[elName]||'Geen redenering beschikbaar')+'</div>'+
-      '</div>'+
-      '<div class="dp-sec" style="padding:0;border:none">'+
-        '<div class="dp-sec-title" style="padding:8px 14px 4px">'+
-          'Bouwdelen — '+filtered.length+' getoond · '+disabledBDs.length+' uitgeschakeld'+
-        '</div>'+
-        '<div class="el-fbar2" id="bd-fbar">'+tabs+'</div>'+
-        '<div class="bd-list">'+(bdRows||'<span style="font-size:11px;color:var(--tm)">Geen bouwdelen</span>')+'</div>'+
+      '<div class="el-detail-section">' +
+        '<div class="el-groep-badge">' + (elInfo.groep || 'Onbekend') + '</div>' +
+        '<div style="font-size:10px;color:var(--tm);font-weight:700;margin-bottom:3px">Code: ' + (elInfo.code || '—') + '</div>' +
+        '<div class="el-werkdef">' + (elInfo.werkdefinitie || '') + '</div>' +
+        (elInfo.toelichting ? '<div class="el-toelichting">' + elInfo.toelichting + '</div>' : '') +
+      '</div>' +
+      '<div class="dp-sec" style="padding:8px 14px 4px">' +
+        '<div class="dp-sec-title">FTA Redenering</div>' +
+        '<div class="el-fta-box">' + (REDEN ? (REDEN[elName] || 'Geen redenering beschikbaar') : '') + '</div>' +
+      '</div>' +
+      '<div class="dp-sec" style="padding:0;border:none">' +
+        '<div class="dp-sec-title" style="padding:8px 14px 4px">' +
+          'Bouwdelen — ' + filtered.length + ' getoond · ' + disabled.length + ' uitgeschakeld' +
+        '</div>' +
+        '<div class="el-fbar2">' + filterTabs + '</div>' +
+        '<div class="bd-list">' + (bdRows || '<span style="font-size:11px;color:var(--tm)">Geen bouwdelen</span>') + '</div>' +
       '</div>';
 
-    // Wire filter tabs
-    document.querySelectorAll('[data-ef2]').forEach(function(tab){
-      tab.addEventListener('click',function(){
-        curF = tab.dataset.ef2; buildBody();
-      });
-    });
-
-    // Wire bouwdeel checkboxes
-    // Restore scroll after re-render
-    var bdListEl = document.getElementById('dp-body') ?
-      document.getElementById('dp-body').querySelector ? null : null : null;
-    var _savedScroll = 0;
-    try { _savedScroll = document.querySelector('.bd-list').scrollTop || 0; } catch(e){}
+    // Restore scroll
     requestAnimationFrame(function(){
-      try { document.querySelector('.bd-list').scrollTop = _savedScroll; } catch(e){}
+      var bl = document.querySelector('.bd-list');
+      if(bl) bl.scrollTop = savedScroll;
     });
 
-    document.querySelectorAll('.bd-check').forEach(function(cb){
-      cb.addEventListener('change',function(){
-        var n2   = findNode(cb.dataset.boid); if(!n2) return;
-        var elN  = cb.dataset.el;
-        var bdN  = cb.dataset.bd;
+    // Wire filter tabs via delegation — remove old listener first
+    var dpBody = document.getElementById('dp-body');
+    if(dpBody._tabHandler) dpBody.removeEventListener('click', dpBody._tabHandler);
+    dpBody._tabHandler = function(e){
+      var tab = e.target.closest('[data-ef2]');
+      if(tab){ curF = tab.dataset.ef2; buildBody(); }
+    };
+    dpBody.addEventListener('click', dpBody._tabHandler);
+
+    // Wire checkboxes — event delegation on bd-list
+    var bdList = document.querySelector('.bd-list');
+    if(bdList){
+      bdList.addEventListener('change', function(e){
+        var cb = e.target;
+        if(!cb.classList.contains('bd-check')) return;
+        var n2  = findNode(cb.dataset.boid); if(!n2) return;
+        var elN = cb.dataset.el;
+        var bdN = cb.dataset.bd;
         n2.disabledBDs = n2.disabledBDs || {};
         n2.disabledBDs[elN] = n2.disabledBDs[elN] || [];
         if(!cb.checked){
-          if(n2.disabledBDs[elN].indexOf(bdN)<0) n2.disabledBDs[elN].push(bdN);
+          if(n2.disabledBDs[elN].indexOf(bdN) < 0) n2.disabledBDs[elN].push(bdN);
         } else {
-          n2.disabledBDs[elN] = n2.disabledBDs[elN].filter(function(x){return x!==bdN;});
+          n2.disabledBDs[elN] = n2.disabledBDs[elN].filter(function(x){ return x !== bdN; });
         }
-        updateStats(); buildBody();
+        // Update state and re-render bouwdelen count in tree
+        var row = cb.closest('.bd-row');
+        if(row){ row.classList.toggle('off', !cb.checked); }
+        // Update header count without full rebuild
+        var title = document.querySelector('.dp-sec-title[style*="padding:8px"]');
+        if(title){
+          var d2 = getDisabled();
+          title.textContent = 'Bouwdelen — ' + filtered.length + ' getoond · ' + d2.length + ' uitgeschakeld';
+        }
+        // Update the bd count in tree (element row)
+        var elRows = document.querySelectorAll('.bo-el-row');
+        elRows.forEach(function(r){
+          if(r.dataset.el === elN && r.dataset.boid === boId){
+            var cnt = r.querySelector('.bo-el-bd-cnt');
+            if(cnt){
+              var total = BD ? (BD[elN]||[]).length : 0;
+              var dis   = getDisabled().length;
+              cnt.textContent = total > 0 ? (total-dis)+'/'+total+' bd' : '';
+            }
+          }
+        });
       });
-    });
+    }
   }
 
   buildBody();
@@ -1081,12 +1154,29 @@ function renderElementDetail(boId, elName){
 var _leafletMap = null;
 var _mapBoId    = null;
 
-function initOrUpdateMap(boId){
-  var n  = findNode(boId);
-  if(!n) return;
-  var lat = parseFloat(n.lat||'');
-  var lon = parseFloat(n.lon||'');
+function makeDivIcon(code, color){
+  var d = ICONS ? (ICONS[code] || '') : '';
+  var svg = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="'+color+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="'+d+'"/></svg>';
+  var html = '<div style="width:36px;height:36px;background:white;border-radius:50%;border:2px solid '+color+';display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25)">'+svg+'</div>';
+  return L.divIcon({html:html, className:'', iconSize:[36,36], iconAnchor:[18,18], popupAnchor:[0,-18]});
+}
 
+function getAllBOsInTree(){
+  var bos = [];
+  function walk(ns){
+    ns.forEach(function(n){
+      if(n.type==='bo') bos.push(n);
+      walk(n.children);
+    });
+  }
+  walk(tree);
+  return bos;
+}
+
+var _mapMarkers   = {};  // boId -> L.marker
+var _mapFilters   = {};  // boCode -> bool (visible)
+
+function initOrUpdateMap(boId){
   var mapCont = document.getElementById('map-container');
   mapCont.classList.add('vis');
 
@@ -1097,27 +1187,101 @@ function initOrUpdateMap(boId){
     }).addTo(_leafletMap);
   }
 
-  setTimeout(function(){ _leafletMap.invalidateSize(); }, 50);
+  setTimeout(function(){ _leafletMap.invalidateSize(); }, 80);
 
-  if(!isNaN(lat) && !isNaN(lon) && lat !== 0 && lon !== 0){
-    _leafletMap.setView([lat,lon], 16);
-    // Remove old markers
-    _leafletMap.eachLayer(function(l){ if(l instanceof L.Marker) _leafletMap.removeLayer(l); });
-    var bo = BOMAP[n.boCode];
-    var popup = '<strong>'+(n.label||'')+'</strong><br>'+
-      (n.maximo ? 'Maximo: '+n.maximo+'<br>' : '')+
-      'Status: '+(n.status||'—')+'<br>'+
-      (n.bouwjaar ? 'Bouwjaar: '+n.bouwjaar : '');
-    L.marker([lat,lon]).addTo(_leafletMap).bindPopup(popup).openPopup();
-    _mapBoId = boId;
-  } else {
-    _leafletMap.setView([52.3, 5.0], 8);
-    document.getElementById('map-container').insertAdjacentHTML('beforeend',
-      '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);'+
-      'background:rgba(255,255,255,.85);padding:8px 14px;border-radius:6px;font-size:12px;z-index:999;pointer-events:none">'+
-      'Vul coördinaten in bij Locatie</div>');
+  // Collect all BOs with coords
+  var allBOs  = getAllBOsInTree();
+  var withCoords = allBOs.filter(function(n){
+    var lat=parseFloat(n.lat||''), lon=parseFloat(n.lon||'');
+    return !isNaN(lat) && !isNaN(lon) && lat!==0 && lon!==0;
+  });
+
+  // Build unique type list for filter
+  var types = {};
+  allBOs.forEach(function(n){
+    if(!types[n.boCode]) types[n.boCode] = n.label.split(' — ')[0] || n.boCode;
+  });
+  if(Object.keys(_mapFilters).length === 0){
+    Object.keys(types).forEach(function(c){ _mapFilters[c] = true; });
   }
+
+  // Clear old markers
+  Object.keys(_mapMarkers).forEach(function(id){
+    try{ _leafletMap.removeLayer(_mapMarkers[id]); }catch(e){}
+  });
+  _mapMarkers = {};
+
+  // Place markers
+  var bounds = [];
+  withCoords.forEach(function(n){
+    var lat = parseFloat(n.lat), lon = parseFloat(n.lon);
+    if(!(_mapFilters[n.boCode] !== false)) return;
+    var bo    = BOMAP[n.boCode];
+    var color = n.id===boId ? '#1A4F8A' : '#3A84C9';
+    var icon  = makeDivIcon(n.boCode, color);
+    var popup = '<strong>'+(n.label||'')+'</strong><br>'+
+      (n.maximo  ? 'Maximo: '+n.maximo+'<br>'  : '')+
+      'Status: '+(n.status||'—')+'<br>'+
+      (n.bouwjaar? 'Bouwjaar: '+n.bouwjaar     : '');
+    var marker = L.marker([lat,lon],{icon:icon})
+      .addTo(_leafletMap)
+      .bindPopup(popup);
+    marker.on('click', function(){
+      selectBO(n.id);
+    });
+    _mapMarkers[n.id] = marker;
+    bounds.push([lat,lon]);
+  });
+
+  // Focus
+  var n = findNode(boId);
+  var lat=parseFloat(n?n.lat||'':''), lon=parseFloat(n?n.lon||'':'');
+  if(!isNaN(lat)&&!isNaN(lon)&&lat!==0&&lon!==0){
+    _leafletMap.setView([lat,lon], 16);
+    if(_mapMarkers[boId]) _mapMarkers[boId].openPopup();
+  } else if(bounds.length>0){
+    _leafletMap.fitBounds(bounds, {padding:[20,20]});
+  } else {
+    _leafletMap.setView([52.3,5.0], 8);
+  }
+
+  _mapBoId = boId;
+  renderMapOverlay(types);
 }
+
+function renderMapOverlay(types){
+  var old = document.getElementById('map-overlay');
+  if(old) old.remove();
+  if(!_leafletMap) return;
+
+  var codes = Object.keys(types);
+  if(codes.length === 0) return;
+
+  var rows = codes.map(function(code){
+    var checked = (_mapFilters[code] !== false) ? ' checked' : '';
+    var svg = ICONS ? svgIcon(code, 16, '#1A4F8A') : '';
+    return '<label class="map-filter-row">'+
+      '<input type="checkbox" data-mapcode="'+code+'"'+checked+'>'+
+      '<span class="map-filter-icon">'+svg+'</span>'+
+      '<span class="map-filter-label">'+types[code]+'</span>'+
+    '</label>';
+  }).join('');
+
+  var div = document.createElement('div');
+  div.id = 'map-overlay';
+  div.className = 'map-overlay';
+  div.innerHTML = '<div class="map-overlay-title">Filter typen</div>'+rows;
+  document.getElementById('map-container').appendChild(div);
+
+  div.querySelectorAll('[data-mapcode]').forEach(function(cb){
+    cb.addEventListener('change', function(){
+      _mapFilters[cb.dataset.mapcode] = cb.checked;
+      initOrUpdateMap(_mapBoId);
+    });
+  });
+}
+
+
 
 function setupDPTabs(boId){
   var tabs = document.getElementById('dp-tabs');
@@ -1127,8 +1291,9 @@ function setupDPTabs(boId){
       document.querySelectorAll('.dp-tab').forEach(function(t){ t.classList.remove('active'); });
       tab.classList.add('active');
       var t = tab.dataset.tab;
-      document.getElementById('dp-body').style.display        = t==='info'  ? '' : 'none';
+      document.getElementById('dp-body').style.display = t==='info' ? '' : 'none';
       document.getElementById('map-container').classList.toggle('vis', t==='map');
+      document.getElementById('rh-map').classList.toggle('vis', t==='map');
       if(t==='map') initOrUpdateMap(boId);
     });
   });
@@ -1176,6 +1341,499 @@ function setupResizeHandles(){
 
   makeResizable('rh-left',  function(){ return document.querySelector('aside'); },         'left');
   makeResizable('rh-right', function(){ return document.getElementById('detail-panel'); }, 'right');
+
+  // Vertical resize for map
+  var rhMap = document.getElementById('rh-map');
+  if(rhMap){
+    var vDragging=false, vStartY=0, vStartH=0;
+    rhMap.addEventListener('mousedown',function(e){
+      vDragging=true;
+      vStartY=e.clientY;
+      vStartH=document.getElementById('map-container').offsetHeight;
+      rhMap.classList.add('dragging');
+      document.body.style.cursor='row-resize';
+      document.body.style.userSelect='none';
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove',function(e){
+      if(!vDragging) return;
+      var delta=e.clientY - vStartY;
+      var newH=Math.max(120, Math.min(600, vStartH+delta));
+      document.getElementById('map-container').style.height=newH+'px';
+      if(_leafletMap) _leafletMap.invalidateSize();
+    });
+    document.addEventListener('mouseup',function(){
+      if(!vDragging) return;
+      vDragging=false;
+      rhMap.classList.remove('dragging');
+      document.body.style.cursor='';
+      document.body.style.userSelect='';
+      if(_leafletMap) _leafletMap.invalidateSize();
+    });
+  }
+}
+
+
+// ── PDF RAPPORT ───────────────────────────────────────────────
+function generatePDF(){
+  if(typeof window==='undefined'||!window.jspdf){alert('PDF library niet geladen.');return;}
+  var jsPDF=window.jspdf.jsPDF;
+  var doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+
+  var PW=210,PH=297,ML=16,MR=16,y=0;
+  var CW=PW-ML-MR; // 178mm
+  var NAVY=[26,79,138],BLUE=[52,132,201],LTBLUE=[232,239,247];
+  var GREEN=[26,122,74],ORANGE=[160,90,0],RED=[176,48,42];
+  var PURPLE=[107,63,160],GREY=[138,150,163],DARK=[13,27,42];
+  var MID=[60,74,92],LIGHT=[240,242,245],WHITE=[255,255,255];
+  var YELLOW_BG=[255,251,230];
+  var dateStr=new Date().toLocaleDateString('nl-NL',{year:'numeric',month:'long',day:'numeric'});
+
+  function F(c){doc.setFillColor(c[0],c[1],c[2]);}
+  function T(c){doc.setTextColor(c[0],c[1],c[2]);}
+  function S(c,w){doc.setDrawColor(c[0],c[1],c[2]);doc.setLineWidth(w||0.25);}
+  function B(sz){doc.setFont('helvetica','bold');doc.setFontSize(sz);}
+  function N(sz){doc.setFont('helvetica','normal');doc.setFontSize(sz);}
+  function check(h){if(y+h>PH-18)newPage();}
+  function hline(c,lw){S(c||[220,225,230],lw||0.2);doc.line(ML,y,PW-MR,y);}
+
+  // FIX 5: group header only if at least one element row fits after it
+  function checkGroup(){if(y+34>PH-18)newPage();}
+
+  function newPage(){
+    doc.addPage();y=22;
+    F(NAVY);doc.rect(ML,8,CW,1.5,'F');
+    N(7);T(GREY);
+    doc.text('PRA Decompositierapport \u2014 NEN 2767',ML,15);
+    doc.text(dateStr,PW-MR,15,{align:'right'});
+    S([220,225,230],0.2);doc.line(ML,17.5,PW-MR,17.5);
+  }
+
+  // FIX 6: kpiBox — number prominent, label directly below touching the number
+  function kpiBox(x,yy,w,h,val,lbl,col){
+    F(col);doc.roundedRect(x,yy,w,h,2,2,'F');
+    T(WHITE);
+    var lblText=lbl.replace(/\n/g,' ');
+    // Tighter layout: number + 1.2mm gap + label, block vertically centred
+    var numH=5.5;
+    var lblH=3.2;
+    var gap=1.2;
+    var blockH=numH+gap+lblH;
+    var blockTop=yy+(h-blockH)/2;
+    B(16);
+    doc.text(String(val),x+w/2,blockTop+numH*0.82,{align:'center'});
+    N(6);
+    doc.text(lblText,x+w/2,blockTop+numH+gap+lblH*0.85,{align:'center'});
+  }
+
+  // Plural helpers
+  function elWord(n){
+    return n===0?'Geen elementen':n===1?'1 Element':n+' Elementen';
+  }
+  function critWord(n){
+    return n===0?'geen kritisch':n===1?'1 kritisch':n+' kritisch';
+  }
+
+  // ── collect stats ────────────────────────────────────────────
+  var allBOs=getAllBOsInTree();
+  var totalAP=0,totalCX=0;
+  (function ct(ns){ns.forEach(function(n){
+    if(n.type==='areaal')totalAP++;
+    else if(n.type==='complex')totalCX++;
+    ct(n.children);
+  });})(tree);
+
+  var totEl=0,actEl=0,totBD=0,actBD=0,jaC=0,opC=0,neC=0;
+  allBOs.forEach(function(n){
+    var bo=BOMAP[n.boCode];if(!bo)return;
+    var dis=n.disabledEls||[];
+    bo.elementen.forEach(function(el){
+      totEl++;
+      if(dis.indexOf(el.element)<0){
+        actEl++;
+        if(el.classificatie==='JA')jaC++;
+        else if(el.classificatie==='OPTIONEEL')opC++;
+        else neC++;
+        var bds=BD?(BD[el.element]||[]):[];
+        var dbd=(n.disabledBDs&&n.disabledBDs[el.element])?n.disabledBDs[el.element]:[];
+        bds.forEach(function(b){totBD++;if(dbd.indexOf(b[0])<0)actBD++;});
+      }
+    });
+  });
+  var avgRisk=actEl>0?Math.round(jaC/actEl*100):0;
+  var covPct=totBD>0?Math.round(actBD/totBD*100):0;
+  var riskColor=avgRisk>=70?RED:avgRisk>=40?ORANGE:GREEN;
+  var riskLabel=avgRisk>=70?'HOOG':avgRisk>=40?'MATIG':'LAAG';
+  var riskText=avgRisk>=70
+    ?'Meer dan '+avgRisk+'% van de actieve elementen is kritisch (JA). Bij falen valt de primaire functie weg. Actie: stel direct een inspectieprogramma op.'
+    :avgRisk>=40
+    ?'Gemiddeld '+avgRisk+'% kritisch. Beheersbaar. Regelmatige inspectie van JA-elementen aanbevolen.'
+    :'Gemiddeld '+avgRisk+'% kritisch. Gezond beeld. Standaard onderhoudsprogramma volstaat.';
+
+  // ════════════════════════════════════════════════════════
+  // PAGINA 1 — COVER
+  // ════════════════════════════════════════════════════════
+  F(NAVY);doc.rect(0,0,PW,56,'F');
+  F(BLUE);doc.rect(0,54,PW,3,'F');
+
+  // NEN badge — NEN official blue #009BC4, vertically centred with title
+  // Title line 1 is at y=23. Badge top aligns with title = 23-7 = 16, h=9
+  F([0,155,196]); // NEN official teal-blue
+  doc.roundedRect(ML,16,26,9,2,2,'F');
+  T(WHITE);B(7.5);doc.text('NEN 2767',ML+13,21.8,{align:'center'});
+
+  T(WHITE);B(20);doc.text('Prestatiegestuurde Risicoanalyses (PRA)',ML+30,23);
+  B(13);doc.text('Decompositierapport',ML+30,33);
+  N(9);T([180,210,255]);doc.text('Sturen op prestaties van systemen',ML+30,42);
+  N(8);T([150,190,240]);doc.text(dateStr,ML+30,50);
+  y=64;
+
+  // Conclusie banner
+  F(riskColor);doc.roundedRect(ML,y,CW,18,3,3,'F');
+  F(WHITE);doc.roundedRect(ML+2,y+2,28,14,2,2,'F');
+  T(riskColor);B(7.5);doc.text('RISICO',ML+16,y+7,{align:'center'});
+  B(13);doc.text(riskLabel,ML+16,y+13.5,{align:'center'});
+  T(WHITE);B(8.5);doc.text('Conclusie',ML+34,y+6);
+  N(7.5);
+  var clines=doc.splitTextToSize(riskText,CW-38);
+  clines.slice(0,3).forEach(function(l,i){doc.text(l,ML+34,y+11+i*4.2);});
+  y+=24;
+
+  // FIX 2: KPI boxes — 5 boxes same width, consistent row
+  // Labels fit on one line within the box width
+  var bw=CW/5-2.4,bh=22;
+  // App pastel colours matching decomposition UI
+  var KPI_BOXES=[
+    {val:totalAP,    lbl:'Areaal Portefeuille', bg:[240,234,249], fg:[107,63,160]},
+    {val:totalCX,    lbl:'Complexen',           bg:[232,245,238], fg:[26,122,74]},
+    {val:allBOs.length,lbl:'Beheerobjecten',    bg:[232,239,247], fg:[26,79,138]},
+    {val:actEl,      lbl:'Actieve Elementen',   bg:[219,234,248], fg:[26,79,138]},
+    {val:actBD,      lbl:'Actieve Bouwdelen',   bg:[220,242,228], fg:[26,122,74]}
+  ];
+  KPI_BOXES.forEach(function(s,i){
+    F(s.bg);doc.roundedRect(ML+i*(bw+3),y,bw,bh,2,2,'F');
+    S(s.fg,0.4);doc.roundedRect(ML+i*(bw+3),y,bw,bh,2,2,'D');
+    T(s.fg);
+    var lblText=s.lbl;
+    var numH=5.5,lblH=3.2,gap=1.2;
+    var blockH=numH+gap+lblH;
+    var blockTop=y+(bh-blockH)/2;
+    B(16);doc.text(String(s.val),ML+i*(bw+3)+bw/2,blockTop+numH*0.82,{align:'center'});
+    N(6);doc.text(lblText,ML+i*(bw+3)+bw/2,blockTop+numH+gap+lblH*0.85,{align:'center'});
+  });
+  y+=bh+8;
+
+  // Classificatie staaf
+  B(9);T(DARK);doc.text('Classificatie actieve elementen',ML,y);y+=5;
+  var barH=8,tot2=jaC+opC+neC;
+  if(tot2>0){
+    var jW=Math.round(CW*jaC/tot2),oW=Math.round(CW*opC/tot2),nW=CW-jW-oW;
+    F(LIGHT);doc.roundedRect(ML,y,CW,barH,2,2,'F');
+    if(jW>0){F(RED);doc.roundedRect(ML,y,jW,barH,2,2,'F');}
+    if(oW>0){F(ORANGE);doc.rect(ML+jW,y,oW,barH,'F');}
+    if(nW>0){F(GREY);doc.roundedRect(ML+jW+oW,y,nW,barH,2,2,'F');}
+    T(WHITE);B(7);
+    if(jW>20)doc.text('JA '+jaC+' ('+Math.round(jaC/tot2*100)+'%)',ML+jW/2,y+5.5,{align:'center'});
+    if(oW>20)doc.text('OPT '+opC,ML+jW+oW/2,y+5.5,{align:'center'});
+    if(nW>20)doc.text('N.V.T. '+neC,ML+jW+oW+nW/2,y+5.5,{align:'center'});
+    y+=barH+4;
+    [[RED,'Kritisch (JA): falen = functieverlies'],
+     [ORANGE,'Optioneel: relevant, niet direct kritisch'],
+     [GREY,'N.V.T.: niet in FTA-model']
+    ].forEach(function(l,i){
+      F(l[0]);doc.rect(ML+i*62,y,3,3,'F');
+      N(6.5);T(MID);doc.text(l[1],ML+i*62+5,y+2.5);
+    });
+    y+=8;
+  }
+
+  // Dekkingsgraad
+  hline();y+=4;
+  B(8);T(DARK);doc.text('Dekkingsgraad bouwdelen',ML,y);
+  // Explanation of what dekkingsgraad means
+  N(7);T(GREY);doc.text('Percentage actieve bouwdelen t.o.v. totaal geregistreerde bouwdelen in de bibliotheek.',ML,y+4.5);
+  N(7);T(GREY);doc.text('Actief: '+actBD+' / Totaal geregistreerd: '+totBD,ML,y+9);
+  var cc2=covPct>=80?GREEN:covPct>=50?ORANGE:RED;
+  // FIX 2: pill RIGHT-aligned
+  F(cc2);doc.roundedRect(PW-MR-24,y,24,9,2,2,'F');
+  T(WHITE);B(10);doc.text(covPct+'%',PW-MR-12,y+6,{align:'center'});
+  y+=15;
+
+  // Overzichtstabel
+  hline();y+=5;
+  B(9);T(DARK);doc.text('Overzicht beheerobjecten',ML,y);y+=5;
+
+  // Column x positions
+  var cPF=ML+62, cSt=ML+120, cEl=ML+138, cBd=ML+153, cPct=ML+CW;
+  F(NAVY);doc.rect(ML,y-3.5,CW,7,'F');
+  T(WHITE);B(7);
+  doc.text('Beheerobject',ML+3,y);
+  doc.text('Primaire functie',cPF+2,y);
+  doc.text('Status',cSt,y,{align:'center'});
+  doc.text('El.',cEl,y,{align:'center'});
+  doc.text('Bd.',cBd,y,{align:'center'});
+  var pbwH=20;doc.text('% Kritisch',cPct-pbwH/2,y,{align:'center'});
+  y+=5;
+
+  allBOs.forEach(function(n,i){
+    var bo=BOMAP[n.boCode];if(!bo)return;
+    var dis=n.disabledEls||[];
+    var aE=bo.elementen.filter(function(e){return dis.indexOf(e.element)<0;});
+    var jE=aE.filter(function(e){return e.classificatie==='JA';});
+    var pct=aE.length>0?Math.round(jE.length/aE.length*100):0;
+    var aBD=0;aE.forEach(function(el){
+      var bds=BD?(BD[el.element]||[]):[];
+      var d=(n.disabledBDs&&n.disabledBDs[el.element])?n.disabledBDs[el.element]:[];
+      aBD+=bds.filter(function(b){return d.indexOf(b[0])<0;}).length;
+    });
+
+    var nameLines=doc.splitTextToSize(n.boCode+' — '+n.label, 56);
+    var pfLines  =doc.splitTextToSize(bo.primaire_functie||'', 50);
+    var LH=4.5;
+    var PAD=6;
+    var maxLines=Math.max(nameLines.length, pfLines.length, 1);
+    var rowH=Math.max(10, maxLines*LH + PAD);
+    check(rowH+2);
+
+    // Stripe
+    if(i%2===0){F(LIGHT);}else{F(WHITE);}
+    doc.rect(ML, y, CW, rowH, 'F');
+
+    // ONE shared mid — the vertical centre of the row
+    // jsPDF text y = baseline. For 7.5pt font cap-height ≈ 2.7mm.
+    // So text appears centred when baseline = mid + capHeight/2 ≈ mid + 1.4
+    var mid = y + rowH/2;          // geometric centre of row
+    var tOff = 1.4;                 // baseline offset so text cap is centred
+
+    // Helper: place a multi-line text block so its visual centre = mid
+    function drawCentred(lines, x, sz, col){
+      var fnt=sz||7.5;
+      var lh=fnt*0.45; // approx line-height in mm for given font size
+      var blockH=(lines.length-1)*lh;
+      var top=mid-blockH/2+tOff;
+      if(col)T(col); else T(DARK);
+      doc.setFontSize(fnt);
+      lines.forEach(function(l,li){doc.text(l, x, top+li*lh);});
+    }
+
+    // Beheerobject name
+    doc.setFont('helvetica','normal');
+    drawCentred(nameLines, ML+3, 7.5, DARK);
+
+    // Primaire functie
+    drawCentred(pfLines.slice(0,3), cPF+2, 7, GREY);
+
+    // Status chip — pill centred on mid
+    var sC={'actief':GREEN,'inactief':RED,'onderhoud':ORANGE}[n.status]||GREY;
+    var chipH=5, chipW=18;
+    F(sC);doc.roundedRect(cSt-chipW/2, mid-chipH/2, chipW, chipH, 1.5,1.5,'F');
+    T(WHITE);doc.setFont('helvetica','bold');doc.setFontSize(6.5);
+    doc.text((n.status||'—').slice(0,6), cSt, mid+tOff*0.5, {align:'center'});
+
+    // El. Bd. — centred
+    doc.setFont('helvetica','normal');doc.setFontSize(7.5);T(MID);
+    doc.text(String(aE.length), cEl, mid+tOff, {align:'center'});
+    doc.text(String(aBD),       cBd, mid+tOff, {align:'center'});
+
+    // % pill — centred
+    var pbw=20, pillH=5;
+    var pfc=pct>=70?RED:pct>=40?ORANGE:GREEN;
+    F(pfc);doc.roundedRect(cPct-pbw, mid-pillH/2, pbw, pillH, 1.5,1.5,'F');
+    T(WHITE);doc.setFont('helvetica','bold');doc.setFontSize(7);
+    doc.text(pct+'%', cPct-pbw/2, mid+tOff*0.5, {align:'center'});
+
+    y+=rowH;
+    S([220,225,230],0.2);doc.line(ML,y,PW-MR,y);
+    y+=1;
+  });;;;;
+
+  // ════════════════════════════════════════════════════════
+  // DETAIL PER BEHEEROBJECT
+  // ════════════════════════════════════════════════════════
+  allBOs.forEach(function(n){
+    var bo=BOMAP[n.boCode];if(!bo)return;
+    var dis=n.disabledEls||[];
+    var aEls=bo.elementen.filter(function(e){return dis.indexOf(e.element)<0;});
+
+    newPage();
+
+    // BO header block
+    F(LTBLUE);doc.rect(ML,y,CW,20,'F');
+    F(NAVY);doc.rect(ML,y,4,20,'F');
+    B(7);T(NAVY);doc.text('BEHEEROBJECT',ML+7,y+4.5);
+    B(13);T(DARK);doc.text(n.boCode+' \u2014 '+n.label,ML+7,y+11.5);
+    N(8);T([46,90,150]);
+    var funcStr='Functie: '+(bo.primaire_functie||'\u2014');
+    var funcLines=doc.splitTextToSize(funcStr,CW-12);
+    doc.text(funcLines[0],ML+7,y+17.5);
+    y+=24;
+
+    // Meta
+    var meta=[];
+    if(n.maximo)    meta.push(['Maximo',n.maximo]);
+    if(n.status)    meta.push(['Status',n.status]);
+    if(n.bouwjaar)  meta.push(['Bouwjaar',n.bouwjaar]);
+    if(n.levensduur)meta.push(['Levensduur',n.levensduur+' jaar']);
+    if(n.adres||n.stad)meta.push(['Adres',((n.adres||'')+(n.stad?', '+n.stad:'')).slice(0,32)]);
+    if(meta.length){
+      check(12);
+      var cols=Math.min(meta.length,4);
+      var cw2=CW/cols;
+      F(LIGHT);doc.roundedRect(ML,y,CW,11,1,1,'F');
+      S([210,218,228],0.2);doc.roundedRect(ML,y,CW,11,1,1,'D');
+      meta.slice(0,cols).forEach(function(m,i){
+        var cx=ML+i*cw2+3;
+        N(6);T(GREY);doc.text(m[0].toUpperCase(),cx,y+4);
+        B(8);T(DARK);doc.text(String(m[1]),cx,y+9.5);
+      });
+      y+=15;
+    }
+
+    // 4 KPI blocks
+    check(20);
+    var jaE=aEls.filter(function(e){return e.classificatie==='JA';}).length;
+    var opE=aEls.filter(function(e){return e.classificatie==='OPTIONEEL';}).length;
+    var neE=aEls.filter(function(e){return e.classificatie==='NEE';}).length;
+    var bw4=CW/4-2;
+    [[jaE,'Kritisch (JA)',RED],[opE,'Optioneel',ORANGE],
+     [neE,'N.V.T.',GREY],[aEls.length,'Actief totaal',NAVY]
+    ].forEach(function(s,i){kpiBox(ML+i*(bw4+2.7),y,bw4,22,s[0],s[1],s[2]);});
+    y+=26;
+
+    // Notitie
+    if(n.notitie){
+      check(12);
+      F(YELLOW_BG);S([200,185,0],0.3);doc.roundedRect(ML,y,CW,9,1,1,'FD');
+      B(7);T([100,80,0]);doc.text('NOTITIE',ML+3,y+5.5);
+      N(7.5);T(DARK);
+      doc.text(doc.splitTextToSize(n.notitie,CW-24)[0],ML+22,y+5.5);
+      y+=13;
+    }
+
+    // Elements by group
+    var grpMap={};
+    aEls.forEach(function(el){
+      var g=(EG&&EG[el.element]&&EG[el.element].groep)||'Overig';
+      grpMap[g]=grpMap[g]||[];grpMap[g].push(el);
+    });
+    var sortedGrp=Object.keys(grpMap).sort();
+
+    sortedGrp.forEach(function(grp){
+      var els=grpMap[grp];
+      var grpJa=els.filter(function(e){return e.classificatie==='JA';}).length;
+
+      // Always keep group header with first element on same page
+      (function(){
+        var firstEl=els[0];
+        if(!firstEl)return;
+        var firstBDs=BD?(BD[firstEl.element]||[]):[];
+        var firstDbd=(n.disabledBDs&&n.disabledBDs[firstEl.element])?n.disabledBDs[firstEl.element]:[];
+        var firstABDs=firstBDs.filter(function(b){return firstDbd.indexOf(b[0])<0;});
+        var firstBdRows=firstABDs.length>0?Math.ceil(firstABDs.length/2):0;
+        var firstRightH=firstBdRows>0?7+firstBdRows*4.8:7;
+        var firstNameLines=doc.splitTextToSize(firstEl.element,52).length;
+        var firstReden=REDEN?(REDEN[firstEl.element]||''):'';
+        var firstLeftH=7+(firstNameLines>1?4:0)+(firstReden?4.5:0)+3;
+        var firstRowH=Math.max(firstLeftH,firstRightH,14);
+        // group header (9) + first row + 2 margin
+        if(y+9+firstRowH+2>PH-18)newPage();
+      })();
+
+      // Group header
+      F([242,246,252]);doc.rect(ML,y,CW,7,'F');
+      S([210,220,235],0.2);doc.rect(ML,y,CW,7);
+      F(BLUE);doc.rect(ML,y,3,7,'F');
+      B(8);T(NAVY);
+      // FIX 4: text starts 7mm from left edge (away from blue bar)
+      doc.text(grp,ML+7,y+5);
+      N(7);T(GREY);
+      // FIX 4: right text ends 3mm from right edge
+      doc.text(elWord(els.length)+' \u2022 '+critWord(grpJa),PW-MR-3,y+5,{align:'right'});
+      y+=9;
+
+      els.forEach(function(el){
+        var bds=BD?(BD[el.element]||[]):[];
+        var dbd=(n.disabledBDs&&n.disabledBDs[el.element])?n.disabledBDs[el.element]:[];
+        var aBDs=bds.filter(function(b){return dbd.indexOf(b[0])<0;});
+        var reden=REDEN?(REDEN[el.element]||''):'';
+
+        // Row height: left = chip+name+reden, right = bouwdelen 2-col
+        var bdColW=44;
+        var bdRows=aBDs.length>0?Math.ceil(aBDs.length/2):0;
+        var rightH=bdRows>0?7+bdRows*4.8:7;
+        // Left height: always 3 fixed lines: name(1 or 2 lines) + reden
+        var nameLines=doc.splitTextToSize(el.element,52).length;
+        var leftH=7+(nameLines>1?4:0)+(reden?4.5:0)+3;
+        var rowH=Math.max(leftH,rightH,14);
+        check(rowH+2);
+
+        F([252,253,255]);doc.rect(ML,y,CW,rowH,'F');
+        S([235,240,246],0.15);doc.rect(ML,y,CW,rowH);
+
+        // FIX 2+7: chip — positioned at top-left of row with 3mm padding
+        var cc=el.classificatie==='JA'?RED:el.classificatie==='OPTIONEEL'?ORANGE:GREY;
+        var cl=el.classificatie==='JA'?'JA':el.classificatie==='OPTIONEEL'?'OPT':'N.V.T.';
+        var chipW=13; // all chips same fixed width
+        // chip top = y+3, vertically near name
+        F(cc);doc.roundedRect(ML+2,y+3,chipW,5,1.5,1.5,'F');
+        T(WHITE);B(6);doc.text(cl,ML+2+chipW/2,y+6.5,{align:'center'});
+
+        // FIX 7: name always starts at y+7 from top, never varies
+        var nameX=ML+18;
+        B(8.5);T(DARK);
+        var enl=doc.splitTextToSize(el.element,52);
+        doc.text(enl[0],nameX,y+7);
+        var afterName=y+7+(enl[1]?5:0);
+        if(enl[1]){B(8.5);doc.text(enl[1],nameX,y+12);}
+
+        // FIX 7: redenering always directly below name, consistent gap
+        if(reden){
+          N(6.5);T(GREY);
+          var rl=doc.splitTextToSize(reden,52);
+          doc.text(rl[0],nameX,afterName+4.5);
+        }
+
+        // Vertical divider
+        S([210,220,235],0.2);doc.line(ML+80,y+1,ML+80,y+rowH-1);
+
+        // Bouwdelen right column
+        var rxStart=ML+83;
+        B(6.5);T(NAVY);
+        doc.text('BOUWDELEN ACTIEF: '+aBDs.length+' / '+bds.length,rxStart,y+4.5);
+
+        if(aBDs.length===0){
+          N(7);T(GREY);doc.text('Geen actieve bouwdelen',rxStart,y+9);
+        } else {
+          var bx=rxStart,by2=y+8.5,col=0;
+          aBDs.forEach(function(b){
+            if(by2>y+rowH-2)return;
+            var dc=b[1]==='J'?RED:b[1]==='O'?ORANGE:GREY;
+            F(dc);doc.circle(bx+1.5,by2-1.2,1.2,'F');
+            var nm=b[0].length>21?b[0].slice(0,20)+'\u2026':b[0];
+            N(7);T(DARK);doc.text(nm,bx+4,by2);
+            col++;
+            if(col%2===1){bx=rxStart+bdColW;}
+            else{bx=rxStart;by2+=4.8;}
+          });
+        }
+        y+=rowH+1;
+      });
+      y+=3;
+    });
+  });
+
+  // Footer
+  var tp=doc.internal.getNumberOfPages();
+  for(var pg=1;pg<=tp;pg++){
+    doc.setPage(pg);
+    F(NAVY);doc.rect(0,PH-11,PW,11,'F');
+    T([180,210,255]);N(7);
+    doc.text('PRA \u2014 NEN 2767 Decompositierapport',ML,PH-4.5);
+    doc.text('Pagina '+pg+' / '+tp,PW-MR,PH-4.5,{align:'right'});
+    T([150,190,240]);doc.text(dateStr,PW/2,PH-4.5,{align:'center'});
+  }
+
+  doc.save('PRA_Rapport_'+new Date().toISOString().slice(0,10)+'.pdf');
 }
 
 /* Boot */
