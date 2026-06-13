@@ -267,6 +267,109 @@ main{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column
   white-space:nowrap;
 }
 .pdf-btn:hover{border-color:#C0392B;background:#FDECEB;color:#C0392B}
+
+/* ═══════════════════════════════════════════════
+   MOBILE / TABLET RESPONSIVE
+   ═══════════════════════════════════════════════ */
+
+/* Tablet (≤900px): sidebar becomes top drawer */
+@media (max-width:900px){
+  body{overflow:auto}
+  header{height:auto;padding:10px 14px;flex-wrap:wrap;gap:8px}
+  .htitle{font-size:13px}
+  .hsub{display:none}
+  .hstats{gap:10px}
+  .hstat strong{font-size:13px}
+  .hstat{font-size:9px}
+
+  .wrap{flex-direction:column;height:auto;overflow:visible}
+
+  /* Sidebar: horizontal scrolling strip at top */
+  aside{
+    width:100% !important;min-width:0 !important;
+    height:auto;border-right:none;border-bottom:2px solid var(--bdr);
+    flex-direction:column;
+  }
+  .sb-head{padding:8px 12px 6px}
+  .bo-list{
+    display:flex;flex-direction:row;
+    overflow-x:auto;overflow-y:hidden;
+    padding:6px 8px;gap:6px;
+    max-height:none;
+    /* snap scrolling */
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+  }
+  .bo-item{
+    flex-direction:column;align-items:center;justify-content:center;
+    min-width:72px;max-width:72px;padding:8px 6px;
+    border-radius:8px;border:1px solid var(--bdr);
+    text-align:center;gap:4px;
+    scroll-snap-align:start;
+    background:var(--sur);
+    cursor:pointer;
+  }
+  .bo-item .bname{font-size:10px;line-height:1.2;text-align:center;white-space:normal;word-break:break-word}
+  .bo-item .bcnt{font-size:9px}
+  .bo-item .bcode{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:11px}
+  .sb-tabs{padding:4px 8px;gap:4px}
+  .stab{font-size:9px;padding:4px 0}
+  .sb-search{font-size:12px;padding:5px 8px 5px 26px}
+
+  /* Resize handles hidden on mobile */
+  .resize-handle,.resize-handle-v{display:none !important}
+
+  main{padding:10px 12px;overflow:visible}
+  .add-bar{gap:5px}
+  .add-inp{font-size:12px;padding:7px 10px}
+  .add-btn{padding:7px 12px;font-size:12px}
+  .toolbar{gap:4px}
+  .tbtn{font-size:10px;padding:5px 7px}
+  .tinfo{display:none}
+
+  /* Tree nodes — full width */
+  .nd-hd{padding:8px 10px;gap:6px}
+  .nd-lbl{font-size:12px}
+  .nd-sub{font-size:10px}
+  .nd-acts .nact{padding:3px 6px;font-size:10px}
+  .nd-kids{padding:4px 4px 6px 10px}
+
+  /* BO element list */
+  .nd-el-list{max-height:none}
+  .bo-el-row{padding:5px 10px;font-size:11px}
+  .bo-el-bd-cnt{display:none} /* hide bd count on small screens */
+
+  /* Detail panel — full width bottom sheet */
+  .detail-panel{
+    width:100% !important;min-width:0 !important;
+    border-left:none;border-top:2px solid var(--bdr);
+    max-height:60vh;
+    position:sticky;bottom:0;
+    z-index:100;
+  }
+  .dp-head{padding:10px 14px}
+  .dp-title{font-size:12px}
+}
+
+/* Phone (≤480px): extra compact */
+@media (max-width:480px){
+  header{padding:8px 12px}
+  .htitle{font-size:12px}
+  .hbadge{font-size:9px;padding:2px 6px}
+  .hstat strong{font-size:12px}
+  .hstats{gap:8px}
+
+  .bo-item{min-width:64px;max-width:64px}
+  .bo-item .bname{font-size:9px}
+  .bo-item .bcode{width:24px;height:24px;font-size:10px}
+
+  .nd-badges .badge{font-size:9px;padding:1px 4px}
+  .nd-badges .pbar{display:none}
+  .nd-acts .nact{font-size:9px;padding:2px 5px}
+
+  .add-bar{flex-wrap:wrap}
+  .add-inp{min-width:0;flex:1}
+}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -1835,6 +1938,153 @@ function generatePDF(){
 
   doc.save('PRA_Rapport_'+new Date().toISOString().slice(0,10)+'.pdf');
 }
+
+
+// ═══════════════════════════════════════════════════════════
+// TOUCH DRAG-AND-DROP (mobile)
+// ═══════════════════════════════════════════════════════════
+(function(){
+  var touchDrag = null;    // same format as `drag` var
+  var touchEl   = null;    // the element being dragged visually
+  var ghostEl   = document.getElementById('ghost');
+
+  function boItemFromEl(el){
+    var item = el.closest('.bo-item');
+    return item ? item.dataset.code : null;
+  }
+  function ndHdFromEl(el){
+    var hd = el.closest('.nd-hd');
+    return hd ? hd.dataset.id : null;
+  }
+  function dropStripFromEl(el){
+    var strip = el.closest('.drop-strip');
+    return strip ? strip.dataset.pid : null;
+  }
+
+  function showTouchGhost(lbl, x, y){
+    ghostEl.textContent = '⠇ ' + lbl;
+    ghostEl.style.display = 'block';
+    ghostEl.style.left = (x+12) + 'px';
+    ghostEl.style.top  = (y+12) + 'px';
+  }
+  function hideTouchGhost(){ ghostEl.style.display='none'; }
+
+  function elAtPoint(x, y){
+    ghostEl.style.display = 'none';
+    var el = document.elementFromPoint(x, y);
+    ghostEl.style.display = 'block';
+    return el;
+  }
+
+  // Touch on library items
+  document.addEventListener('touchstart', function(e){
+    var item = e.target.closest('.bo-item');
+    if(!item) return;
+    var code = item.dataset.code;
+    if(!code) return;
+    touchDrag = {from:'lib', code:code};
+    var t = e.touches[0];
+    showTouchGhost(BOMAP[code]?BOMAP[code].naam:code, t.clientX, t.clientY);
+  }, {passive:true});
+
+  // Touch on tree node headers
+  document.addEventListener('touchstart', function(e){
+    var hd = e.target.closest('.nd-hd');
+    if(!hd || e.target.closest('.nd-acts') || e.target.closest('.bo-el-row')) return;
+    // Only start drag after 300ms hold (distinguish tap from drag)
+    var id = hd.dataset.id;
+    var holdTimer = setTimeout(function(){
+      var n = findNode(id);
+      if(!n) return;
+      touchDrag = {from:'tree', id:id};
+      var t = e.touches[0];
+      showTouchGhost(n.label, t.clientX, t.clientY);
+    }, 400);
+    hd.addEventListener('touchend', function(){ clearTimeout(holdTimer); }, {once:true});
+    hd.addEventListener('touchmove', function(){ clearTimeout(holdTimer); }, {once:true, passive:true});
+  }, {passive:true});
+
+  document.addEventListener('touchmove', function(e){
+    if(!touchDrag) return;
+    var t = e.touches[0];
+    ghostEl.style.left = (t.clientX+12)+'px';
+    ghostEl.style.top  = (t.clientY+12)+'px';
+
+    // Highlight drop target
+    document.querySelectorAll('.nd-hd.dov').forEach(function(x){x.classList.remove('dov');});
+    document.querySelectorAll('.drop-strip').forEach(function(s){s.classList.remove('ov');s.classList.add('vis');});
+    var el = elAtPoint(t.clientX, t.clientY);
+    if(!el) return;
+    var hd = el.closest('.nd-hd');
+    if(hd) hd.classList.add('dov');
+    var strip = el.closest('.drop-strip');
+    if(strip) strip.classList.add('ov');
+  }, {passive:true});
+
+  document.addEventListener('touchend', function(e){
+    if(!touchDrag){ return; }
+    hideTouchGhost();
+    document.querySelectorAll('.nd-hd.dov').forEach(function(x){x.classList.remove('dov');});
+    document.querySelectorAll('.drop-strip').forEach(function(s){s.classList.remove('vis','ov');});
+
+    var t = e.changedTouches[0];
+    var el = elAtPoint(t.clientX, t.clientY);
+    if(!el){ touchDrag=null; return; }
+
+    // Drop on nd-hd
+    var hd = el.closest('.nd-hd');
+    if(hd){
+      var targetId = hd.dataset.id;
+      var target = findNode(targetId);
+      if(target && target.type !== 'bo'){
+        if(touchDrag.from==='lib'){
+          target.children.push(makeBO(touchDrag.code));
+          target.open=true;
+          render();
+        } else if(touchDrag.from==='tree' && touchDrag.id!==targetId){
+          if(!isAncestor(touchDrag.id, targetId)){
+            var src=extractNode(touchDrag.id);
+            if(src){target.children.push(src);target.open=true;render();}
+          }
+        }
+      } else if(target && target.type==='bo' && touchDrag.from==='lib'){
+        // tap on BO = open detail
+      }
+      touchDrag=null; return;
+    }
+
+    // Drop on strip
+    var strip = el.closest('.drop-strip');
+    if(strip){
+      var pid = strip.dataset.pid;
+      var arr = pid==='root' ? tree : (findNode(pid)||{children:[]}).children;
+      if(touchDrag.from==='lib'){
+        arr.push(makeBO(touchDrag.code));
+        render();
+      } else if(touchDrag.from==='tree' && touchDrag.id!==pid){
+        var src2=extractNode(touchDrag.id);
+        if(src2){arr.push(src2);render();}
+      }
+      touchDrag=null; return;
+    }
+
+    touchDrag=null;
+  });
+
+  // Tap on bo-item = dblclick equivalent (add to first complex)
+  document.addEventListener('touchend', function(e){
+    if(touchDrag) return; // was a drag
+    var item = e.target.closest('.bo-item');
+    if(!item) return;
+    var code = item.dataset.code;
+    if(!code) return;
+    var cx = firstType(tree,'complex');
+    if(!cx){ return; }
+    cx.children.push(makeBO(code));
+    cx.open=true;
+    render();
+  });
+})();
 
 /* Boot */
 document.addEventListener('DOMContentLoaded', function(){
