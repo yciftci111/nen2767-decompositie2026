@@ -425,8 +425,61 @@ main{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column
 
 /* ── DUPLICATE ── */
 .nact.dup:hover{background:var(--asf);color:var(--acc)}
+
+/* ── COMPLETENESS SCORE ── */
+.nd-complete{
+  display:flex;flex-direction:column;align-items:flex-end;gap:2px;
+  flex-shrink:0;margin-right:4px;
+}
+.nd-complete-bar{
+  width:48px;height:4px;background:var(--bdr);border-radius:2px;overflow:hidden;
+}
+.nd-complete-fill{height:100%;border-radius:2px;transition:width .3s}
+.nd-complete-pct{font-size:9px;color:var(--tm);font-weight:600}
+
+/* ── BOOM FILTER ── */
+.filter-bar{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 0;flex-wrap:wrap;flex-shrink:0;
+}
+.filter-chip{
+  padding:3px 10px;border:1px solid var(--bdr);border-radius:12px;
+  font-size:11px;font-weight:600;cursor:pointer;
+  background:var(--sur);color:var(--tm);transition:.15s;
+  display:flex;align-items:center;gap:4px;
+}
+.filter-chip:hover{border-color:var(--acc);color:var(--acc)}
+.filter-chip.active{background:var(--acc);border-color:var(--acc);color:#fff}
+.filter-chip.active-red{background:var(--ne);border-color:var(--ne);color:#fff}
+.filter-chip.active-orange{background:var(--op);border-color:var(--op);color:#fff}
+.filter-chip.active-green{background:var(--ja);border-color:var(--ja);color:#fff}
+.filter-label{font-size:11px;color:var(--tm);font-weight:600}
+
+/* ── INLINE NOTITIES ── */
+.inline-note{
+  font-size:10px;color:var(--op);font-style:italic;
+  margin-top:1px;display:flex;align-items:center;gap:3px;
+}
+.inline-note svg{flex-shrink:0;opacity:.7}
+.note-edit-btn{
+  padding:1px 5px;border:none;background:none;
+  color:var(--tm);cursor:pointer;font-size:10px;
+  border-radius:3px;transition:.15s;
+}
+.note-edit-btn:hover{background:var(--asf);color:var(--acc)}
+.note-inline-form{
+  display:flex;gap:4px;margin-top:4px;align-items:center;
+}
+.note-inline-inp{
+  flex:1;padding:4px 8px;border:1px solid var(--op);border-radius:4px;
+  font-size:11px;color:var(--th);outline:none;
+  font-family:'Segoe UI',system-ui,sans-serif;
+}
+.note-inline-inp:focus{border-color:var(--acc)}
+.note-save-btn{padding:4px 8px;background:var(--acc);color:#fff;border:none;border-radius:4px;font-size:11px;cursor:pointer}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 </head>
@@ -478,8 +531,27 @@ main{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         PDF Rapport
       </button>
+      <button class="pdf-btn" id="btn-excel" style="border-color:#1A7A4A;color:#1A7A4A" onmouseover="this.style.background='#E8F5EE'" onmouseout="this.style.background=''">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18M15 3v18"/></svg>
+        Excel Export
+      </button>
     </div>
-    <div class="tree-area" id="tree-area">
+        <div class="tree-search-wrap" id="tree-search-wrap">
+      <svg class="tree-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="tree-search" id="tree-search" type="text" placeholder="Zoek in boom — beheerobject, element, bouwdeel…">
+      <button class="tree-search-clear" id="tree-search-clear">×</button>
+    </div>
+    <div class="search-count" id="search-count"></div>
+    <div class="filter-bar" id="filter-bar">
+      <span class="filter-label">Filter:</span>
+      <span class="filter-chip active" data-filter="all">Alle</span>
+      <span class="filter-chip" data-filter="high-risk">&#128308; Hoog risico (&gt;70%)</span>
+      <span class="filter-chip" data-filter="mid-risk">&#128992; Matig (40-70%)</span>
+      <span class="filter-chip" data-filter="low-risk">&#128994; Laag (&lt;40%)</span>
+      <span class="filter-chip" data-filter="no-maximo">&#9888;&#65039; Geen Maximo</span>
+      <span class="filter-chip" data-filter="incomplete">&#9675; Incompleet</span>
+    </div>
+<div class="tree-area" id="tree-area">
       <div class="empty" id="empty-msg">
         <h2>Lege decompositie</h2>
         <p>Voeg een <strong>Areaal / Portefeuille</strong> toe, maak een <strong>Complex</strong> aan en sleep beheerobjecten vanuit de zijbalk.</p>
@@ -554,7 +626,8 @@ function makeBO(code){
     _addingCX:false, _renaming:false, _renameVal:'', _delConfirm:false,
     maximo:'', status:'actief', bouwjaar:'', levensduur:'',
     adres:'', stad:'', lat:'', lon:'', notitie:'',
-    photos:[], disabledEls:[], disabledBDs:{}
+    photos:[], disabledEls:[], disabledBDs:{},
+    elNotes:{}, bdNotes:{}
   };
 }
 
@@ -678,7 +751,9 @@ function setAutosaveStatus(status, text){
   txt.textContent = text;
 }
 
+var _skipAutoSave = false;
 function autoSave(){
+  if(_skipAutoSave) return;
   // Debounce: wait 1.5s after last change
   if(_autoSaveTimer) clearTimeout(_autoSaveTimer);
   setAutosaveStatus('saving','Opslaan...');
@@ -954,12 +1029,24 @@ function renderNode(n){
     iconStr = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="'+color+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>';
   }
 
-  // Badges
+  // Badges + completeness
   var badges = '';
   if(bo){
-    var disC = (n.disabledEls||[]).length;
-    var jaC  = bo.elementen.filter(function(e){ return e.classificatie==='JA' && (n.disabledEls||[]).indexOf(e.element)<0; }).length;
-    badges = '<div class="nd-badges">'+
+    var disEls = n.disabledEls||[];
+    var disC   = disEls.length;
+    var jaC    = bo.elementen.filter(function(e){ return e.classificatie==='JA' && disEls.indexOf(e.element)<0; }).length;
+
+    // Completeness: fields filled / total fields
+    var fields = ['maximo','status','bouwjaar','levensduur','adres','lat'];
+    var filled = fields.filter(function(f){ return n[f] && String(n[f]).trim()!==''; }).length;
+    var complPct = Math.round(filled/fields.length*100);
+    var complColor = complPct===100?'var(--ja)':complPct>=50?'#A05A00':'var(--ne)';
+
+    badges = '<div class="nd-complete" title="Compleetheid: '+filled+'/'+fields.length+' velden ingevuld">' +
+      '<div class="nd-complete-bar"><div class="nd-complete-fill" style="width:'+complPct+'%;background:'+complColor+'"></div></div>'+
+      '<span class="nd-complete-pct">'+complPct+'%</span>'+
+    '</div>'+
+    '<div class="nd-badges">'+
       '<span class="badge bja">▲'+jaC+'</span>'+
       '<span class="badge bop">◆'+bo.stats.optioneel+'</span>'+
       '<span class="badge bne">✕'+bo.stats.nee+'</span>'+
@@ -977,7 +1064,8 @@ function renderNode(n){
       '<button class="nact del" data-action="dodel" data-id="'+n.id+'">Ja</button>'+
       '<button class="nact" data-action="canceldel" data-id="'+n.id+'">Nee</button>';
   } else {
-    acts += '<button class="nact del" data-action="askdel" data-id="'+n.id+'">×</button>';
+      acts += '<button class="nact dup" title="Dupliceren" data-action="dup" data-id="'+n.id+'">&#10697;</button>';
+acts += '<button class="nact del" data-action="askdel" data-id="'+n.id+'">×</button>';
   }
 
   var hd = '<div class="nd-hd" id="hd-'+n.id+'" data-id="'+n.id+'" data-type="'+n.type+'">'+
@@ -1059,6 +1147,7 @@ function render(){
   attachTreeEvents();
   if(selectedId && !selectedEl) renderDetail(selectedId);
   updateStats(); renderLib();
+  if(typeof autoSave==='function') autoSave();
 }
 
 // ─── All tree events wired here after render ────────────────────────
@@ -1218,6 +1307,7 @@ document.getElementById('btn-save').addEventListener('click',    saveJSON);
 document.getElementById('btn-load').addEventListener('click',    loadJSON);
 document.getElementById('dp-close').addEventListener('click',    closeDetail);
 document.getElementById('btn-pdf').addEventListener('click', generatePDF);
+document.getElementById('btn-excel').addEventListener('click', exportExcel);
 
 function updateStats(){
   var ap=0, cx=0, bo=0;
@@ -1290,6 +1380,40 @@ function renderBouwdeelDetail(boId, elName, bdName){
         (bdLib.code ? 'NEN 2767 correspondentiecode: <strong>'+bdLib.code+'</strong>' : '') +
       '</div>' +
     '</div>';
+
+  // Wire bd note save
+  (function(){
+    var n2 = findNode(boId);
+    var bdKey = elName + '||' + bdName;
+    var existNote = (n2 && n2.bdNotes && n2.bdNotes[bdKey]) ? n2.bdNotes[bdKey] : '';
+
+    // Append note section to dp-body
+    var dpBody = document.getElementById('dp-body');
+    if(!dpBody) return;
+    var noteDiv = document.createElement('div');
+    noteDiv.className = 'dp-sec';
+    noteDiv.style.borderTop = '1px solid var(--bdr)';
+    noteDiv.innerHTML = '<div class="dp-sec-title">Notitie bij dit bouwdeel</div>' +
+      '<div class="note-inline-form">' +
+        '<input class="note-inline-inp" id="bd-note-inp" ' +
+          'placeholder="Situatiespecifieke opmerking… bijv. vervangen in 2026" ' +
+          'value="' + existNote.replace(/"/g,'&quot;') + '">' +
+        '<button class="note-save-btn" id="bd-note-save">Opslaan</button>' +
+      '</div>';
+    dpBody.appendChild(noteDiv);
+
+    var saveBtn = document.getElementById('bd-note-save');
+    if(saveBtn){
+      saveBtn.addEventListener('click', function(){
+        var inp = document.getElementById('bd-note-inp');
+        if(!inp) return;
+        saveBdNote(boId, elName, bdName, inp.value);
+        saveBtn.textContent = '✓ Opgeslagen';
+        inp.style.borderColor = 'var(--ja)';
+        setTimeout(function(){ saveBtn.textContent = 'Opslaan'; inp.style.borderColor = ''; }, 1500);
+      });
+    }
+  })();
 }
 
 // ── ELEMENT DETAIL ──────────────────────────────────────────────
@@ -1359,6 +1483,17 @@ function renderElementDetail(boId, elName){
         '<div class="dp-sec-title">FTA Redenering</div>' +
         '<div class="el-fta-box">' + (REDEN ? (REDEN[elName] || 'Geen redenering beschikbaar') : '') + '</div>' +
       '</div>' +
+      '<div class="dp-sec">' +
+        '<div class="dp-sec-title">Notitie bij dit element</div>' +
+        (function(){
+          var n2=findNode(boId);
+          var existNote=(n2&&n2.elNotes&&n2.elNotes[elName])?n2.elNotes[elName]:'';
+          return '<div class="note-inline-form">'+
+            '<input class="note-inline-inp" id="el-note-inp" data-boid="'+boId+'" data-el="'+elName.replace(/"/g,'&quot;')+'" placeholder="Situatiespecifieke opmerking…" value="'+existNote.replace(/"/g,'&quot;')+'">'+
+            '<button class="note-save-btn" id="el-note-save">Opslaan</button>'+
+          '</div>';
+        })() +
+      '</div>' +
       '<div class="dp-sec" style="padding:0;border:none">' +
         '<div class="dp-sec-title" style="padding:8px 14px 4px">' +
           'Bouwdelen — ' + filtered.length + ' getoond · ' + disabled.length + ' uitgeschakeld' +
@@ -1372,6 +1507,18 @@ function renderElementDetail(boId, elName){
       var bl = document.querySelector('.bd-list');
       if(bl) bl.scrollTop = savedScroll;
     });
+
+    // Wire element note save
+    var elSaveBtn2 = document.getElementById('el-note-save');
+    if(elSaveBtn2){
+      elSaveBtn2.addEventListener('click',function(){
+        var inp2 = document.getElementById('el-note-inp');
+        if(!inp2) return;
+        saveElNote(inp2.dataset.boid, inp2.dataset.el, inp2.value);
+        elSaveBtn2.textContent = '✓ Opgeslagen';
+        setTimeout(function(){ elSaveBtn2.textContent='Opslaan'; }, 1500);
+      });
+    }
 
     // Wire filter tabs + bouwdeel row clicks via delegation
     var dpBody = document.getElementById('dp-body');
@@ -2461,13 +2608,237 @@ function duplicateNode(id){
   render();
 }
 
+
+// ── EXCEL EXPORT ─────────────────────────────────────────────────
+function exportExcel(){
+  if(typeof XLSX === 'undefined'){ alert('Excel library niet geladen.'); return; }
+
+  var rows = [];
+  // Header
+  rows.push([
+    'Areaal/Portefeuille','Complex','Beheerobject','BO Code','Primaire functie',
+    'Maximo Werkcode','Status','Bouwjaar','Levensduur','Adres','Stad',
+    'Element','El. Classificatie','El. FTA Redenering','El. Actief',
+    'Bouwdeel','Bd. Classificatie','Bd. FTA Redenering','Bd. Actief',
+    'Correspondentiecode','Werkdefinitie Bouwdeel','Vakdiscipline'
+  ]);
+
+  function getAP(nodes){ // returns areaal/pf label of parent chain
+    return '';
+  }
+
+  // Walk tree
+  function walkAP(ns, apLabel){
+    ns.forEach(function(n){
+      if(n.type==='areaal'){
+        walkCX(n.children, n.label);
+      } else {
+        walkCX(n.children||[], '');
+      }
+    });
+  }
+
+  function walkCX(ns, apLabel){
+    ns.forEach(function(n){
+      if(n.type==='complex'){
+        walkBO(n.children, apLabel, n.label);
+      }
+    });
+  }
+
+  function walkBO(ns, apLabel, cxLabel){
+    ns.forEach(function(n){
+      if(n.type!=='bo') return;
+      var bo = BOMAP[n.boCode]; if(!bo) return;
+      var disEls = n.disabledEls||[];
+
+      bo.elementen.forEach(function(el){
+        var elActive = disEls.indexOf(el.element) < 0;
+        var elReden  = REDEN ? (REDEN[el.element]||'') : '';
+        var bds      = BD ? (BD[el.element]||[]) : [];
+        var disBDs   = (n.disabledBDs&&n.disabledBDs[el.element]) ? n.disabledBDs[el.element] : [];
+
+        if(bds.length === 0){
+          // Element without bouwdelen — one row
+          rows.push([
+            apLabel, cxLabel, n.label, n.boCode||'', bo.primaire_functie||'',
+            n.maximo||'', n.status||'', n.bouwjaar||'', n.levensduur||'',
+            n.adres||'', n.stad||'',
+            el.element, el.classificatie, elReden, elActive?'Ja':'Nee',
+            '','','','',
+            '','',''
+          ]);
+        } else {
+          bds.forEach(function(bd){
+            var bdActive = disBDs.indexOf(bd[0]) < 0;
+            var bdLib    = BD_LIB ? (BD_LIB[bd[0]]||{}) : {};
+            var bdCls    = bd[1]==='J'?'JA':bd[1]==='O'?'OPTIONEEL':'NEE';
+            rows.push([
+              apLabel, cxLabel, n.label, n.boCode||'', bo.primaire_functie||'',
+              n.maximo||'', n.status||'', n.bouwjaar||'', n.levensduur||'',
+              n.adres||'', n.stad||'',
+              el.element, el.classificatie, elReden, elActive?'Ja':'Nee',
+              bd[0], bdCls, bd[2]||'', bdActive?'Ja':'Nee',
+              bdLib.code||'', bdLib.werkdefinitie||'', bdLib.vakdiscipline||''
+            ]);
+          });
+        }
+      });
+    });
+  }
+
+  // Walk top level
+  tree.forEach(function(n){
+    if(n.type==='areaal'){
+      n.children.forEach(function(cx){
+        if(cx.type==='complex') walkBO(cx.children, n.label, cx.label);
+      });
+    }
+  });
+
+  if(rows.length <= 1){ alert('Geen data om te exporteren. Voeg eerst beheerobjecten toe.'); return; }
+
+  var ws = XLSX.utils.aoa_to_sheet(rows);
+
+  // Column widths
+  var cols = [20,20,30,8,35,18,12,10,12,30,20,35,15,40,10,30,15,40,10,16,40,15];
+  ws['!cols'] = cols.map(function(w){ return {wch:w}; });
+
+  // Style header row (bold) — basic
+  var range = XLSX.utils.decode_range(ws['!ref']);
+  for(var C=range.s.c; C<=range.e.c; C++){
+    var addr = XLSX.utils.encode_cell({r:0,c:C});
+    if(!ws[addr]) continue;
+    ws[addr].s = {font:{bold:true}, fill:{fgColor:{rgb:'1A4F8A'}}, font:{bold:true,color:{rgb:'FFFFFF'}}};
+  }
+
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'PRA Decompositie');
+
+  // Summary sheet
+  var sumRows = [['Statistiek','Waarde']];
+  var ap=0,cx=0,boC=0,elC=0,bdC=0;
+  function countAll(ns){ ns.forEach(function(n){
+    if(n.type==='areaal')ap++;
+    else if(n.type==='complex')cx++;
+    else if(n.type==='bo'){
+      boC++;
+      var bo=BOMAP[n.boCode]; if(!bo)return;
+      var disEls=n.disabledEls||[];
+      bo.elementen.forEach(function(el){
+        if(disEls.indexOf(el.element)<0){
+          elC++;
+          var bds=BD?(BD[el.element]||[]):[];
+          var dis=(n.disabledBDs&&n.disabledBDs[el.element])?n.disabledBDs[el.element]:[];
+          bds.forEach(function(bd){if(dis.indexOf(bd[0])<0)bdC++;});
+        }
+      });
+    }
+    countAll(n.children||[]);
+  });}
+  countAll(tree);
+  sumRows.push(['Arealen/Portefeuilles', ap]);
+  sumRows.push(['Complexen', cx]);
+  sumRows.push(['Beheerobjecten', boC]);
+  sumRows.push(['Actieve elementen', elC]);
+  sumRows.push(['Actieve bouwdelen', bdC]);
+  sumRows.push(['Totaal rijen export', rows.length - 1]);
+  sumRows.push(['Gegenereerd op', new Date().toLocaleString('nl-NL')]);
+  var ws2 = XLSX.utils.aoa_to_sheet(sumRows);
+  ws2['!cols'] = [{wch:30},{wch:20}];
+  XLSX.utils.book_append_sheet(wb, ws2, 'Samenvatting');
+
+  XLSX.writeFile(wb, 'PRA_Export_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
+
+// ── BOOM FILTER ──────────────────────────────────────────────────
+var _activeFilter = 'all';
+
+function initBoomFilter(){
+  document.querySelectorAll('[data-filter]').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      _activeFilter = chip.dataset.filter;
+      document.querySelectorAll('[data-filter]').forEach(function(c){
+        c.className = 'filter-chip' + (c.dataset.filter===_activeFilter?' active':'');
+      });
+      applyBoomFilter();
+    });
+  });
+}
+
+function applyBoomFilter(){
+  var f = _activeFilter;
+  if(f==='all'){
+    document.querySelectorAll('.nd').forEach(function(el){ el.classList.remove('dim','match'); });
+    return;
+  }
+
+  document.querySelectorAll('.nd').forEach(function(ndEl){
+    var id = ndEl.id.replace('nd-','');
+    var node = findNode(id);
+    if(!node || node.type!=='bo'){ ndEl.classList.remove('dim','match'); return; }
+
+    var bo = BOMAP[node.boCode]; if(!bo){ ndEl.classList.add('dim'); return; }
+    var disEls = node.disabledEls||[];
+    var actEls = bo.elementen.filter(function(e){ return disEls.indexOf(e.element)<0; });
+    var jaEls  = actEls.filter(function(e){ return e.classificatie==='JA'; });
+    var pct    = actEls.length>0 ? Math.round(jaEls.length/actEls.length*100) : 0;
+    var fields = ['maximo','status','bouwjaar','levensduur','adres','lat'];
+    var filled = fields.filter(function(fld){ return node[fld]&&String(node[fld]).trim()!==''; }).length;
+
+    var show = false;
+    if(f==='high-risk')   show = pct >= 70;
+    if(f==='mid-risk')    show = pct >= 40 && pct < 70;
+    if(f==='low-risk')    show = pct < 40;
+    if(f==='no-maximo')   show = !node.maximo || node.maximo.trim()==='';
+    if(f==='incomplete')  show = filled < fields.length;
+
+    if(show){
+      ndEl.classList.remove('dim');
+      ndEl.classList.add('match');
+      openAncestors(id); // ensure visible
+    } else {
+      ndEl.classList.add('dim');
+      ndEl.classList.remove('match');
+    }
+  });
+}
+
+
+// ── NOTITIES PER ELEMENT / BOUWDEEL ──────────────────────────────
+function saveElNote(boId, elName, note){
+  var n = findNode(boId); if(!n) return;
+  n.elNotes = n.elNotes || {};
+  n.elNotes[elName] = note;
+  autoSave();
+}
+
+function saveBdNote(boId, elName, bdName, note){
+  var n = findNode(boId); if(!n) return;
+  n.bdNotes = n.bdNotes || {};
+  var key = elName + '||' + bdName;
+  n.bdNotes[key] = note;
+  autoSave();
+}
+
+function showNoteEditor(inputId, saveCallback){
+  var inp = document.getElementById(inputId);
+  if(!inp) return;
+  var val = inp.value;
+  saveCallback(val);
+  // Visual feedback
+  inp.style.borderColor = 'var(--ja)';
+  setTimeout(function(){ inp.style.borderColor = ''; }, 1000);
+}
+
 /* Boot */
 document.addEventListener('DOMContentLoaded', function(){
   initData();
   renderLib();
   // Try to restore from localStorage first
   var restored = autoLoad();
-  render();
+  var _skipAutoSave = true; render(); _skipAutoSave = false;
   if(restored){
     // Show restore notification briefly
     setTimeout(function(){
@@ -2490,6 +2861,8 @@ document.addEventListener('DOMContentLoaded', function(){
   setupResizeHandles();
   // Tree search
   initTreeSearch();
+  // Boom filter
+  initBoomFilter();
 });
 </script>
 </body>
