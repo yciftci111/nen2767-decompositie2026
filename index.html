@@ -1414,6 +1414,48 @@ function renderBouwdeelDetail(boId, elName, bdName){
       });
     }
   })();
+
+
+  // Componenten
+  (function(){
+    var n2=findNode(boId); if(!n2) return;
+    var k=elName+'||'+bdName;
+    var comps=(n2.components&&n2.components[k])?n2.components[k]:[];
+    var sec=document.createElement('div');
+    sec.className='dp-sec'; sec.style.borderTop='1px solid var(--bdr)';
+    sec.innerHTML=
+      '<div class="dp-sec-title">Componenten ('+comps.length+')</div>'+
+      '<div class="comp-list" id="comp-list">'+
+        (comps.length===0
+          ?'<span style="font-size:11px;color:var(--tm)">Nog geen componenten</span>'
+          :comps.map(function(c,i){
+              return '<div class="comp-row"><span class="comp-name">'+c+'</span>'+
+                '<button class="comp-del" data-action="delcomp" data-boid="'+boId+
+                '" data-elname="'+elName+'" data-bdname="'+bdName+'" data-idx="'+i+
+                '">×</button></div>';
+            }).join(''))+
+      '</div>'+
+      '<div class="comp-add-form">'+
+        '<input class="comp-add-inp" id="comp-inp" placeholder="Componentnaam…">'+
+        '<button class="comp-add-btn" id="comp-add">+ Toevoegen</button>'+
+      '</div>';
+    var dp=document.getElementById('dp-body'); if(dp) dp.appendChild(sec);
+    var addBtn=document.getElementById('comp-add'), addInp=document.getElementById('comp-inp');
+    if(addBtn&&addInp){
+      addBtn.addEventListener('click',function(){addComponent(boId,elName,bdName,addInp.value);addInp.value='';});
+      addInp.addEventListener('keydown',function(ev){if(ev.key==='Enter')addBtn.click();});
+    }
+    var dp2=document.getElementById('dp-body');
+    if(dp2){
+      if(dp2._compH) dp2.removeEventListener('click',dp2._compH);
+      dp2._compH=function(ev){
+        var bt=ev.target;
+        if(bt.dataset&&bt.dataset.action==='delcomp')
+          removeComponent(bt.dataset.boid,bt.dataset.elname,bt.dataset.bdname,parseInt(bt.dataset.idx));
+      };
+      dp2.addEventListener('click',dp2._compH);
+    }
+  })();
 }
 
 // ── ELEMENT DETAIL ──────────────────────────────────────────────
