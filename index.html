@@ -627,7 +627,7 @@ function makeBO(code){
     maximo:'', status:'actief', bouwjaar:'', levensduur:'',
     adres:'', stad:'', lat:'', lon:'', notitie:'',
     photos:[], disabledEls:[], disabledBDs:{},
-    elNotes:{}, bdNotes:{}
+    elNotes:{}, bdNotes:{}, components:{}
   };
 }
 
@@ -1418,42 +1418,59 @@ function renderBouwdeelDetail(boId, elName, bdName){
 
   // Componenten
   (function(){
-    var n2=findNode(boId); if(!n2) return;
-    var k=elName+'||'+bdName;
-    var comps=(n2.components&&n2.components[k])?n2.components[k]:[];
-    var sec=document.createElement('div');
-    sec.className='dp-sec'; sec.style.borderTop='1px solid var(--bdr)';
-    sec.innerHTML=
-      '<div class="dp-sec-title">Componenten ('+comps.length+')</div>'+
-      '<div class="comp-list" id="comp-list">'+
-        (comps.length===0
-          ?'<span style="font-size:11px;color:var(--tm)">Nog geen componenten</span>'
-          :comps.map(function(c,i){
-              return '<div class="comp-row"><span class="comp-name">'+c+'</span>'+
-                '<button class="comp-del" data-action="delcomp" data-boid="'+boId+
-                '" data-elname="'+elName+'" data-bdname="'+bdName+'" data-idx="'+i+
-                '">×</button></div>';
+    var n2 = findNode(boId); if(!n2) return;
+    var k = elName + '||' + bdName;
+    var comps = (n2.components && n2.components[k]) ? n2.components[k] : [];
+
+    var sec = document.createElement('div');
+    sec.className = 'dp-sec';
+    sec.style.borderTop = '1px solid var(--bdr)';
+    sec.innerHTML =
+      '<div class="dp-sec-title" id="comp-title">Componenten (' + comps.length + ')</div>' +
+      '<div class="comp-list" id="comp-list">' +
+        (comps.length === 0
+          ? '<span style="font-size:11px;color:var(--tm)">Nog geen componenten toegevoegd</span>'
+          : comps.map(function(c, i){
+              return '<div class="comp-row">' +
+                '<span class="comp-name">' + c + '</span>' +
+                '<button class="comp-del" data-action="delcomp" data-boid="' + boId +
+                  '" data-elname="' + elName.replace(/"/g,'&quot;') +
+                  '" data-bdname="' + bdName.replace(/"/g,'&quot;') +
+                  '" data-idx="' + i + '" title="Verwijderen">×</button>' +
+              '</div>';
             }).join(''))+
-      '</div>'+
-      '<div class="comp-add-form">'+
-        '<input class="comp-add-inp" id="comp-inp" placeholder="Componentnaam…">'+
-        '<button class="comp-add-btn" id="comp-add">+ Toevoegen</button>'+
+      '</div>' +
+      '<div class="comp-add-form">' +
+        '<input class="comp-add-inp" id="comp-inp" placeholder="Componentnaam… bijv. O-ring, Afdichtingsrubber">' +
+        '<button class="comp-add-btn" id="comp-add">+ Toevoegen</button>' +
       '</div>';
-    var dp=document.getElementById('dp-body'); if(dp) dp.appendChild(sec);
-    var addBtn=document.getElementById('comp-add'), addInp=document.getElementById('comp-inp');
-    if(addBtn&&addInp){
-      addBtn.addEventListener('click',function(){addComponent(boId,elName,bdName,addInp.value);addInp.value='';});
-      addInp.addEventListener('keydown',function(ev){if(ev.key==='Enter')addBtn.click();});
+
+    var dpBodyEl = document.getElementById('dp-body');
+    if(dpBodyEl) dpBodyEl.appendChild(sec);
+
+    // Wire add button + Enter key
+    var addBtn = document.getElementById('comp-add');
+    var addInp = document.getElementById('comp-inp');
+    if(addBtn && addInp){
+      addBtn.addEventListener('click', function(){
+        addComponent(boId, elName, bdName, addInp.value);
+        addInp.value = '';
+        addInp.focus();
+      });
+      addInp.addEventListener('keydown', function(ev){
+        if(ev.key === 'Enter'){ ev.preventDefault(); addBtn.click(); }
+      });
     }
-    var dp2=document.getElementById('dp-body');
-    if(dp2){
-      if(dp2._compH) dp2.removeEventListener('click',dp2._compH);
-      dp2._compH=function(ev){
-        var bt=ev.target;
-        if(bt.dataset&&bt.dataset.action==='delcomp')
-          removeComponent(bt.dataset.boid,bt.dataset.elname,bt.dataset.bdname,parseInt(bt.dataset.idx));
+
+    // Wire delete buttons via delegation (single handler, replaced each render)
+    if(dpBodyEl){
+      if(dpBodyEl._compDelHandler) dpBodyEl.removeEventListener('click', dpBodyEl._compDelHandler);
+      dpBodyEl._compDelHandler = function(ev){
+        var btn = ev.target.closest('[data-action="delcomp"]');
+        if(!btn) return;
+        removeComponent(btn.dataset.boid, btn.dataset.elname, btn.dataset.bdname, parseInt(btn.dataset.idx,10));
       };
-      dp2.addEventListener('click',dp2._compH);
+      dpBodyEl.addEventListener('click', dpBodyEl._compDelHandler);
     }
   })();
 }
@@ -1567,11 +1584,14 @@ function renderElementDetail(boId, elName){
     var dpBody = document.getElementById('dp-body');
     if(dpBody._tabHandler) dpBody.removeEventListener('click', dpBody._tabHandler);
     dpBody._tabHandler = function(e){
+      var t = e.target;
       // Filter tab
-      var tab = e.target.closest('[data-ef2]');
+      var tab = t.closest('[data-ef2]');
       if(tab){ curF = tab.dataset.ef2; buildBody(); return; }
-      // Bouwdeel row click → show bouwdeel detail
-      var bdRow = e.target.closest('.bd-row');
+      // CRITICAL: checkbox click must NEVER open bouwdeel detail
+      if(t.classList.contains('bd-check')) return;
+      // Bouwdeel row click → show bouwdeel detail (but not when clicking the checkbox)
+      var bdRow = t.closest('.bd-row');
       if(bdRow){
         var bdName = bdRow.querySelector('.bd-name');
         if(bdName) renderBouwdeelDetail(boId, elName, bdName.textContent);
@@ -1583,6 +1603,7 @@ function renderElementDetail(boId, elName){
     var bdList = document.querySelector('.bd-list');
     if(bdList){
       bdList.addEventListener('change', function(e){
+        e.stopPropagation();
         var cb = e.target;
         if(!cb.classList.contains('bd-check')) return;
         var n2  = findNode(cb.dataset.boid); if(!n2) return;
@@ -2873,6 +2894,55 @@ function showNoteEditor(inputId, saveCallback){
   // Visual feedback
   inp.style.borderColor = 'var(--ja)';
   setTimeout(function(){ inp.style.borderColor = ''; }, 1000);
+}
+
+
+// ── COMPONENTEN BEHEER ───────────────────────────────────────────
+function addComponent(boId, elName, bdName, name){
+  name = (name||'').trim();
+  if(!name) return;
+  var n = findNode(boId); if(!n) return;
+  n.components = n.components || {};
+  var k = elName + '||' + bdName;
+  n.components[k] = n.components[k] || [];
+  if(n.components[k].indexOf(name) < 0){
+    n.components[k].push(name);
+  }
+  autoSave();
+  renderCompList(boId, elName, bdName);
+}
+
+function removeComponent(boId, elName, bdName, idx){
+  var n = findNode(boId); if(!n) return;
+  var k = elName + '||' + bdName;
+  if(n.components && n.components[k]){
+    n.components[k].splice(idx, 1);
+  }
+  autoSave();
+  renderCompList(boId, elName, bdName);
+}
+
+function renderCompList(boId, elName, bdName){
+  var n = findNode(boId); if(!n) return;
+  var k = elName + '||' + bdName;
+  var comps = (n.components && n.components[k]) ? n.components[k] : [];
+
+  var listEl  = document.getElementById('comp-list');
+  var titleEl = document.getElementById('comp-title');
+  if(titleEl) titleEl.textContent = 'Componenten (' + comps.length + ')';
+  if(listEl){
+    listEl.innerHTML = comps.length === 0
+      ? '<span style="font-size:11px;color:var(--tm)">Nog geen componenten toegevoegd</span>'
+      : comps.map(function(c, i){
+          return '<div class="comp-row">' +
+            '<span class="comp-name">' + c + '</span>' +
+            '<button class="comp-del" data-action="delcomp" data-boid="' + boId +
+              '" data-elname="' + elName.replace(/"/g,'&quot;') +
+              '" data-bdname="' + bdName.replace(/"/g,'&quot;') +
+              '" data-idx="' + i + '" title="Verwijderen">\u00d7</button>' +
+          '</div>';
+        }).join('');
+  }
 }
 
 /* Boot */
