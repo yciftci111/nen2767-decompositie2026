@@ -477,6 +477,64 @@ main{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column
 }
 .note-inline-inp:focus{border-color:var(--acc)}
 .note-save-btn{padding:4px 8px;background:var(--acc);color:#fff;border:none;border-radius:4px;font-size:11px;cursor:pointer}
+
+/* ── COMPONENTEN ── */
+.comp-list{display:flex;flex-direction:column;gap:4px;padding:4px 0}
+.comp-row{
+  display:flex;align-items:center;gap:10px;
+  padding:6px 10px;border-radius:5px;font-size:12px;
+  background:var(--s2);border:1px solid var(--bdr);
+}
+.comp-row:hover{background:var(--asf);border-color:var(--acc)}
+.comp-name{flex:1;color:var(--th);font-weight:500;overflow-wrap:anywhere}
+.comp-del{
+  flex-shrink:0;width:20px;height:20px;
+  display:flex;align-items:center;justify-content:center;
+  padding:0;border:none;background:var(--bg);color:var(--tm);
+  cursor:pointer;border-radius:50%;font-size:14px;line-height:1;
+  transition:.15s;
+}
+.comp-del:hover{background:var(--neb);color:var(--ne)}
+.comp-add-form{display:flex;gap:6px;margin-top:8px}
+.comp-add-inp{
+  flex:1;padding:7px 10px;border:1px solid var(--bdr);border-radius:5px;
+  font-size:12px;color:var(--th);outline:none;font-family:inherit;
+  min-width:0;
+}
+.comp-add-inp:focus{border-color:var(--acc)}
+.comp-add-btn{
+  flex-shrink:0;padding:7px 12px;background:var(--acc);color:#fff;
+  border:none;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;
+  white-space:nowrap;
+}
+.comp-add-btn:hover{background:var(--acc-d,var(--acc));opacity:.9}
+
+/* ── BULK SELECT ── */
+.el-bulk-bar{display:flex;align-items:center;gap:6px}
+.bk-btn{
+  padding:2px 9px;border:1px solid var(--bdr);border-radius:4px;
+  font-size:9.5px;font-weight:700;cursor:pointer;background:var(--sur);
+  color:var(--tb);transition:.15s;white-space:nowrap;
+}
+.bk-btn:hover{border-color:var(--acc);background:var(--asf);color:var(--acc)}
+.bk-btn.bk-off:hover{border-color:var(--ne);background:var(--neb);color:var(--ne)}
+
+.bd-bulk-bar{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 12px;border-bottom:1px solid var(--bdr);
+  background:var(--sur);flex-shrink:0;
+}
+.bd-bulk-label{font-size:10px;color:var(--tm);font-weight:600;flex-shrink:0}
+.bd-bulk-count{font-size:10px;color:var(--tm);margin-left:auto;flex-shrink:0}
+
+/* Bouwdeel heeft componenten indicator */
+.bd-has-comp{
+  display:inline-flex;align-items:center;gap:2px;
+  font-size:9px;color:var(--acc);font-weight:700;
+  background:var(--asf);padding:1px 5px;border-radius:8px;
+  margin-left:4px;flex-shrink:0;
+}
+
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1126,7 +1184,11 @@ acts += '<button class="nact del" data-action="askdel" data-id="'+n.id+'">×</bu
     kidsPanel = '<div class="nd-el-list" id="kids-'+n.id+'">'+
       '<div class="nd-el-header">'+
         '<span>'+activeEls.length+' actieve elementen</span>'+
-        '<span style="color:var(--tm);font-size:10px">'+(n.disabledEls||[]).length+' uitgeschakeld</span>'+
+        '<div class="el-bulk-bar">'+
+          '<button class="bk-btn" data-bulkel="all" data-boid="'+n.id+'">\u2713 Alles</button>'+
+          '<button class="bk-btn bk-off" data-bulkel="none" data-boid="'+n.id+'">\u2715 Geen</button>'+
+          '<span style="color:var(--tm);font-size:10px">'+(n.disabledEls||[]).length+' uit</span>'+
+        '</div>'+
       '</div>'+
       '<div class="bo-el-rows">'+elRows+'</div>'+
     '</div>';
@@ -1519,14 +1581,21 @@ function renderElementDetail(boId, elName){
       var isOff = disabled.indexOf(b[0]) >= 0;
       var chip  = b[1]==='J' ? 'cja' : b[1]==='O' ? 'cop' : 'cne';
       var lbl   = b[1]==='J' ? 'JA'  : b[1]==='O' ? 'OPT' : 'NEE';
+      // Check if this bouwdeel already has components
+      var compKey = elName + '||' + b[0];
+      var compN   = findNode(boId);
+      var compCount = (compN && compN.components && compN.components[compKey]) ? compN.components[compKey].length : 0;
+      var compBadge = compCount > 0
+        ? '<span class="bd-has-comp" title="' + compCount + ' componenten">&#9881; ' + compCount + '</span>'
+        : '';
       return '<div class="bd-row' + (isOff ? ' off' : '') + '">' +
         '<input type="checkbox" class="bd-check"' + (isOff ? '' : ' checked') +
           ' data-boid="' + boId + '"' +
           ' data-el="'   + elName.replace(/"/g, '&quot;') + '"' +
           ' data-bd="'   + b[0].replace(/"/g,   '&quot;') + '">' +
         '<span class="bd-chip ' + chip + '">' + lbl + '</span>' +
-        '<div>' +
-          '<div class="bd-name">' + b[0] + '</div>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div class="bd-name">' + b[0] + compBadge + '</div>' +
           '<div class="bd-rsn">'  + b[2] + '</div>' +
         '</div>' +
       '</div>';
@@ -1558,6 +1627,12 @@ function renderElementDetail(boId, elName){
         '<div class="dp-sec-title" style="padding:8px 14px 4px">' +
           'Bouwdelen — ' + filtered.length + ' getoond · ' + disabled.length + ' uitgeschakeld' +
         '</div>' +
+        '<div class="bd-bulk-bar">'+
+          '<span class="bd-bulk-label">Selectie:</span>'+
+          '<button class="bk-btn" id="bd-bulk-all">✓ Alle aan</button>'+
+          '<button class="bk-btn bk-off" id="bd-bulk-none">✕ Alle uit</button>'+
+          '<span class="bd-bulk-count">'+(bds.length-disabled.length)+'/'+bds.length+' actief</span>'+
+        '</div>' +
         '<div class="el-fbar2">' + filterTabs + '</div>' +
         '<div class="bd-list">' + (bdRows || '<span style="font-size:11px;color:var(--tm)">Geen bouwdelen</span>') + '</div>' +
       '</div>';
@@ -1588,6 +1663,24 @@ function renderElementDetail(boId, elName){
       // Filter tab
       var tab = t.closest('[data-ef2]');
       if(tab){ curF = tab.dataset.ef2; buildBody(); return; }
+      // Bulk: alle bouwdelen aan
+      if(t.id === 'bd-bulk-all'){
+        var n2 = findNode(boId); if(!n2) return;
+        n2.disabledBDs = n2.disabledBDs || {};
+        n2.disabledBDs[elName] = [];
+        autoSave();
+        buildBody();
+        return;
+      }
+      // Bulk: alle bouwdelen uit
+      if(t.id === 'bd-bulk-none'){
+        var n2 = findNode(boId); if(!n2) return;
+        n2.disabledBDs = n2.disabledBDs || {};
+        n2.disabledBDs[elName] = bds.map(function(b){ return b[0]; });
+        autoSave();
+        buildBody();
+        return;
+      }
       // CRITICAL: checkbox click must NEVER open bouwdeel detail
       if(t.classList.contains('bd-check')) return;
       // Bouwdeel row click → show bouwdeel detail (but not when clicking the checkbox)
@@ -2965,7 +3058,18 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   // Delegated element row click — registered once after DOM exists
   document.getElementById('tree-area').addEventListener('click', function(e){
-    var row = e.target.closest('.bo-el-row');
+    var t = e.target;
+    // Bulk select/deselect elements
+    var bk = t.closest('[data-bulkel]');
+    if(bk){
+      e.stopPropagation();
+      var nb = findNode(bk.dataset.boid); if(!nb) return;
+      var bob = BOMAP[nb.boCode]; if(!bob) return;
+      nb.disabledEls = bk.dataset.bulkel === 'all' ? [] : bob.elementen.map(function(el){ return el.element; });
+      render();
+      return;
+    }
+    var row = t.closest('.bo-el-row');
     if(!row) return;
     e.stopPropagation();
     renderElementDetail(row.dataset.boid, row.dataset.el);
