@@ -2589,8 +2589,13 @@ function generatePDF(){
             if(by2>y+rowH-2)return;
             var dc=b[1]==='J'?RED:b[1]==='O'?ORANGE:GREY;
             F(dc);doc.circle(bx+1.5,by2-1.2,1.2,'F');
-            var nm=b[0].length>21?b[0].slice(0,20)+'\u2026':b[0];
-            N(7);T(DARK);doc.text(nm,bx+4,by2);
+            // Compact component count indicator
+            var compKey=el.element+'||'+b[0];
+            var compN=(n.components&&n.components[compKey])?n.components[compKey].length:0;
+            var compSuf=compN>0?' \u2699'+compN:'';
+            var maxLen=compN>0?18:21;
+            var nm=b[0].length>maxLen?b[0].slice(0,maxLen-1)+'\u2026':b[0];
+            N(7);T(DARK);doc.text(nm+compSuf,bx+4,by2);
             col++;
             if(col%2===1){bx=rxStart+bdColW;}
             else{bx=rxStart;by2+=4.8;}
@@ -2601,6 +2606,96 @@ function generatePDF(){
       y+=3;
     });
   });
+
+  // ── COMPONENTENOVERZICHT (apart hoofdstuk, t.b.v. Fase 2 Conditiemeting) ──
+  (function(){
+    // Verzamel alle bouwdelen-met-componenten, gegroepeerd per beheerobject
+    var chapterData = []; // [{boLabel, boCode, groups:[{elName, items:[{bdName, cls, comps}]}]}]
+
+    function walkBO(ns){
+      ns.forEach(function(nn){
+        if(nn.type==='bo'){
+          var bo2=BOMAP[nn.boCode]; if(!bo2) return;
+          var disEls=nn.disabledEls||[];
+          var groups=[];
+          bo2.elementen.forEach(function(el){
+            if(disEls.indexOf(el.element)>=0) return;
+            var elBds=BD?(BD[el.element]||[]):[];
+            var items=[];
+            elBds.forEach(function(b){
+              var ck=el.element+'||'+b[0];
+              var comps=(nn.components&&nn.components[ck])?nn.components[ck]:[];
+              if(comps.length>0) items.push({bdName:b[0],cls:b[1],comps:comps});
+            });
+            if(items.length>0) groups.push({elName:el.element,items:items});
+          });
+          if(groups.length>0){
+            chapterData.push({boLabel:nn.label,boCode:bo2.code||'',groups:groups});
+          }
+        }
+        if(nn.children) walkBO(nn.children);
+      });
+    }
+    walkBO(tree);
+
+    if(chapterData.length===0) return; // geen componenten geregistreerd — hoofdstuk overslaan
+
+    // Nieuwe pagina + hoofdstuk-titel
+    doc.addPage(); y=22;
+    F(NAVY);doc.rect(0,0,PW,32,'F');
+    T(WHITE);B(16);doc.text('Componentenoverzicht',ML,18);
+    N(8.5);T([190,215,250]);
+    doc.text('Handmatig toegevoegde componenten per bouwdeel \u2014 input voor Fase 2 Conditiemeting',ML,26);
+    y=42;
+
+    var totalComps=0,totalBds=0;
+    chapterData.forEach(function(g){ g.groups.forEach(function(gr){ totalBds+=gr.items.length; gr.items.forEach(function(it){totalComps+=it.comps.length;}); }); });
+
+    N(8);T(GREY);
+    doc.text('In totaal '+totalComps+' componenten geregistreerd op '+totalBds+' bouwdelen, verspreid over '+chapterData.length+' beheerobject(en).',ML,y);
+    y+=8;
+    hline();y+=6;
+
+    chapterData.forEach(function(boEntry){
+      check(14);
+      F([235,240,250]);doc.rect(ML,y,CW,9,'F');
+      S([200,210,230],0.2);doc.rect(ML,y,CW,9);
+      B(9.5);T(NAVY);
+      doc.text((boEntry.boCode?boEntry.boCode+' \u2014 ':'')+boEntry.boLabel,ML+3,y+6);
+      y+=12;
+
+      boEntry.groups.forEach(function(gr){
+        check(8);
+        B(8);T(DARK);
+        doc.text(gr.elName,ML+3,y);
+        y+=5.5;
+
+        gr.items.forEach(function(it){
+          var compText=it.comps.join(', ');
+          var lines=doc.splitTextToSize(compText,CW-30);
+          var rowH=5+lines.length*4;
+          check(rowH+1);
+
+          var cc=it.cls==='J'?RED:it.cls==='O'?ORANGE:GREY;
+          var cl=it.cls==='J'?'JA':it.cls==='O'?'OPT':'N.V.T.';
+          F(cc);doc.roundedRect(ML+6,y,11,4.5,1,1,'F');
+          T(WHITE);B(5.5);doc.text(cl,ML+11.5,y+3.1,{align:'center'});
+
+          B(7.5);T(DARK);
+          doc.text(it.bdName,ML+20,y+3.2);
+
+          N(7);T(GREY);
+          lines.forEach(function(ln,li){
+            doc.text(ln,ML+20,y+3.2+5+(li*4));
+          });
+
+          y+=rowH+1.5;
+        });
+        y+=2;
+      });
+      y+=3;
+    });
+  })();
 
   // Footer
   var tp=doc.internal.getNumberOfPages();
