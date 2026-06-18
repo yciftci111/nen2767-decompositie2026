@@ -1290,6 +1290,19 @@ function render(){
     area.innerHTML = '<div class="empty"><h2>Lege decompositie</h2><p>Voeg een <strong>Areaal / Portefeuille</strong> toe, maak een <strong>Complex</strong> aan en sleep beheerobjecten vanuit de zijbalk.</p></div>';
     updateStats(); renderLib(); return;
   }
+
+  // Bewaar scrollposities (boom-container + elke open elementenlijst per beheerobject)
+  // vóór de DOM wordt herbouwd, zodat acties zoals dupliceren/hernoemen/checkboxen
+  // de gebruiker niet terugzetten naar de bovenkant van de lijst.
+  var savedAreaScroll = area.scrollTop;
+  var savedElScrolls = {};
+  area.querySelectorAll('.bo-el-rows').forEach(function(elRowsContainer){
+    var parentNd = elRowsContainer.closest('.nd');
+    if(parentNd && parentNd.id && elRowsContainer.scrollTop > 0){
+      savedElScrolls[parentNd.id] = elRowsContainer.scrollTop;
+    }
+  });
+
   var rootStrip = '<div class="drop-strip vis" id="strip-root" data-pid="root">+ Zet hier neer (root niveau)</div>';
   area.innerHTML = tree.map(function(n){ return renderNode(n); }).join('') + rootStrip;
 
@@ -1297,6 +1310,15 @@ function render(){
   if(selectedId && !selectedEl) renderDetail(selectedId);
   updateStats(); renderLib();
   if(typeof autoSave==='function') autoSave();
+
+  // Herstel scrollposities na de herbouw
+  area.scrollTop = savedAreaScroll;
+  Object.keys(savedElScrolls).forEach(function(ndId){
+    var ndEl = document.getElementById(ndId);
+    if(!ndEl) return;
+    var rowsContainer = ndEl.querySelector('.bo-el-rows');
+    if(rowsContainer) rowsContainer.scrollTop = savedElScrolls[ndId];
+  });
 }
 
 // ─── All tree events wired here after render ────────────────────────
@@ -1344,6 +1366,12 @@ function attachTreeEvents(){
 
   // Action buttons
   document.querySelectorAll('[data-action]').forEach(function(btn){
+    var act0 = btn.dataset.action;
+    // Deze acties worden elders (specifiekere delegated handlers) afgehandeld —
+    // hier NIET registreren, anders vangt deze generieke listener de klik weg
+    // (met stopPropagation) voordat de juiste handler hem bereikt.
+    if(act0==='dupel' || act0==='delelinst' || act0==='delcomp') return;
+
     btn.addEventListener('click', function(e){
       e.stopPropagation();
       var id = btn.dataset.id;
