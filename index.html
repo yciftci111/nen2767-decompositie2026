@@ -250,7 +250,7 @@ main{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column
 .bd-rsn{color:var(--tm);font-size:10px;line-height:1.4;margin-top:1px}
 
 /* ── BO ELEMENT ROWS: show bouwdeel count ── */
-.bo-el-bd-cnt{font-size:10px;color:var(--tm);flex-shrink:0}
+.bo-el-bd-cnt{font-size:10px;color:var(--tm);flex-shrink:0;width:44px;text-align:right}
 
 /* ── RESIZABLE PANELS ── */
 .resize-handle{
@@ -555,11 +555,12 @@ main{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column
 
 /* ── ELEMENT ROW COMPONENT INDICATOR ── */
 .bo-el-comp-cnt{
-  display:inline-flex;align-items:center;gap:2px;flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:center;gap:2px;flex-shrink:0;
   font-size:9px;font-weight:700;color:var(--acc);
   background:var(--asf);padding:1px 6px;border-radius:8px;
-  white-space:nowrap;
+  white-space:nowrap;width:34px;box-sizing:border-box;
 }
+.bo-el-comp-cnt-empty{background:none;padding:1px 0}
 
 
 /* ── COMPONENTEN OVERZICHT TAB ── */
@@ -617,6 +618,7 @@ main{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column
   display:flex;align-items:center;justify-content:center;
 }
 .bo-el-delbtn:hover{background:var(--neb);color:var(--ne)}
+.bo-el-delbtn-spacer{display:inline-block;width:18px;height:18px;flex-shrink:0}
 
 
 /* ── BOUWDEEL INSTANTIES (duplicaten zoals meerdere afsluiters) ── */
@@ -640,6 +642,7 @@ main{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column
   display:flex;align-items:center;justify-content:center;align-self:flex-start;margin-top:2px;
 }
 .bd-delbtn:hover{background:var(--neb);color:var(--ne)}
+.bd-delbtn-spacer{display:inline-block;width:18px;height:18px;flex-shrink:0;align-self:flex-start;margin-top:2px}
 
 
 /* ── PDF RAPPORTINSTELLINGEN ── */
@@ -1517,18 +1520,26 @@ acts += '<button class="nact del" data-action="askdel" data-id="'+n.id+'">×</bu
         : e.isBorrowed ? ' <span class="bo-el-borrow-tag" title="Geleend uit de bibliotheek van \'' + (e.borrowedFromLabel||'') + '\'">geleend van: ' + (e.borrowedFromLabel||'') + '</span>'
         : e.isCustom ? ' <span class="bo-el-custom-tag">vrij toegevoegd</span>'
         : '';
-      var canDup = !e.isDup && !e.isBorrowed && !e.isCustom; // dupliceren alleen voor eigen bibliotheek-elementen
+      // Dupliceren mag nu voor ALLE soorten elementen (eigen, geleend, vrij toegevoegd)
+      var dupTitle = e.isBorrowed ? 'Dupliceer deze lening (nog een instantie)'
+        : e.isCustom ? 'Dupliceer dit vrije element'
+        : 'Dupliceer dit element (bijv. 2e pompinstallatie)';
+      // Vaste 'slots' i.p.v. optionele elementen, zodat ALLE rijen (bibliotheek/geleend/vrij)
+      // exact dezelfde kolomopbouw hebben en de bd-teller altijd op dezelfde positie staat.
+      var compSlot = '<span class="bo-el-comp-cnt'+(elCompCount>0?'':' bo-el-comp-cnt-empty')+'"' +
+        (elCompCount>0 ? ' title="'+elCompCount+' componenten toegevoegd">&#9881; '+elCompCount : '>') +
+        '</span>';
+      var delSlot = (e.isDup || e.isBorrowed || e.isCustom)
+        ? '<button class="bo-el-delbtn" data-action="delelinst" data-boid="'+n.id+'" data-key="'+e.key.replace(/"/g,'&quot;')+'" title="Verwijder dit'+(e.isDup?' deze kopie':e.isBorrowed?' geleende element':' vrije element')+'">&times;</button>'
+        : '<span class="bo-el-delbtn-spacer"></span>';
       return '<div class="bo-el-row'+(e.isDup?' bo-el-dup':'')+(e.isBorrowed?' bo-el-borrowed':'')+(e.isCustom?' bo-el-customrow':'')+'" data-boid="'+n.id+'" data-el="'+e.key.replace(/"/g,'&quot;')+'"'+
         ' style="cursor:pointer" title="Klik voor details">'+
         '<span class="echip2 '+chip+'">'+lbl+'</span>'+
         '<span class="bo-el-name">'+e.label+specialTag+'</span>'+
-        (elCompCount > 0 ? '<span class="bo-el-comp-cnt" title="'+elCompCount+' componenten toegevoegd">&#9881; '+elCompCount+'</span>' : '')+
-        '<span class="bo-el-bd-cnt">'+
-          (bdCount > 0 ? (bdCount - disabledBDcount)+'/'+bdCount+' bd' : '')+
-        '</span>'+
-        (canDup ? '<button class="bo-el-dupbtn" data-action="dupel" data-boid="'+n.id+'" data-base="'+e.element.replace(/"/g,'&quot;')+'" title="Dupliceer dit element (bijv. 2e pompinstallatie)">&#10697;</button>' : '')+
-        (e.isDup ? '<button class="bo-el-delbtn" data-action="delelinst" data-boid="'+n.id+'" data-key="'+e.key.replace(/"/g,'&quot;')+'" title="Verwijder deze kopie">&times;</button>' : '')+
-        ((e.isBorrowed || e.isCustom) ? '<button class="bo-el-delbtn" data-action="delelinst" data-boid="'+n.id+'" data-key="'+e.key.replace(/"/g,'&quot;')+'" title="Verwijder dit '+(e.isBorrowed?'geleende':'vrije')+' element">&times;</button>' : '')+
+        compSlot+
+        '<span class="bo-el-bd-cnt">'+(bdCount - disabledBDcount)+'/'+bdCount+' bd</span>'+
+        '<button class="bo-el-dupbtn" data-action="dupel2" data-boid="'+n.id+'" data-key="'+e.key.replace(/"/g,'&quot;')+'" title="'+dupTitle+'">&#10697;</button>'+
+        delSlot+
         '<span style="font-size:10px;color:var(--tm)">›</span>'+
       '</div>';
     }).join('');
@@ -1635,7 +1646,7 @@ function attachTreeEvents(){
     // Deze acties worden elders (specifiekere delegated handlers) afgehandeld —
     // hier NIET registreren, anders vangt deze generieke listener de klik weg
     // (met stopPropagation) voordat de juiste handler hem bereikt.
-    if(act0==='dupel' || act0==='delelinst' || act0==='delcomp' || act0==='dupbd' || act0==='delbdinst' || act0==='openelpicker' || act0==='openbdpicker') return;
+    if(act0==='dupel' || act0==='dupel2' || act0==='delelinst' || act0==='delcomp' || act0==='dupbd' || act0==='dupbd2' || act0==='delbdinst' || act0==='openelpicker' || act0==='openbdpicker') return;
 
     btn.addEventListener('click', function(e){
       e.stopPropagation();
@@ -2032,7 +2043,12 @@ function renderElementDetail(boId, elName){
         : b.isBorrowed ? ' <span class="bd-borrow-tag" title="Geleend uit element \'' + (b.borrowedFromElement||'') + '\'">geleend van: ' + (b.borrowedFromElement||'') + '</span>'
         : b.isCustom ? ' <span class="bd-custom-tag">vrij toegevoegd</span>'
         : '';
-      var canDup = !b.isDup && !b.isBorrowed && !b.isCustom;
+      var dupTitleBd = b.isBorrowed ? 'Dupliceer deze lening (nog een instantie)'
+        : b.isCustom ? 'Dupliceer dit vrije bouwdeel'
+        : 'Dupliceer dit bouwdeel (bijv. 2e afsluiter)';
+      var bdDelSlot = (b.isDup || b.isBorrowed || b.isCustom)
+        ? '<button class="bd-delbtn" data-action="delbdinst" data-boid="' + boId + '" data-elkey="' + elName.replace(/"/g,'&quot;') + '" data-key="' + b.key.replace(/"/g,'&quot;') + '" title="Verwijder dit' + (b.isDup?' deze kopie':b.isBorrowed?' geleende bouwdeel':' vrije bouwdeel') + '">&times;</button>'
+        : '<span class="bd-delbtn-spacer"></span>';
       return '<div class="bd-row' + (isOff ? ' off' : '') + (b.isDup ? ' bd-row-dup' : '') + (b.isBorrowed ? ' bd-row-borrowed' : '') + (b.isCustom ? ' bd-row-custom' : '') + '" data-bdname="' + b.key.replace(/"/g,'&quot;') + '">' +
         '<input type="checkbox" class="bd-check"' + (isOff ? '' : ' checked') +
           ' data-boid="' + boId + '"' +
@@ -2043,9 +2059,8 @@ function renderElementDetail(boId, elName){
           '<div class="bd-name"><span class="bd-name-txt">' + b.label + '</span>' + specialTag + compBadge + '</div>' +
           '<div class="bd-rsn">'  + b.reden + '</div>' +
         '</div>' +
-        (canDup ? '<button class="bd-dupbtn" data-action="dupbd" data-boid="' + boId + '" data-elkey="' + elName.replace(/"/g,'&quot;') + '" data-base="' + b.base.replace(/"/g,'&quot;') + '" title="Dupliceer dit bouwdeel (bijv. 2e afsluiter)">&#10697;</button>' : '') +
-        (b.isDup ? '<button class="bd-delbtn" data-action="delbdinst" data-boid="' + boId + '" data-elkey="' + elName.replace(/"/g,'&quot;') + '" data-key="' + b.key.replace(/"/g,'&quot;') + '" title="Verwijder deze kopie">&times;</button>' : '') +
-        ((b.isBorrowed || b.isCustom) ? '<button class="bd-delbtn" data-action="delbdinst" data-boid="' + boId + '" data-elkey="' + elName.replace(/"/g,'&quot;') + '" data-key="' + b.key.replace(/"/g,'&quot;') + '" title="Verwijder dit ' + (b.isBorrowed?'geleende':'vrije') + ' bouwdeel">&times;</button>' : '') +
+        '<button class="bd-dupbtn" data-action="dupbd2" data-boid="' + boId + '" data-elkey="' + elName.replace(/"/g,'&quot;') + '" data-key="' + b.key.replace(/"/g,'&quot;') + '" title="' + dupTitleBd + '">&#10697;</button>' +
+        bdDelSlot +
       '</div>';
     }).join('');
 
@@ -2146,6 +2161,12 @@ function renderElementDetail(boId, elName){
       var dupBdBtn = t.closest('[data-action="dupbd"]');
       if(dupBdBtn){
         duplicateBouwdeel(dupBdBtn.dataset.boid, dupBdBtn.dataset.elkey, dupBdBtn.dataset.base);
+        return;
+      }
+      // Bouwdeel-instantie dupliceren (universeel: eigen, geleend, of vrij toegevoegd)
+      var dupBdBtn2 = t.closest('[data-action="dupbd2"]');
+      if(dupBdBtn2){
+        duplicateBouwdeelInstance(dupBdBtn2.dataset.boid, dupBdBtn2.dataset.elkey, dupBdBtn2.dataset.key);
         return;
       }
       // Bouwdeel-instantie verwijderen (alleen kopieën)
@@ -2696,7 +2717,16 @@ function generatePDF(){
     ct(n.children);
   });})(tree);
 
+  // 'Dekkingsgraad' (totEl/totBD vs. actEl/actBD) blijft een zuivere bibliotheek-metriek:
+  // hoeveel van de STANDAARDBIBLIOTHEEK wordt actief gebruikt. Geleende en vrij toegevoegde
+  // elementen vallen daarbuiten (ze zijn per definitie een uitzondering op de standaardbibliotheek,
+  // geen aan/uit te zetten bibliotheek-item), dus die tellen NIET mee in tot/act hieronder —
+  // anders zou de dekkingsgraad kunstmatig boven 100% kunnen uitkomen.
+  // De KPI-blokken 'Actieve Elementen'/'Actieve Bouwdelen' bovenaan tellen WEL alles mee
+  // (duplicaten + leningen + vrije items), zodat ze consistent zijn met de samenvattingstabel
+  // en detailpagina's verderop in het rapport — vandaar de aparte tellers kpiActEl/kpiActBD.
   var totEl=0,actEl=0,totBD=0,actBD=0,jaC=0,opC=0,neC=0;
+  var kpiActEl=0,kpiActBD=0,kpiJaC=0,kpiOpC=0,kpiNeC=0,kpiCuC=0;
   allBOs.forEach(function(n){
     var bo=BOMAP[n.boCode];if(!bo)return;
     var dis=n.disabledEls||[];
@@ -2712,8 +2742,22 @@ function generatePDF(){
         bds.forEach(function(b){totBD++;if(dbd.indexOf(b[0])<0)actBD++;});
       }
     });
+    // Volledige instantie-telling (incl. duplicaten/leningen/vrije elementen) t.b.v. de KPI-blokken,
+    // de risico-conclusie, en de classificatiebalk — dit is het WERKELIJKE risicobeeld van het
+    // beheerobject zoals het nu is samengesteld, niet alleen van de standaardbibliotheek-subset.
+    var instances=getActiveElementInstances(n, bo);
+    instances.forEach(function(el){
+      kpiActEl++;
+      if(el.classificatie==='JA')kpiJaC++;
+      else if(el.classificatie==='OPTIONEEL')kpiOpC++;
+      else if(el.classificatie==='CUSTOM')kpiCuC++;
+      else kpiNeC++;
+      var bds=BD?(BD[el.element]||[]):[];
+      var dbd=(n.disabledBDs&&n.disabledBDs[el.key])?n.disabledBDs[el.key]:[];
+      bds.forEach(function(b){ if(dbd.indexOf(b[0])<0) kpiActBD++; });
+    });
   });
-  var avgRisk=actEl>0?Math.round(jaC/actEl*100):0;
+  var avgRisk=kpiActEl>0?Math.round(kpiJaC/kpiActEl*100):0;
   var covPct=totBD>0?Math.round(actBD/totBD*100):0;
   var riskColor=avgRisk>=70?RED:avgRisk>=40?ORANGE:GREEN;
   var riskLabel=avgRisk>=70?'HOOG':avgRisk>=40?'MATIG':'LAAG';
@@ -2763,8 +2807,8 @@ function generatePDF(){
     {val:totalAP,    lbl:'Areaal Portefeuille', bg:[240,234,249], fg:[107,63,160]},
     {val:totalCX,    lbl:'Complexen',           bg:[232,245,238], fg:[26,122,74]},
     {val:allBOs.length,lbl:'Beheerobjecten',    bg:[232,239,247], fg:[26,79,138]},
-    {val:actEl,      lbl:'Actieve Elementen',   bg:[219,234,248], fg:[26,79,138]},
-    {val:actBD,      lbl:'Actieve Bouwdelen',   bg:[220,242,228], fg:[26,122,74]}
+    {val:kpiActEl,   lbl:'Actieve Elementen',   bg:[219,234,248], fg:[26,79,138]},
+    {val:kpiActBD,   lbl:'Actieve Bouwdelen',   bg:[220,242,228], fg:[26,122,74]}
   ];
   KPI_BOXES.forEach(function(s,i){
     F(s.bg);doc.roundedRect(ML+i*(bw+3),y,bw,bh,2,2,'F');
@@ -2781,34 +2825,62 @@ function generatePDF(){
 
   // Classificatie staaf
   B(9);T(DARK);doc.text('Classificatie actieve elementen',ML,y);y+=5;
-  var barH=8,tot2=jaC+opC+neC;
+  // Classificatiebalk gebruikt de VOLLEDIGE instantie-telling (kpiJaC/kpiOpC/kpiNeC/kpiCuC),
+  // zodat deze klopt met de KPI-blokken erboven, de risico-conclusie, en de detailpagina's.
+  // Classificatiebalk: elk segment is een eigen volledig afgeronde 'pil' met een kleine
+  // tussenruimte (i.p.v. één samengevoegde balk waarbij alleen de uiterste randen rond zijn) —
+  // zo blijft elk blokje visueel consistent, ook als een segment smal wordt.
+  var barH=8,gap=1.2,tot2=kpiJaC+kpiOpC+kpiNeC+kpiCuC;
   if(tot2>0){
-    var jW=Math.round(CW*jaC/tot2),oW=Math.round(CW*opC/tot2),nW=CW-jW-oW;
-    F(LIGHT);doc.roundedRect(ML,y,CW,barH,2,2,'F');
-    if(jW>0){F(RED);doc.roundedRect(ML,y,jW,barH,2,2,'F');}
-    if(oW>0){F(ORANGE);doc.rect(ML+jW,y,oW,barH,'F');}
-    if(nW>0){F(GREY);doc.roundedRect(ML+jW+oW,y,nW,barH,2,2,'F');}
-    T(WHITE);B(7);
-    if(jW>20)doc.text('JA '+jaC+' ('+Math.round(jaC/tot2*100)+'%)',ML+jW/2,y+5.5,{align:'center'});
-    if(oW>20)doc.text('OPT '+opC,ML+jW+oW/2,y+5.5,{align:'center'});
-    if(nW>20)doc.text('N.V.T. '+neC,ML+jW+oW+nW/2,y+5.5,{align:'center'});
-    y+=barH+4;
-    [[RED,'Kritisch (JA): falen = functieverlies'],
-     [ORANGE,'Optioneel: relevant, niet direct kritisch'],
-     [GREY,'N.V.T.: niet in FTA-model']
-    ].forEach(function(l,i){
-      F(l[0]);doc.rect(ML+i*62,y,3,3,'F');
-      N(6.5);T(MID);doc.text(l[1],ML+i*62+5,y+2.5);
+    var segments=[
+      {n:kpiJaC, lbl:'JA',   col:RED,           showPct:true},
+      {n:kpiOpC, lbl:'OPT',  col:ORANGE,        showPct:false},
+      {n:kpiCuC, lbl:'VRIJ', col:[107,63,160],  showPct:false},
+      {n:kpiNeC, lbl:'N.V.T.', col:GREY,        showPct:false}
+    ].filter(function(s){ return s.n>0; }); // segmenten met 0 items helemaal weglaten
+
+    var totalGapW=(segments.length-1)*gap;
+    var availW=CW-totalGapW;
+    var segX=ML;
+    segments.forEach(function(s,i){
+      var segW=Math.round(availW*s.n/tot2);
+      if(i===segments.length-1) segW=ML+CW-segX; // laatste segment vult exact tot de rand, voorkomt afrondingsgaten
+      F(s.col);doc.roundedRect(segX,y,segW,barH,2,2,'F');
+      if(segW>16){
+        T(WHITE);B(6.5);
+        var pct=Math.round(s.n/tot2*100);
+        var txt=s.showPct ? (s.lbl+' '+s.n+' ('+pct+'%)') : (s.lbl+' '+s.n);
+        doc.text(txt,segX+segW/2,y+5.3,{align:'center'});
+      }
+      segX+=segW+gap;
     });
-    y+=8;
+    y+=barH+5;
+
+    // Legenda als duidelijk eigen blok ONDER de balk, met ruime witregel ervoor en
+    // automatische terugloop naar een tweede regel als er 4 items zijn (i.p.v. te smal proppen).
+    var legendItems=[[RED,'Kritisch (JA): falen = functieverlies'],
+     [ORANGE,'Optioneel: relevant, niet direct kritisch'],
+     [GREY,'N.V.T.: niet in FTA-model']];
+    if(kpiCuC>0) legendItems.push([[107,63,160],'Vrij toegevoegd: niet bibliotheek-geclassificeerd']);
+    var perRow=2, legendColW=CW/perRow;
+    legendItems.forEach(function(l,i){
+      var col=i%perRow, row=Math.floor(i/perRow);
+      var lx=ML+col*legendColW, ly=y+row*6;
+      F(l[0]);doc.rect(lx,ly,3,3,'F');
+      N(6.5);T(MID);doc.text(l[1],lx+5,ly+2.5);
+    });
+    var legendRows=Math.ceil(legendItems.length/perRow);
+    y+=legendRows*6+4;
   }
 
-  // Dekkingsgraad
+  // Dekkingsgraad — gaat specifiek over de STANDAARDBIBLIOTHEEK (niet over geleende/vrije
+  // items, die per definitie buiten de bibliotheek vallen). De tekst maakt dit nu expliciet,
+  // zodat dit getal niet verward wordt met de bredere 'Actieve Bouwdelen'-KPI hierboven, die
+  // wel alle toegevoegde instanties meetelt.
   hline();y+=4;
-  B(8);T(DARK);doc.text('Dekkingsgraad bouwdelen',ML,y);
-  // Explanation of what dekkingsgraad means
-  N(7);T(GREY);doc.text('Percentage actieve bouwdelen t.o.v. totaal geregistreerde bouwdelen in de bibliotheek.',ML,y+4.5);
-  N(7);T(GREY);doc.text('Actief: '+actBD+' / Totaal geregistreerd: '+totBD,ML,y+9);
+  B(8);T(DARK);doc.text('Dekkingsgraad standaardbibliotheek',ML,y);
+  N(7);T(GREY);doc.text('Percentage bibliotheek-bouwdelen dat actief is gebleven (excl. geleende en vrij toegevoegde items).',ML,y+4.5);
+  N(7);T(GREY);doc.text('Actief vanuit bibliotheek: '+actBD+' / Totaal in bibliotheek: '+totBD,ML,y+9);
   var cc2=covPct>=80?GREEN:covPct>=50?ORANGE:RED;
   // FIX 2: pill RIGHT-aligned
   F(cc2);doc.roundedRect(PW-MR-24,y,24,9,2,2,'F');
@@ -2833,13 +2905,15 @@ function generatePDF(){
 
   allBOs.forEach(function(n,i){
     var bo=BOMAP[n.boCode];if(!bo)return;
-    var dis=n.disabledEls||[];
-    var aE=bo.elementen.filter(function(e){return dis.indexOf(e.element)<0;});
+    // Gebruik getActiveElementInstances, zodat duplicaten/leningen/vrije elementen ook
+    // meetellen in de samenvattingstabel (El./Bd./% Kritisch), consistent met de UI en
+    // met de gedetailleerde structuurpagina's verderop in dit rapport.
+    var aE=getActiveElementInstances(n, bo);
     var jE=aE.filter(function(e){return e.classificatie==='JA';});
     var pct=aE.length>0?Math.round(jE.length/aE.length*100):0;
     var aBD=0;aE.forEach(function(el){
       var bds=BD?(BD[el.element]||[]):[];
-      var d=(n.disabledBDs&&n.disabledBDs[el.element])?n.disabledBDs[el.element]:[];
+      var d=(n.disabledBDs&&n.disabledBDs[el.key])?n.disabledBDs[el.key]:[];
       aBD+=bds.filter(function(b){return d.indexOf(b[0])<0;}).length;
     });
 
@@ -2909,7 +2983,9 @@ function generatePDF(){
   allBOs.forEach(function(n){
     var bo=BOMAP[n.boCode];if(!bo)return;
     var dis=n.disabledEls||[];
-    var aEls=bo.elementen.filter(function(e){return dis.indexOf(e.element)<0;});
+    // Gebruik getActiveElementInstances i.p.v. de pure bibliotheeklijst, zodat gedupliceerde,
+    // geleende en vrij toegevoegde elementen ook in het PDF-rapport verschijnen (niet alleen in de UI).
+    var aEls=getActiveElementInstances(n, bo);
 
     newPage();
 
@@ -2950,20 +3026,47 @@ function generatePDF(){
     var jaE=aEls.filter(function(e){return e.classificatie==='JA';}).length;
     var opE=aEls.filter(function(e){return e.classificatie==='OPTIONEEL';}).length;
     var neE=aEls.filter(function(e){return e.classificatie==='NEE';}).length;
+    var cuE=aEls.filter(function(e){return e.classificatie==='CUSTOM';}).length; // vrij toegevoegd, niet geclassificeerd
     var bw4=CW/4-2;
-    [[jaE,'Kritisch (JA)',RED],[opE,'Optioneel',ORANGE],
-     [neE,'N.V.T.',GREY],[aEls.length,'Actief totaal',NAVY]
-    ].forEach(function(s,i){kpiBox(ML+i*(bw4+2.7),y,bw4,22,s[0],s[1],s[2]);});
+    // Bij vrij toegevoegde elementen tonen we 5 compactere KPI-blokken i.p.v. 4, zodat de
+    // getallen nog steeds optellen tot 'Actief totaal' en niets stilletjes verdwijnt.
+    if(cuE > 0){
+      var bw5=CW/5-2;
+      [[jaE,'Kritisch (JA)',RED],[opE,'Optioneel',ORANGE],[neE,'N.V.T.',GREY],
+       [cuE,'Vrij toegevoegd',[107,63,160]],[aEls.length,'Actief totaal',NAVY]
+      ].forEach(function(s,i){kpiBox(ML+i*(bw5+2.2),y,bw5,22,s[0],s[1],s[2]);});
+    } else {
+      [[jaE,'Kritisch (JA)',RED],[opE,'Optioneel',ORANGE],
+       [neE,'N.V.T.',GREY],[aEls.length,'Actief totaal',NAVY]
+      ].forEach(function(s,i){kpiBox(ML+i*(bw4+2.7),y,bw4,22,s[0],s[1],s[2]);});
+    }
     y+=26;
 
-    // Notitie
+    // Notitie — toont nu de VOLLEDIGE tekst (meerdere regels indien nodig),
+    // in plaats van alleen de eerste regel met de rest afgekapt.
     if(n.notitie){
-      check(12);
-      F(YELLOW_BG);S([200,185,0],0.3);doc.roundedRect(ML,y,CW,9,1,1,'FD');
+      // BELANGRIJK: het lettertype/grootte moet AL ingesteld zijn op het font waarmee
+      // straks ook daadwerkelijk gerenderd wordt (N(7.5) = Helvetica 7.5pt normaal),
+      // VOORDAT splitTextToSize wordt aangeroepen. jsPDF gebruikt namelijk het op dat
+      // moment ACTIEVE lettertype om de regelbreedte te berekenen. Eerder stond hier
+      // N(7.5) pas NA splitTextToSize, waardoor nog het kleinere 6pt-lettertype van de
+      // laatste KPI-box (kpiBox eindigt met N(6)) actief was tijdens het opdelen — de
+      // tekst werd dus te ruim ingeschat en liep bij het echte (grotere) renderen over
+      // de rand van het vak heen.
+      N(7.5);
+      // Beschikbare breedte voor de tekst = vakbreedte MINUS de inspringing waar de tekst start
+      // (ML+22 t.o.v. ML) MINUS een kleine rechtermarge.
+      var notitieTextW = CW - 22 - 10;
+      var notitieLines = doc.splitTextToSize(n.notitie, notitieTextW);
+      var notitieBoxH = Math.max(9, 5.5 + notitieLines.length * 4);
+      check(notitieBoxH + 3);
+      F(YELLOW_BG);S([200,185,0],0.3);doc.roundedRect(ML,y,CW,notitieBoxH,1,1,'FD');
       B(7);T([100,80,0]);doc.text('NOTITIE',ML+3,y+5.5);
       N(7.5);T(DARK);
-      doc.text(doc.splitTextToSize(n.notitie,CW-24)[0],ML+22,y+5.5);
-      y+=13;
+      notitieLines.forEach(function(ln, li){
+        doc.text(ln, ML+22, y+5.5+(li*4));
+      });
+      y += notitieBoxH + 4;
     }
 
     // Elements by group
@@ -2983,13 +3086,19 @@ function generatePDF(){
         var firstEl=els[0];
         if(!firstEl)return;
         var firstBDs=BD?(BD[firstEl.element]||[]):[];
-        var firstDbd=(n.disabledBDs&&n.disabledBDs[firstEl.element])?n.disabledBDs[firstEl.element]:[];
+        var firstDbd=(n.disabledBDs&&n.disabledBDs[firstEl.key])?n.disabledBDs[firstEl.key]:[];
         var firstABDs=firstBDs.filter(function(b){return firstDbd.indexOf(b[0])<0;});
         var firstBdRows=firstABDs.length>0?Math.ceil(firstABDs.length/2):0;
         var firstRightH=firstBdRows>0?7+firstBdRows*4.8:7;
-        var firstNameLines=doc.splitTextToSize(firstEl.element,52).length;
-        var firstReden=REDEN?(REDEN[firstEl.element]||''):'';
-        var firstLeftH=7+(firstNameLines>1?4:0)+(firstReden?4.5:0)+3;
+        var firstDisplayName=firstEl.label||firstEl.element;
+        var firstNameLines=doc.splitTextToSize(firstDisplayName,52).length;
+        var firstReden=firstEl.isCustom
+          ? (((n.customElData&&n.customElData[firstEl.key])||{}).toelichting || '(geen toelichting opgegeven)')
+          : (REDEN?(REDEN[firstEl.element]||''):'');
+        var firstHasAnnot=(firstEl.isBorrowed||firstEl.isCustom);
+        N(6.5);
+        var firstRedenLines=firstReden?doc.splitTextToSize(firstReden,52).slice(0,3):[];
+        var firstLeftH=7+(firstNameLines>1?4:0)+(firstHasAnnot?4.5:0)+(firstRedenLines.length>0?4+(firstRedenLines.length-1)*3.6:0)+3;
         var firstRowH=Math.max(firstLeftH,firstRightH,14);
         // group header (9) + first row + 2 margin
         if(y+9+firstRowH+2>PH-18)newPage();
@@ -3008,18 +3117,41 @@ function generatePDF(){
       y+=9;
 
       els.forEach(function(el){
+        // Gebruik el.key (instantie-sleutel) voor disabledBDs-lookup, consistent met de rest
+        // van de applicatie — el.element (de kale bibliotheeknaam) is voor duplicaten/leningen
+        // niet uniek genoeg en zou de verkeerde uitgeschakelde-bouwdelen-lijst kunnen raadplegen.
         var bds=BD?(BD[el.element]||[]):[];
-        var dbd=(n.disabledBDs&&n.disabledBDs[el.element])?n.disabledBDs[el.element]:[];
+        var dbd=(n.disabledBDs&&n.disabledBDs[el.key])?n.disabledBDs[el.key]:[];
         var aBDs=bds.filter(function(b){return dbd.indexOf(b[0])<0;});
-        var reden=REDEN?(REDEN[el.element]||''):'';
+        var reden;
+        if(el.isCustom){
+          // Vrij toegevoegd element: geen bibliotheek-FTA-redenering, toon de eigen toelichting
+          var customInfo=(n.customElData&&n.customElData[el.key])?n.customElData[el.key]:null;
+          reden=customInfo&&customInfo.toelichting ? customInfo.toelichting : '(geen toelichting opgegeven)';
+        } else {
+          reden=REDEN?(REDEN[el.element]||''):'';
+        }
 
         // Row height: left = chip+name+reden, right = bouwdelen 2-col
         var bdColW=44;
         var bdRows=aBDs.length>0?Math.ceil(aBDs.length/2):0;
         var rightH=bdRows>0?7+bdRows*4.8:7;
-        // Left height: always 3 fixed lines: name(1 or 2 lines) + reden
-        var nameLines=doc.splitTextToSize(el.element,52).length;
-        var leftH=7+(nameLines>1?4:0)+(reden?4.5:0)+3;
+        // Left height: name(1 of 2 regels) + evt. geleend/vrij-annotatie + reden (meerdere regels mogelijk)
+        var nameLines=doc.splitTextToSize(el.label||el.element,52).length;
+        var hasAnnot=(el.isBorrowed||el.isCustom);
+        // Lettertype EERST instellen (6.5pt, hetzelfde als waarmee straks gerenderd wordt),
+        // zodat splitTextToSize met de juiste breedte rekent — zelfde les als de notitie-fix:
+        // anders blijft het font van een eerdere sectie actief en wordt de regelbreedte verkeerd
+        // ingeschat, met afgekapte of overlappende tekst tot gevolg.
+        N(6.5);
+        var redenLines=reden?doc.splitTextToSize(reden,52):[];
+        var maxRedenLines=3; // praktische grens, zodat één zeer lange redenering de rij niet torenhoog maakt
+        var redenLinesShown=redenLines.slice(0,maxRedenLines);
+        if(redenLines.length>maxRedenLines){
+          var lastLine=redenLinesShown[maxRedenLines-1];
+          redenLinesShown[maxRedenLines-1]=lastLine.length>2?lastLine.slice(0,-1)+'\u2026':lastLine+'\u2026';
+        }
+        var leftH=7+(nameLines>1?4:0)+(hasAnnot?4.5:0)+(redenLinesShown.length>0?4+(redenLinesShown.length-1)*3.6:0)+3;
         var rowH=Math.max(leftH,rightH,14);
         check(rowH+2);
 
@@ -3027,26 +3159,42 @@ function generatePDF(){
         S([235,240,246],0.15);doc.rect(ML,y,CW,rowH);
 
         // FIX 2+7: chip — positioned at top-left of row with 3mm padding
-        var cc=el.classificatie==='JA'?RED:el.classificatie==='OPTIONEEL'?ORANGE:GREY;
-        var cl=el.classificatie==='JA'?'JA':el.classificatie==='OPTIONEEL'?'OPT':'N.V.T.';
+        var cc=el.classificatie==='JA'?RED:el.classificatie==='OPTIONEEL'?ORANGE:el.classificatie==='CUSTOM'?[107,63,160]:GREY;
+        var cl=el.classificatie==='JA'?'JA':el.classificatie==='OPTIONEEL'?'OPT':el.classificatie==='CUSTOM'?'VRIJ':'N.V.T.';
         var chipW=13; // all chips same fixed width
         // chip top = y+3, vertically near name
         F(cc);doc.roundedRect(ML+2,y+3,chipW,5,1.5,1.5,'F');
         T(WHITE);B(6);doc.text(cl,ML+2+chipW/2,y+6.5,{align:'center'});
 
         // FIX 7: name always starts at y+7 from top, never varies
+        // Gebruik el.label i.p.v. el.element, zodat duplicaten ('Pompinstallatie #2'),
+        // leningen, en vrije elementen herkenbaar zijn in plaats van allemaal identiek
+        // de kale bibliotheeknaam te tonen.
         var nameX=ML+18;
         B(8.5);T(DARK);
-        var enl=doc.splitTextToSize(el.element,52);
+        // Gebruik el.label i.p.v. el.element, zodat duplicaten ('Pompinstallatie #2') herkenbaar
+        // zijn i.p.v. allemaal identiek de kale bibliotheeknaam te tonen.
+        var displayName=el.label||el.element;
+        var enl=doc.splitTextToSize(displayName,52);
         doc.text(enl[0],nameX,y+7);
         var afterName=y+7+(enl[1]?5:0);
         if(enl[1]){B(8.5);doc.text(enl[1],nameX,y+12);}
+        // Geleend/vrij-annotatie als APARTE, altijd zichtbare regel direct onder de naam
+        // (niet afhankelijk van of de naam zelf al meerdere regels beslaat).
+        if(el.isBorrowed || el.isCustom){
+          N(6.5);T([107,63,160]);
+          var annotText = el.isBorrowed ? ('geleend van: '+(el.borrowedFromLabel||'')) : 'vrij toegevoegd';
+          doc.text(annotText, nameX, afterName + (enl[1]?4.5:4.5));
+          afterName += 4.5;
+        }
 
         // FIX 7: redenering always directly below name, consistent gap
-        if(reden){
+        // Toont nu ALLE berekende regels (tot maxRedenLines) i.p.v. alleen de eerste regel.
+        if(redenLinesShown.length>0){
           N(6.5);T(GREY);
-          var rl=doc.splitTextToSize(reden,52);
-          doc.text(rl[0],nameX,afterName+4.5);
+          redenLinesShown.forEach(function(ln,li){
+            doc.text(ln,nameX,afterName+4.5+(li*3.6));
+          });
         }
 
         // Vertical divider
@@ -3098,18 +3246,22 @@ function generatePDF(){
       ns.forEach(function(nn){
         if(nn.type==='bo'){
           var bo2=BOMAP[nn.boCode]; if(!bo2) return;
-          var disEls=nn.disabledEls||[];
           var groups=[];
-          bo2.elementen.forEach(function(el){
-            if(disEls.indexOf(el.element)>=0) return;
+          // Gebruik getActiveElementInstances/getBouwdeelInstances i.p.v. de pure bibliotheeklijst,
+          // zodat componenten op gedupliceerde, geleende, of vrij toegevoegde elementen/bouwdelen
+          // ook in dit hoofdstuk verschijnen (componenten worden immers opgeslagen onder de
+          // instantie-sleutel, niet de kale bibliotheeknaam).
+          var elInstances2=getActiveElementInstances(nn, bo2);
+          elInstances2.forEach(function(el){
             var elBds=BD?(BD[el.element]||[]):[];
+            var bdInstances2=getBouwdeelInstances(nn, el.key, elBds);
             var items=[];
-            elBds.forEach(function(b){
-              var ck=el.element+'||'+b[0];
+            bdInstances2.forEach(function(b){
+              var ck=el.key+'||'+b.key;
               var comps=(nn.components&&nn.components[ck])?nn.components[ck]:[];
-              if(comps.length>0) items.push({bdName:b[0],cls:b[1],comps:comps});
+              if(comps.length>0) items.push({bdName:b.label||b.base,cls:b.cls,comps:comps});
             });
-            if(items.length>0) groups.push({elName:el.element,items:items});
+            if(items.length>0) groups.push({elName:el.label||el.element,items:items});
           });
           if(groups.length>0){
             chapterData.push({boLabel:nn.label,boCode:bo2.code||'',groups:groups});
@@ -3158,8 +3310,8 @@ function generatePDF(){
           var rowH=5+lines.length*4;
           check(rowH+1);
 
-          var cc=it.cls==='J'?RED:it.cls==='O'?ORANGE:GREY;
-          var cl=it.cls==='J'?'JA':it.cls==='O'?'OPT':'N.V.T.';
+          var cc=it.cls==='J'?RED:it.cls==='O'?ORANGE:it.cls==='CUSTOM'?[107,63,160]:GREY;
+          var cl=it.cls==='J'?'JA':it.cls==='O'?'OPT':it.cls==='CUSTOM'?'VRIJ':'N.V.T.';
           F(cc);doc.roundedRect(ML+6,y,11,4.5,1,1,'F');
           T(WHITE);B(5.5);doc.text(cl,ML+11.5,y+3.1,{align:'center'});
 
@@ -3878,6 +4030,53 @@ function duplicateElement(boId, baseElement){
   render();
 }
 
+// ── INSTANTIE DUPLICEREN: werkt voor ELKE soort element (eigen bibliotheek, geleend, of vrij) ──
+// instanceKey is de volledige sleutel zoals die in de boom staat (bijv. 'Pompinstallatie',
+// 'Aanrijbalk@AA', of 'CUSTOM:Iets:123456'). Dit dekt het geval dat duplicateElement() hierboven
+// niet aankan: dupliceren van een lening of een vrij element, inclusief hun extra metadata.
+function duplicateElementInstance(boId, instanceKey){
+  var n = findNode(boId); if(!n) return;
+  n.extraEls = n.extraEls || [];
+
+  // Bepaal het bron-object: ofwel het ORIGINELE bibliotheekelement (instanceKey === elementnaam,
+  // geen entry in extraEls), of een bestaande extraEls-entry (gedupliceerd/geleend/custom).
+  var sourceEx = n.extraEls.filter(function(ex){ return ex.key === instanceKey; })[0];
+  var baseLabel = sourceEx ? (sourceEx.label || sourceEx.base) : instanceKey;
+
+  // Tel hoeveel instanties van DEZE SPECIFIEKE 'familie' al bestaan, zodat je het volgende
+  // vrije nummer kunt bepalen. De familie = instanceKey zelf (telt als instantie #1, of die nu
+  // het kale bibliotheekelement is of al een aparte extraEls-entry zoals een lening) PLUS alle
+  // bestaande duplicaten daarvan (instanceKey+'#2', instanceKey+'#3', ...).
+  var familyPrefix = instanceKey + '#';
+  var existingCount = 1; // de bron zelf (instanceKey) telt altijd als instantie #1
+  n.extraEls.forEach(function(ex){
+    if(ex.key !== instanceKey && ex.key.indexOf(familyPrefix) === 0) existingCount++;
+  });
+  var newNum = existingCount + 1;
+  var newKey = instanceKey + '#' + newNum;
+
+  if(!sourceEx){
+    // Dupliceren van het ORIGINELE bibliotheekelement (zelfde pad als de bestaande duplicateElement)
+    n.extraEls.push({ base: instanceKey, key: newKey, label: instanceKey + ' #' + newNum });
+  } else if(sourceEx.borrowedFrom){
+    n.extraEls.push({
+      base: sourceEx.base, key: newKey, label: baseLabel + ' #' + newNum,
+      borrowedFrom: sourceEx.borrowedFrom, borrowedFromLabel: sourceEx.borrowedFromLabel
+    });
+  } else if(sourceEx.isCustom){
+    // Custom element dupliceren: ook de toelichting meekopiëren naar de nieuwe key
+    n.extraEls.push({ base: newKey, key: newKey, label: baseLabel + ' #' + newNum, isCustom: true });
+    n.customElData = n.customElData || {};
+    var origToelichting = (n.customElData[sourceEx.key] || {}).toelichting || '';
+    n.customElData[newKey] = { toelichting: origToelichting };
+  } else {
+    // Gewone duplicatie van een al-gedupliceerd element
+    n.extraEls.push({ base: sourceEx.base, key: newKey, label: baseLabel + ' #' + newNum });
+  }
+  autoSave();
+  render();
+}
+
 // ── ELEMENT LENEN van een ANDER beheerobject in de bibliotheek ──
 // Voegt een element toe dat in de bibliotheek bij een ander beheerobject-type hoort,
 // inclusief zijn eigen bouwdelenlijst en FTA-classificatie (geen verzonnen data).
@@ -4016,6 +4215,42 @@ function duplicateBouwdeel(boId, elKey, baseBd){
   n.extraBds[elKey].push({ base: baseBd, key: newKey, label: baseBd + ' #' + newNum });
   autoSave();
   // Herbouw alleen het bouwdelen-paneel (geen volledige render() nodig, blijft sneller en behoudt boom-scroll)
+  if(typeof window._refreshBdPanel === 'function') window._refreshBdPanel();
+}
+
+// ── BOUWDEEL-INSTANTIE DUPLICEREN: werkt voor ELKE soort bouwdeel (eigen, geleend, of vrij) ──
+function duplicateBouwdeelInstance(boId, elKey, bdInstanceKey){
+  var n = findNode(boId); if(!n) return;
+  n.extraBds = n.extraBds || {};
+  n.extraBds[elKey] = n.extraBds[elKey] || [];
+
+  var sourceEx = n.extraBds[elKey].filter(function(ex){ return ex.key === bdInstanceKey; })[0];
+  var baseLabel = sourceEx ? (sourceEx.label || sourceEx.base) : bdInstanceKey;
+
+  var familyPrefix = bdInstanceKey + '#';
+  var existingCount = 1; // de bron zelf (bdInstanceKey) telt altijd als instantie #1
+  n.extraBds[elKey].forEach(function(ex){
+    if(ex.key !== bdInstanceKey && ex.key.indexOf(familyPrefix) === 0) existingCount++;
+  });
+  var newNum = existingCount + 1;
+  var newKey = bdInstanceKey + '#' + newNum;
+
+  if(!sourceEx){
+    n.extraBds[elKey].push({ base: bdInstanceKey, key: newKey, label: bdInstanceKey + ' #' + newNum });
+  } else if(sourceEx.borrowedFromElement){
+    n.extraBds[elKey].push({
+      base: sourceEx.base, key: newKey, label: baseLabel + ' #' + newNum,
+      borrowedFromElement: sourceEx.borrowedFromElement
+    });
+  } else if(sourceEx.isCustom){
+    n.extraBds[elKey].push({ base: newKey, key: newKey, label: baseLabel + ' #' + newNum, isCustom: true });
+    n.customBdData = n.customBdData || {};
+    var origToelichting = (n.customBdData[elKey+'||'+sourceEx.key] || {}).toelichting || '';
+    n.customBdData[elKey+'||'+newKey] = { toelichting: origToelichting };
+  } else {
+    n.extraBds[elKey].push({ base: sourceEx.base, key: newKey, label: baseLabel + ' #' + newNum });
+  }
+  autoSave();
   if(typeof window._refreshBdPanel === 'function') window._refreshBdPanel();
 }
 
@@ -4393,6 +4628,13 @@ document.addEventListener('DOMContentLoaded', function(){
     if(dupBtn){
       e.stopPropagation();
       duplicateElement(dupBtn.dataset.boid, dupBtn.dataset.base);
+      return;
+    }
+    // Element-instantie dupliceren (universeel: bibliotheek, geleend, of vrij toegevoegd)
+    var dupBtn2 = t.closest('[data-action="dupel2"]');
+    if(dupBtn2){
+      e.stopPropagation();
+      duplicateElementInstance(dupBtn2.dataset.boid, dupBtn2.dataset.key);
       return;
     }
     // Element-instantie verwijderen (alleen kopieën, niet het origineel)
