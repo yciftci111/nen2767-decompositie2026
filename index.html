@@ -160,9 +160,9 @@ main{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px}
 #ghost{position:fixed;pointer-events:none;z-index:9999;background:var(--acc);color:#fff;padding:5px 12px;border-radius:4px;font-size:12px;font-weight:600;display:none}
 
-/* ── BO ELEMENT LIST (inline in tree) ── */
+/* ── BO ELEMENT LIST (inline in tree, of in mobiel detail-paneel) ── */
 .nd-el-list{
-  display:none;flex-direction:column;
+  display:flex;flex-direction:column;
   border-top:1px solid var(--bdr);
   background:var(--sur);
   overflow:hidden;
@@ -326,14 +326,20 @@ main{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column
   }
   .bo-item{
     flex-direction:column;align-items:center;justify-content:center;
-    min-width:72px;max-width:72px;padding:8px 6px;
+    min-width:84px;max-width:84px;padding:8px 6px;
     border-radius:8px;border:1px solid var(--bdr);
     text-align:center;gap:4px;
     scroll-snap-align:start;
     background:var(--sur);
     cursor:pointer;
   }
-  .bo-item .bname{font-size:10px;line-height:1.2;text-align:center;white-space:normal;word-break:break-word}
+  /* Iets bredere kaart (was 72px) + nette ellipsis na 3 regels i.p.v. word-break:break-word,
+     wat woorden lelijk middendoor hakte (bijv. 'Beheerobje'/'ct'). De volledige naam blijft
+     via het title-attribuut (al aanwezig in de markup) als tooltip beschikbaar. */
+  .bo-item .bname{
+    font-size:10px;line-height:1.2;text-align:center;white-space:normal;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+  }
   .bo-item .bcnt{font-size:9px}
   .bo-item .bcode{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:11px}
   .sb-tabs{padding:4px 8px;gap:4px}
@@ -345,34 +351,99 @@ main{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column
 
   main{padding:10px 12px;overflow:visible}
   .add-bar{gap:5px}
-  .add-inp{font-size:12px;padding:7px 10px}
-  .add-btn{padding:7px 12px;font-size:12px}
-  .toolbar{gap:4px}
-  .tbtn{font-size:10px;padding:5px 7px}
+  .add-inp{font-size:12px;padding:9px 10px}
+  .add-btn{padding:9px 12px;font-size:12px}
+  .toolbar{gap:6px}
+  /* Iets meer verticale padding dan voorheen (was 5px) zodat de tap-hoogte richting de
+     aanbevolen ~40px minimum touch-target gaat, in plaats van een te krappe ~24px. */
+  .tbtn{font-size:10px;padding:9px 9px}
   .tinfo{display:none}
 
+  /* Filter-chips (Hoog risico/Matig/Laag/Geen Maximo/Incompleet) — was padding:3px 10px
+     (~22px tap-hoogte), vergroot voor touch. */
+  .filter-chip{padding:7px 12px}
+
   /* Tree nodes — full width */
+  /* nd-hd was een gedwongen enkele rij (icoon + naam/functie + badges + 4 actieknoppen), wat op
+     smalle schermen te weinig ruimte overliet voor .nd-meta — met als gevolg dat de naam tot
+     'AA — ...' werd afgekapt (volledige naam onzichtbaar) en de primaire functie woord-voor-woord
+     verticaal stapelde in de overgebleven smalle kolom. Nu mag de rij wrappen: meta krijgt zijn
+     eigen volle-breedte regel, badges/acties krijgen een eigen regel eronder indien nodig. */
+  .nd-hd{flex-wrap:wrap}
+  .nd-meta{flex-basis:100%;order:1}
+  .nd-bar,.nd-hd>svg,.nd-hd>.svgicon{order:0}
+  .nd-badges{order:2}
+  .nd-acts{order:3;margin-left:auto}
+  .nd-chev{order:4}
+  .nd-lbl{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.3}
+  .nd-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .nd-hd{padding:8px 10px;gap:6px}
   .nd-lbl{font-size:12px}
   .nd-sub{font-size:10px}
-  .nd-acts .nact{padding:3px 6px;font-size:10px}
+  /* Was padding:3px 6px (~22px tap-hoogte) — vergroot voor een werkbaardere touch-target,
+     met behoud van een compact uiterlijk. */
+  .nd-acts .nact{padding:7px 8px;font-size:11px}
   .nd-kids{padding:4px 4px 6px 10px}
 
   /* BO element list */
   .nd-el-list{max-height:none}
   .bo-el-row{padding:5px 10px;font-size:11px}
-  .bo-el-bd-cnt{display:none} /* hide bd count on small screens */
+  /* Was display:none — bedoeld voor de oude smalle gestapelde kolom-layout. Nu het detail-paneel
+     op mobiel fullscreen is (volledige schermbreedte), past de '45/45 bd'-badge weer prima en
+     is hij nuttige informatie; niet langer verbergen. */
+  .bo-el-bd-cnt{font-size:10px}
 
-  /* Detail panel — full width bottom sheet */
-  .detail-panel{
-    width:100% !important;min-width:0 !important;
-    border-left:none;border-top:2px solid var(--bdr);
-    max-height:60vh;
-    position:sticky;bottom:0;
-    z-index:100;
+  /* Detail panel — fullscreen overlay i.p.v. een kleine bottom-sheet. De vorige opzet (max
+     60vh, boom/bibliotheek blijven zichtbaar erboven) werkte slecht omdat de daadwerkelijke
+     inhoud van het paneel vaak duizenden pixels lang is (een element met 40+ bouwdelen) —
+     scrollen in een krappe 60vh-strook terwijl de boom nutteloos blijft staan, is onpraktisch
+     op een telefoon. Nu neemt het paneel het hele scherm in zodra het open is; de bestaande
+     ×-sluitknop (closeDetail) brengt de gebruiker terug naar de boom.
+     Niet van toepassing als het paneel gesloten is — .closed blijft width:0 zoals op desktop. */
+  .detail-panel:not(.closed){
+    position:fixed;inset:0;
+    width:100% !important;min-width:0 !important;max-width:none !important;
+    height:100vh !important;max-height:none !important;
+    border:none;
+    z-index:500;
   }
-  .dp-head{padding:10px 14px}
-  .dp-title{font-size:12px}
+  .dp-head{padding:12px 14px;flex-shrink:0}
+  .dp-title{font-size:13px}
+  .dp-close{width:32px;height:32px;font-size:18px} /* groter touch-target dan op desktop */
+
+  /* Bouwdelen bulk-actiebalk (Alle aan/uit/+ Bouwdeel/teller) — op smalle schermen past dit
+     niet comfortabel op één regel; laat 'm wrappen i.p.v. de teller tegen de rand te duwen. */
+  .bd-bulk-bar{flex-wrap:wrap;row-gap:6px}
+  .bd-bulk-count{margin-left:0;flex-basis:100%;text-align:right}
+  .bk-btn{font-size:10.5px;padding:4px 8px}
+
+  /* Dupliceer-/verwijderknoppen zijn op desktop bewust verborgen tot :hover (opacity:0, alleen
+     zichtbaar bij muis-over) — op een touchscreen bestaat geen aanhoudende hover-state, dus deze
+     knoppen waren daar feitelijk onbereikbaar en onzichtbaar. Altijd tonen op mobiel/tablet.
+     LET OP: !important is hier nodig op ALLE eigenschappen, niet alleen opacity — deze regel
+     staat binnen de media-query VÓÓR de basisstijl-definitie (.bo-el-dupbtn{width:18px...} verderop
+     in het stylesheet), dus zonder !important zou de latere, niet-media-query basisregel bij
+     gelijke specificiteit alsnog winnen en width/height/font-size weer naar de kleine 18px-maat
+     terugzetten — precies wat er gebeurde voordat dit was opgemerkt. */
+  .bo-el-dupbtn,.bd-dupbtn{
+    opacity:1 !important;width:26px !important;height:26px !important;
+    font-size:14px !important;color:var(--acc) !important;
+  }
+  /* Verwijderknop was altijd al zichtbaar (geen hover-only probleem), maar even klein
+     (18px) als de dupliceerknop — vergroot voor consistentie en betere touch-bruikbaarheid. */
+  .bo-el-delbtn,.bd-delbtn{width:26px !important;height:26px !important;font-size:15px !important}
+  /* Zelfde probleem voor de foto-verwijderknop (display:none, alleen via :hover zichtbaar). */
+  .photo-del{display:block !important;padding:3px 6px;font-size:12px}
+
+  /* Voorkomt dat de onderliggende pagina meescrolt achter het fullscreen detail-paneel
+     (zie de MutationObserver in de JS die deze class toggle't op .closed-wijzigingen). */
+  body.panel-open-lock{overflow:hidden !important;position:fixed;width:100%}
+
+  /* Element-lijst header ('N actieve elementen' + Alles/Geen/+Element-knoppen) — was een
+     gedwongen enkele rij met space-between, waardoor het label lelijk over 2 regels brak
+     op smalle schermen. Laat wrappen i.p.v. knellen. */
+  .nd-el-header{flex-wrap:wrap;row-gap:6px;gap:6px}
+  .nd-el-header>span:first-child{flex-basis:100%}
 }
 
 /* Phone (≤480px): extra compact */
@@ -1271,14 +1342,24 @@ function renderDetail(id){
       '<div class="photo-grid" id="photo-grid-'+id+'">'+photoHtml+'</div>'+
     '</div>'+
     '<div class="dp-sec" style="padding:0;border:none">'+
-      '<div class="dp-sec-title" style="padding:10px 14px 4px">Elementen — '+els.length+' getoond · '+disabled.length+' uitgeschakeld</div>'+
-      '<div class="el-search-wrap">'+
-        '<svg class="el-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'+
-        '<input type="text" class="el-search-inp" id="el-search-'+id+'" placeholder="Zoek element\u2026" value="'+(detailELQ||'').replace(/"/g,'&quot;')+'">'+
-        (detailELQ ? '<button class="el-search-clear" id="el-search-clear-'+id+'">&times;</button>' : '')+
-      '</div>'+
-      '<div class="el-fbar2">'+efTabs+'</div>'+
-      '<div class="el-list2">'+(elRows||'<span style="font-size:11px;color:var(--tm);padding:10px 14px;display:block">'+(detailELQ?'Geen elementen gevonden voor \u201c'+detailELQ+'\u201d':'Geen elementen')+'</span>')+'</div>'+
+      // Op mobiel/tablet (≤900px) toont het detail-paneel nu de RIJKE elementenlijst (met
+      // dupliceren/lenen/badges/componenttellers) — dezelfde die op desktop al inline in de
+      // boomstructuur staat. Reden: op een smal scherm verbergt dit fullscreen paneel de boom
+      // volledig, dus zonder dit zou een mobiele gebruiker nooit bij dupliceren/lenen kunnen
+      // komen. Op desktop blijft de eenvoudigere checkbox-lijst staan, want daar is de rijke
+      // boom-lijst toch al apart zichtbaar — twee keer dezelfde uitgebreide lijst tonen zou
+      // overbodig zijn.
+      (window.innerWidth <= 900 && bo
+        ? buildElementListHTML(n, bo)
+        : '<div class="dp-sec-title" style="padding:10px 14px 4px">Elementen — '+els.length+' getoond · '+disabled.length+' uitgeschakeld</div>'+
+          '<div class="el-search-wrap">'+
+            '<svg class="el-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'+
+            '<input type="text" class="el-search-inp" id="el-search-'+id+'" placeholder="Zoek element\u2026" value="'+(detailELQ||'').replace(/"/g,'&quot;')+'">'+
+            (detailELQ ? '<button class="el-search-clear" id="el-search-clear-'+id+'">&times;</button>' : '')+
+          '</div>'+
+          '<div class="el-fbar2">'+efTabs+'</div>'+
+          '<div class="el-list2">'+(elRows||'<span style="font-size:11px;color:var(--tm);padding:10px 14px;display:block">'+(detailELQ?'Geen elementen gevonden voor \u201c'+detailELQ+'\u201d':'Geen elementen')+'</span>')+'</div>'
+      )+
     '</div>';
 
   // Wire save buttons
@@ -1408,6 +1489,65 @@ function clearDragUI(){
 var COLORS = {areaal:'var(--c1)', complex:'var(--c3)', bo:'var(--c4)'};
 var TAGS   = {areaal:'Areaal / Portefeuille', complex:'Complex', bo:'Beheerobject'};
 
+// Gedeelde functie voor de rijke, interactieve elementenlijst (met dupliceren/lenen/badges/
+// componenttellers) van een beheerobject. Oorspronkelijk alleen inline gebruikt in de
+// boomstructuur (renderNode), nu ook hergebruikt door renderDetail() op mobiel/tablet, waar
+// het fullscreen detail-paneel de boom (en dus deze lijst) anders volledig zou verbergen.
+function buildElementListHTML(n, bo){
+  var activeEls = getActiveElementInstances(n, bo)
+    .slice().sort(function(a,b){ return a.label.localeCompare(b.label,'nl'); });
+  var elRows = activeEls.map(function(e){
+    var chip = e.classificatie==='JA'?'cja':e.classificatie==='OPTIONEEL'?'cop':e.classificatie==='CUSTOM'?'ccu':'cne';
+    var lbl   = e.classificatie==='OPTIONEEL'?'OPT':e.classificatie==='CUSTOM'?'VRIJ':e.classificatie;
+    var libBdsForCount = BD ? (BD[e.element]||[]) : [];
+    var bdInstancesForCount = getBouwdeelInstances(n, e.key, libBdsForCount);
+    var bdCount = bdInstancesForCount.length;
+    var disabledBDcount = (n.disabledBDs && n.disabledBDs[e.key]) ? n.disabledBDs[e.key].length : 0;
+    var elCompCount = 0;
+    if(n.components){
+      bdInstancesForCount.forEach(function(b){
+        var ck = e.key + '||' + b.key;
+        if(n.components[ck]) elCompCount += n.components[ck].length;
+      });
+    }
+    var specialTag = e.isDup ? ' <span class="bo-el-dup-tag">kopie</span>'
+      : e.isBorrowed ? ' <span class="bo-el-borrow-tag" title="Geleend uit de bibliotheek van \'' + (e.borrowedFromLabel||'') + '\'">geleend van: ' + (e.borrowedFromLabel||'') + '</span>'
+      : e.isCustom ? ' <span class="bo-el-custom-tag">vrij toegevoegd</span>'
+      : '';
+    var dupTitle = e.isBorrowed ? 'Dupliceer deze lening (nog een instantie)'
+      : e.isCustom ? 'Dupliceer dit vrije element'
+      : 'Dupliceer dit element (bijv. 2e pompinstallatie)';
+    var compSlot = '<span class="bo-el-comp-cnt'+(elCompCount>0?'':' bo-el-comp-cnt-empty')+'"' +
+      (elCompCount>0 ? ' title="'+elCompCount+' componenten toegevoegd">&#9881; '+elCompCount : '>') +
+      '</span>';
+    var delSlot = (e.isDup || e.isBorrowed || e.isCustom)
+      ? '<button class="bo-el-delbtn" data-action="delelinst" data-boid="'+n.id+'" data-key="'+e.key.replace(/"/g,'&quot;')+'" title="Verwijder dit'+(e.isDup?' deze kopie':e.isBorrowed?' geleende element':' vrije element')+'">&times;</button>'
+      : '<span class="bo-el-delbtn-spacer"></span>';
+    return '<div class="bo-el-row'+(e.isDup?' bo-el-dup':'')+(e.isBorrowed?' bo-el-borrowed':'')+(e.isCustom?' bo-el-customrow':'')+'" data-boid="'+n.id+'" data-el="'+e.key.replace(/"/g,'&quot;')+'"'+
+      ' style="cursor:pointer" title="Klik voor details">'+
+      '<span class="echip2 '+chip+'">'+lbl+'</span>'+
+      '<span class="bo-el-name">'+e.label+specialTag+'</span>'+
+      compSlot+
+      '<span class="bo-el-bd-cnt">'+(bdCount - disabledBDcount)+'/'+bdCount+' bd</span>'+
+      '<button class="bo-el-dupbtn" data-action="dupel2" data-boid="'+n.id+'" data-key="'+e.key.replace(/"/g,'&quot;')+'" title="'+dupTitle+'">&#10697;</button>'+
+      delSlot+
+      '<span style="font-size:10px;color:var(--tm)">›</span>'+
+    '</div>';
+  }).join('');
+  return '<div class="nd-el-list" id="kids-'+n.id+'">'+
+    '<div class="nd-el-header">'+
+      '<span>'+activeEls.length+' actieve elementen</span>'+
+      '<div class="el-bulk-bar">'+
+        '<button class="bk-btn" data-bulkel="all" data-boid="'+n.id+'">\u2713 Alles</button>'+
+        '<button class="bk-btn bk-off" data-bulkel="none" data-boid="'+n.id+'">\u2715 Geen</button>'+
+        '<span style="color:var(--tm);font-size:10px">'+(n.disabledEls||[]).length+' uit</span>'+
+        '<button class="bk-btn bk-addel" data-action="openelpicker" data-boid="'+n.id+'" title="Element lenen uit andere bibliotheek, of vrij element toevoegen">+ Element</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="bo-el-rows">'+elRows+'</div>'+
+  '</div>';
+}
+
 function renderNode(n){
   var color = COLORS[n.type] || 'var(--acc)';
   var tag   = TAGS[n.type]   || n.type;
@@ -1499,62 +1639,10 @@ acts += '<button class="nact del" data-action="askdel" data-id="'+n.id+'">×</bu
     var strip = '<div class="drop-strip" id="strip-'+n.id+'" data-pid="'+n.id+'">+ Zet hier neer</div>';
     kidsPanel = '<div class="nd-kids" id="kids-'+n.id+'">'+cxForm+kidsHtml+strip+'</div>';
   } else if(bo && n.open) {
-    // Show active elements inline under BO
-    var activeEls = getActiveElementInstances(n, bo)
-      .slice().sort(function(a,b){ return a.label.localeCompare(b.label,'nl'); });
-    var elRows = activeEls.map(function(e){
-      var chip = e.classificatie==='JA'?'cja':e.classificatie==='OPTIONEEL'?'cop':e.classificatie==='CUSTOM'?'ccu':'cne';
-      var lbl   = e.classificatie==='OPTIONEEL'?'OPT':e.classificatie==='CUSTOM'?'VRIJ':e.classificatie;
-      var bdCount = BD ? (BD[e.element]||[]).length : 0;
-      var disabledBDcount = (n.disabledBDs && n.disabledBDs[e.key]) ? n.disabledBDs[e.key].length : 0;
-      // Count components across all bouwdelen of this element-instantie
-      var elCompCount = 0;
-      if(n.components){
-        var elBds = BD ? (BD[e.element]||[]) : [];
-        elBds.forEach(function(b){
-          var ck = e.key + '||' + b[0];
-          if(n.components[ck]) elCompCount += n.components[ck].length;
-        });
-      }
-      var specialTag = e.isDup ? ' <span class="bo-el-dup-tag">kopie</span>'
-        : e.isBorrowed ? ' <span class="bo-el-borrow-tag" title="Geleend uit de bibliotheek van \'' + (e.borrowedFromLabel||'') + '\'">geleend van: ' + (e.borrowedFromLabel||'') + '</span>'
-        : e.isCustom ? ' <span class="bo-el-custom-tag">vrij toegevoegd</span>'
-        : '';
-      // Dupliceren mag nu voor ALLE soorten elementen (eigen, geleend, vrij toegevoegd)
-      var dupTitle = e.isBorrowed ? 'Dupliceer deze lening (nog een instantie)'
-        : e.isCustom ? 'Dupliceer dit vrije element'
-        : 'Dupliceer dit element (bijv. 2e pompinstallatie)';
-      // Vaste 'slots' i.p.v. optionele elementen, zodat ALLE rijen (bibliotheek/geleend/vrij)
-      // exact dezelfde kolomopbouw hebben en de bd-teller altijd op dezelfde positie staat.
-      var compSlot = '<span class="bo-el-comp-cnt'+(elCompCount>0?'':' bo-el-comp-cnt-empty')+'"' +
-        (elCompCount>0 ? ' title="'+elCompCount+' componenten toegevoegd">&#9881; '+elCompCount : '>') +
-        '</span>';
-      var delSlot = (e.isDup || e.isBorrowed || e.isCustom)
-        ? '<button class="bo-el-delbtn" data-action="delelinst" data-boid="'+n.id+'" data-key="'+e.key.replace(/"/g,'&quot;')+'" title="Verwijder dit'+(e.isDup?' deze kopie':e.isBorrowed?' geleende element':' vrije element')+'">&times;</button>'
-        : '<span class="bo-el-delbtn-spacer"></span>';
-      return '<div class="bo-el-row'+(e.isDup?' bo-el-dup':'')+(e.isBorrowed?' bo-el-borrowed':'')+(e.isCustom?' bo-el-customrow':'')+'" data-boid="'+n.id+'" data-el="'+e.key.replace(/"/g,'&quot;')+'"'+
-        ' style="cursor:pointer" title="Klik voor details">'+
-        '<span class="echip2 '+chip+'">'+lbl+'</span>'+
-        '<span class="bo-el-name">'+e.label+specialTag+'</span>'+
-        compSlot+
-        '<span class="bo-el-bd-cnt">'+(bdCount - disabledBDcount)+'/'+bdCount+' bd</span>'+
-        '<button class="bo-el-dupbtn" data-action="dupel2" data-boid="'+n.id+'" data-key="'+e.key.replace(/"/g,'&quot;')+'" title="'+dupTitle+'">&#10697;</button>'+
-        delSlot+
-        '<span style="font-size:10px;color:var(--tm)">›</span>'+
-      '</div>';
-    }).join('');
-    kidsPanel = '<div class="nd-el-list" id="kids-'+n.id+'">'+
-      '<div class="nd-el-header">'+
-        '<span>'+activeEls.length+' actieve elementen</span>'+
-        '<div class="el-bulk-bar">'+
-          '<button class="bk-btn" data-bulkel="all" data-boid="'+n.id+'">\u2713 Alles</button>'+
-          '<button class="bk-btn bk-off" data-bulkel="none" data-boid="'+n.id+'">\u2715 Geen</button>'+
-          '<span style="color:var(--tm);font-size:10px">'+(n.disabledEls||[]).length+' uit</span>'+
-          '<button class="bk-btn bk-addel" data-action="openelpicker" data-boid="'+n.id+'" title="Element lenen uit andere bibliotheek, of vrij element toevoegen">+ Element</button>'+
-        '</div>'+
-      '</div>'+
-      '<div class="bo-el-rows">'+elRows+'</div>'+
-    '</div>';
+    // Show active elements inline under BO — gebruikt de gedeelde buildElementListHTML(),
+    // zodat dezelfde rijke weergave (dupliceren/lenen/badges) ook herbruikt kan worden in
+    // het mobiele fullscreen detail-paneel (zie renderDetail), i.p.v. twee losse implementaties.
+    kidsPanel = buildElementListHTML(n, bo);
   }
 
   return '<div class="nd nd-'+n.type+(n.open?' open':'')+(isSel?' sel':'')+'" id="nd-'+n.id+'">'+hd+renameForm+kidsPanel+'</div>';
@@ -1724,7 +1812,7 @@ function renderLib(){
   });
   document.getElementById('sb-cnt').textContent = items.length;
   document.getElementById('bo-list').innerHTML = items.map(function(b){
-    return '<div class="bo-item" draggable="true" data-code="'+b.code+'">'+
+    return '<div class="bo-item" draggable="true" data-code="'+b.code+'" title="'+esc(b.naam)+'">'+
       svgIcon(b.code, 18, 'var(--acc)')+
       '<span class="bcode">'+b.code+'</span>'+
       '<span class="bname">'+b.naam+'</span>'+
@@ -2242,7 +2330,13 @@ function renderElementDetail(boId, elName){
           if(r.dataset.el === elN && r.dataset.boid === boId){
             var cnt = r.querySelector('.bo-el-bd-cnt');
             if(cnt){
-              var total = BD ? (BD[elN]||[]).length : 0;
+              // Gebruik getBouwdeelInstances i.p.v. de pure bibliotheeklijst, zodat de live-update
+              // van deze badge (bij het aan/uitzetten van een bouwdeel-checkbox) ook gedupliceerde,
+              // geleende en vrij toegevoegde bouwdelen meetelt — anders raakt de badge na een
+              // toggle weer uit sync met het werkelijke aantal.
+              var nForBadge = findNode(boId);
+              var libBdsForBadge = BD ? (BD[elN]||[]) : [];
+              var total = getBouwdeelInstances(nForBadge, elN, libBdsForBadge).length;
               var dis   = getDisabled().length;
               cnt.textContent = total > 0 ? (total-dis)+'/'+total+' bd' : '';
             }
@@ -2400,12 +2494,15 @@ function setupDPTabs(boId){
   var bo = n ? BOMAP[n.boCode] : null;
   var totalComp = 0;
   if(n && n.components && bo){
-    var disEls = n.disabledEls || [];
-    bo.elementen.forEach(function(el){
-      if(disEls.indexOf(el.element) >= 0) return;
-      var elBds = BD ? (BD[el.element]||[]) : [];
-      elBds.forEach(function(b){
-        var ck = el.element + '||' + b[0];
+    // Gebruik getActiveElementInstances/getBouwdeelInstances i.p.v. de pure bibliotheeklijst,
+    // zodat componenten op gedupliceerde/geleende/vrije elementen EN bouwdelen ook meetellen
+    // in deze tabbadge (componenten worden opgeslagen onder instantie-sleutels, niet kale namen).
+    var elInstancesForComp = getActiveElementInstances(n, bo);
+    elInstancesForComp.forEach(function(el){
+      var libBdsForComp = BD ? (BD[el.element]||[]) : [];
+      var bdInstancesForComp = getBouwdeelInstances(n, el.key, libBdsForComp);
+      bdInstancesForComp.forEach(function(b){
+        var ck = el.key + '||' + b.key;
         if(n.components[ck]) totalComp += n.components[ck].length;
       });
     });
@@ -2438,19 +2535,23 @@ function renderComponentOverview(boId){
   var disEls = n.disabledEls || [];
   var groups = []; // {elName, classificatie, items:[{bdName, cls, comps:[]}]}
 
-  bo.elementen.forEach(function(el){
-    if(disEls.indexOf(el.element) >= 0) return;
-    var elBds = BD ? (BD[el.element]||[]) : [];
+  // Gebruik getActiveElementInstances/getBouwdeelInstances i.p.v. de pure bibliotheeklijst,
+  // zodat componenten op gedupliceerde/geleende/vrije elementen EN bouwdelen ook in dit
+  // Componenten-tabblad verschijnen (componenten staan onder instantie-sleutels, niet kale namen).
+  var elInstancesForCompTab = getActiveElementInstances(n, bo);
+  elInstancesForCompTab.forEach(function(el){
+    var libBdsForCompTab = BD ? (BD[el.element]||[]) : [];
+    var bdInstancesForCompTab = getBouwdeelInstances(n, el.key, libBdsForCompTab);
     var items = [];
-    elBds.forEach(function(b){
-      var ck = el.element + '||' + b[0];
+    bdInstancesForCompTab.forEach(function(b){
+      var ck = el.key + '||' + b.key;
       var comps = (n.components && n.components[ck]) ? n.components[ck] : [];
       if(comps.length > 0){
-        items.push({ bdName: b[0], cls: b[1], comps: comps });
+        items.push({ bdName: b.label||b.base, cls: b.cls, comps: comps });
       }
     });
     if(items.length > 0){
-      groups.push({ elName: el.element, classificatie: el.classificatie, items: items });
+      groups.push({ elName: el.label||el.element, classificatie: el.classificatie, items: items });
     }
   });
 
@@ -2648,6 +2749,60 @@ function setupResizeHandles(){
 }
 
 
+// ── HERKOMST-TELLING (Bibliotheek / Geleend / Vrij toegevoegd) ───────────────
+// Centrale, herbruikbare telfunctie die voor één beheerobject precies uitsplitst
+// hoeveel elementen en bouwdelen uit elke herkomst-categorie komen. Dit vervangt
+// de eerder verspreide, deels overlappende tellingen (actEl/kpiActEl/jaC/kpiJaC enz.)
+// door één duidelijke, consistente bron van waarheid die overal in het rapport
+// hetzelfde verhaal vertelt.
+//
+// Ontwerpkeuze: een GEDUPLICEERD element/bouwdeel (isDup) hoort qua HERKOMST nog
+// steeds bij 'bibliotheek' — het is een extra exemplaar van iets dat in de
+// standaardbibliotheek staat, geen uitzondering daarop. Een bouwdeel dat hoort bij
+// een GELEEND element volgt de herkomst van dat element (telt mee als 'geleend'),
+// ook al staat het bouwdeel zelf gewoon in de bron-bibliotheek van dat element.
+function getHerkomstTelling(n, bo){
+  var t = {
+    elLib:0, elLeen:0, elVrij:0,                 // elementen per herkomst
+    elJa:0, elOpt:0, elNvt:0,                     // classificatie-telling (over ALLE herkomsten heen)
+    bdLib:0, bdLeen:0, bdVrij:0,                  // bouwdelen per herkomst (actief, niet uitgeschakeld)
+    bdLibTotaal:0,                                // bouwdelen die in de STANDAARDBIBLIOTHEEK bestaan voor dit BO-type (incl. uitgeschakelde) — referentie voor dekkingsgraad
+    bdLibActief:0                                 // daarvan: hoeveel staan aan (excl. uitgeschakeld) — teller voor dekkingsgraad
+  };
+  if(!bo) return t;
+  var instances = getActiveElementInstances(n, bo);
+  instances.forEach(function(el){
+    var elHerkomst = el.isBorrowed ? 'leen' : el.isCustom ? 'vrij' : 'lib'; // isDup valt onder 'lib'
+    if(elHerkomst==='lib') t.elLib++; else if(elHerkomst==='leen') t.elLeen++; else t.elVrij++;
+    if(el.classificatie==='JA') t.elJa++;
+    else if(el.classificatie==='OPTIONEEL') t.elOpt++;
+    else if(el.classificatie!=='CUSTOM') t.elNvt++; // CUSTOM heeft geen JA/OPT/N.V.T.
+
+    var libBds = BD ? (BD[el.element]||[]) : [];
+    var bdInstances = getBouwdeelInstances(n, el.key, libBds);
+    var dbd = (n.disabledBDs && n.disabledBDs[el.key]) ? n.disabledBDs[el.key] : [];
+    bdInstances.forEach(function(b){
+      var isActive = dbd.indexOf(b.key) < 0;
+      // Een bouwdeel volgt de herkomst van zijn EIGEN toevoeging (geleend/vrij bouwdeel
+      // binnen een verder bibliotheek-element telt apart), TENZIJ het hele element al
+      // geleend/vrij is — dan hoort elk bouwdeel daarbinnen vanzelfsprekend bij diezelfde
+      // herkomst, ook het bouwdeel dat in de bron-bibliotheek van dat element staat.
+      var bdHerkomst = elHerkomst!=='lib' ? elHerkomst : (b.isBorrowed ? 'leen' : b.isCustom ? 'vrij' : 'lib');
+      if(isActive){
+        if(bdHerkomst==='lib') t.bdLib++; else if(bdHerkomst==='leen') t.bdLeen++; else t.bdVrij++;
+      }
+      // Dekkingsgraad-referentie: alleen bouwdelen die ECHT in de standaardbibliotheek van
+      // dit BO-type staan tellen mee (dus alleen bij een bibliotheek-element, en alleen als
+      // het bouwdeel zelf ook een bibliotheek-bouwdeel is, geen losse toevoeging).
+      if(elHerkomst==='lib' && bdHerkomst==='lib'){
+        t.bdLibTotaal++;
+        if(isActive) t.bdLibActief++;
+      }
+    });
+  });
+  return t;
+}
+
 // ── PDF RAPPORT ───────────────────────────────────────────────
 function generatePDF(){
   if(typeof window==='undefined'||!window.jspdf){alert('PDF library niet geladen.');return;}
@@ -2717,48 +2872,24 @@ function generatePDF(){
     ct(n.children);
   });})(tree);
 
-  // 'Dekkingsgraad' (totEl/totBD vs. actEl/actBD) blijft een zuivere bibliotheek-metriek:
-  // hoeveel van de STANDAARDBIBLIOTHEEK wordt actief gebruikt. Geleende en vrij toegevoegde
-  // elementen vallen daarbuiten (ze zijn per definitie een uitzondering op de standaardbibliotheek,
-  // geen aan/uit te zetten bibliotheek-item), dus die tellen NIET mee in tot/act hieronder —
-  // anders zou de dekkingsgraad kunstmatig boven 100% kunnen uitkomen.
-  // De KPI-blokken 'Actieve Elementen'/'Actieve Bouwdelen' bovenaan tellen WEL alles mee
-  // (duplicaten + leningen + vrije items), zodat ze consistent zijn met de samenvattingstabel
-  // en detailpagina's verderop in het rapport — vandaar de aparte tellers kpiActEl/kpiActBD.
-  var totEl=0,actEl=0,totBD=0,actBD=0,jaC=0,opC=0,neC=0;
-  var kpiActEl=0,kpiActBD=0,kpiJaC=0,kpiOpC=0,kpiNeC=0,kpiCuC=0;
+  // ÉÉN centrale telling via getHerkomstTelling (zie functie hierboven), per beheerobject
+  // opgeteld tot een totaal voor het hele rapport. Dit vervangt de eerdere twee parallelle
+  // tellingen (actEl/totEl/jaC vs. kpiActEl/kpiJaC) die los van elkaar werden bijgehouden —
+  // met dit ene overzicht is voor elk getal in het rapport duidelijk uit welke herkomst-
+  // categorie (Bibliotheek / Geleend / Vrij toegevoegd) het is opgebouwd.
+  var H={elLib:0,elLeen:0,elVrij:0,elJa:0,elOpt:0,elNvt:0,
+         bdLib:0,bdLeen:0,bdVrij:0,bdLibTotaal:0,bdLibActief:0};
   allBOs.forEach(function(n){
     var bo=BOMAP[n.boCode];if(!bo)return;
-    var dis=n.disabledEls||[];
-    bo.elementen.forEach(function(el){
-      totEl++;
-      if(dis.indexOf(el.element)<0){
-        actEl++;
-        if(el.classificatie==='JA')jaC++;
-        else if(el.classificatie==='OPTIONEEL')opC++;
-        else neC++;
-        var bds=BD?(BD[el.element]||[]):[];
-        var dbd=(n.disabledBDs&&n.disabledBDs[el.element])?n.disabledBDs[el.element]:[];
-        bds.forEach(function(b){totBD++;if(dbd.indexOf(b[0])<0)actBD++;});
-      }
-    });
-    // Volledige instantie-telling (incl. duplicaten/leningen/vrije elementen) t.b.v. de KPI-blokken,
-    // de risico-conclusie, en de classificatiebalk — dit is het WERKELIJKE risicobeeld van het
-    // beheerobject zoals het nu is samengesteld, niet alleen van de standaardbibliotheek-subset.
-    var instances=getActiveElementInstances(n, bo);
-    instances.forEach(function(el){
-      kpiActEl++;
-      if(el.classificatie==='JA')kpiJaC++;
-      else if(el.classificatie==='OPTIONEEL')kpiOpC++;
-      else if(el.classificatie==='CUSTOM')kpiCuC++;
-      else kpiNeC++;
-      var bds=BD?(BD[el.element]||[]):[];
-      var dbd=(n.disabledBDs&&n.disabledBDs[el.key])?n.disabledBDs[el.key]:[];
-      bds.forEach(function(b){ if(dbd.indexOf(b[0])<0) kpiActBD++; });
-    });
+    var t=getHerkomstTelling(n, bo);
+    Object.keys(H).forEach(function(k){ H[k]+=t[k]; });
   });
-  var avgRisk=kpiActEl>0?Math.round(kpiJaC/kpiActEl*100):0;
-  var covPct=totBD>0?Math.round(actBD/totBD*100):0;
+  var kpiActEl=H.elLib+H.elLeen+H.elVrij;             // alle actieve elementen, ongeacht herkomst
+  var kpiActBD=H.bdLib+H.bdLeen+H.bdVrij;              // alle actieve bouwdelen, ongeacht herkomst
+  var avgRisk=kpiActEl>0?Math.round(H.elJa/kpiActEl*100):0;
+  // Dekkingsgraad: uitsluitend de STANDAARDBIBLIOTHEEK-subset (geen geleende/vrije items) —
+  // hoeveel % van wat de bibliotheek voor dit BO-type aanbiedt, staat ook daadwerkelijk aan.
+  var covPct=H.bdLibTotaal>0?Math.round(H.bdLibActief/H.bdLibTotaal*100):0;
   var riskColor=avgRisk>=70?RED:avgRisk>=40?ORANGE:GREEN;
   var riskLabel=avgRisk>=70?'HOOG':avgRisk>=40?'MATIG':'LAAG';
   var riskText=avgRisk>=70
@@ -2830,13 +2961,13 @@ function generatePDF(){
   // Classificatiebalk: elk segment is een eigen volledig afgeronde 'pil' met een kleine
   // tussenruimte (i.p.v. één samengevoegde balk waarbij alleen de uiterste randen rond zijn) —
   // zo blijft elk blokje visueel consistent, ook als een segment smal wordt.
-  var barH=8,gap=1.2,tot2=kpiJaC+kpiOpC+kpiNeC+kpiCuC;
+  var barH=8,gap=1.2,tot2=H.elJa+H.elOpt+H.elNvt+H.elVrij;
   if(tot2>0){
     var segments=[
-      {n:kpiJaC, lbl:'JA',   col:RED,           showPct:true},
-      {n:kpiOpC, lbl:'OPT',  col:ORANGE,        showPct:false},
-      {n:kpiCuC, lbl:'VRIJ', col:[107,63,160],  showPct:false},
-      {n:kpiNeC, lbl:'N.V.T.', col:GREY,        showPct:false}
+      {n:H.elJa,   lbl:'JA',   col:RED,           showPct:true},
+      {n:H.elOpt,  lbl:'OPT',  col:ORANGE,        showPct:false},
+      {n:H.elVrij, lbl:'VRIJ', col:[107,63,160],  showPct:false},
+      {n:H.elNvt,  lbl:'N.V.T.', col:GREY,        showPct:false}
     ].filter(function(s){ return s.n>0; }); // segmenten met 0 items helemaal weglaten
 
     var totalGapW=(segments.length-1)*gap;
@@ -2861,7 +2992,7 @@ function generatePDF(){
     var legendItems=[[RED,'Kritisch (JA): falen = functieverlies'],
      [ORANGE,'Optioneel: relevant, niet direct kritisch'],
      [GREY,'N.V.T.: niet in FTA-model']];
-    if(kpiCuC>0) legendItems.push([[107,63,160],'Vrij toegevoegd: niet bibliotheek-geclassificeerd']);
+    if(H.elVrij>0) legendItems.push([[107,63,160],'Vrij toegevoegd: niet bibliotheek-geclassificeerd']);
     var perRow=2, legendColW=CW/perRow;
     legendItems.forEach(function(l,i){
       var col=i%perRow, row=Math.floor(i/perRow);
@@ -2880,12 +3011,56 @@ function generatePDF(){
   hline();y+=4;
   B(8);T(DARK);doc.text('Dekkingsgraad standaardbibliotheek',ML,y);
   N(7);T(GREY);doc.text('Percentage bibliotheek-bouwdelen dat actief is gebleven (excl. geleende en vrij toegevoegde items).',ML,y+4.5);
-  N(7);T(GREY);doc.text('Actief vanuit bibliotheek: '+actBD+' / Totaal in bibliotheek: '+totBD,ML,y+9);
+  N(7);T(GREY);doc.text('Actief vanuit bibliotheek: '+H.bdLibActief+' / Totaal in bibliotheek: '+H.bdLibTotaal,ML,y+9);
   var cc2=covPct>=80?GREEN:covPct>=50?ORANGE:RED;
   // FIX 2: pill RIGHT-aligned
   F(cc2);doc.roundedRect(PW-MR-24,y,24,9,2,2,'F');
   T(WHITE);B(10);doc.text(covPct+'%',PW-MR-12,y+6,{align:'center'});
   y+=15;
+
+  // Herkomst bouwdelen — maakt EXPLICIET zichtbaar hoeveel van de 'Actieve Bouwdelen'-KPI
+  // (hierboven) uit elke categorie komt: standaardbibliotheek, geleend van een ander
+  // beheerobject-type, of vrij toegevoegd zonder bibliotheek-classificatie. Dit was voorheen
+  // alleen impliciet af te leiden uit losse getallen; nu staat het in één oogopslag bij elkaar.
+  hline();y+=4;
+  B(8);T(DARK);doc.text('Herkomst bouwdelen',ML,y);
+  N(7);T(GREY);doc.text('Waar de '+kpiActBD+' actieve bouwdelen vandaan komen.',ML,y+4.5);
+  y+=9;
+  (function(){
+    var herkomstItems=[
+      {n:H.bdLib,  lbl:'Standaardbibliotheek', col:NAVY},
+      {n:H.bdLeen, lbl:'Geleend',              col:[26,122,74]},
+      {n:H.bdVrij, lbl:'Vrij toegevoegd',      col:[107,63,160]}
+    ];
+    // In een puur-bibliotheek-rapport (geen leningen/vrije items) voegen 'Geleend (0%)' en
+    // 'Vrij toegevoegd (0%)' niets toe en zijn ze alleen ruis — toon dan enkel Standaardbibliotheek.
+    if(H.bdLeen===0 && H.bdVrij===0) herkomstItems=[herkomstItems[0]];
+    var hCols=herkomstItems.length, hColW=CW/Math.max(hCols,3);
+    herkomstItems.forEach(function(hi,i){
+      var hx=ML+i*hColW;
+      var pct=kpiActBD>0?Math.round(hi.n/kpiActBD*100):0;
+      // Bij een klein maar wel degelijk aanwezig aandeel (bijv. 5 van de 1169) rondt dit af
+      // naar 0%, wat verwarrend oogt naast een positief aantal — toon dan '<1%' in plaats van '0%'.
+      var pctText = (hi.n>0 && pct===0) ? '<1%' : pct+'%';
+      F(hi.col);doc.circle(hx+2,y-1.3,1.8,'F');
+      B(9);T(DARK);doc.text(String(hi.n),hx+6,y);
+      N(6.5);T(GREY);doc.text(hi.lbl+(kpiActBD>0?' ('+pctText+')':''),hx+6,y+4);
+    });
+    y+=8;
+    // Eenmalige uitleg van de herkomst-markering die verderop in het rapport (bij elk bouwdeel
+    // in de detailpagina's) wordt gebruikt: een dun gekleurd randje om het classificatie-bolletje
+    // geeft geleende/vrije bouwdelen aan, los van hun JA/OPT/N.V.T.-classificatiekleur.
+    if(H.bdLeen>0 || H.bdVrij>0){
+      N(6);T(GREY);
+      var ringExplain='Let op: in de detailpagina\u2019s verderop heeft elk bouwdeel-bolletje een gekleurd randje als het geleend';
+      if(H.bdLeen>0 && H.bdVrij>0) ringExplain+=' (groen) of vrij toegevoegd (paars) is';
+      else if(H.bdLeen>0) ringExplain+=' (groen) is';
+      else ringExplain+=' of vrij toegevoegd (paars) is';
+      ringExplain+=' \u2014 zonder randje = standaardbibliotheek.';
+      doc.text(ringExplain,ML,y);
+      y+=4;
+    }
+  })();
 
   // Overzichtstabel
   hline();y+=5;
@@ -2905,17 +3080,14 @@ function generatePDF(){
 
   allBOs.forEach(function(n,i){
     var bo=BOMAP[n.boCode];if(!bo)return;
-    // Gebruik getActiveElementInstances, zodat duplicaten/leningen/vrije elementen ook
-    // meetellen in de samenvattingstabel (El./Bd./% Kritisch), consistent met de UI en
-    // met de gedetailleerde structuurpagina's verderop in dit rapport.
-    var aE=getActiveElementInstances(n, bo);
-    var jE=aE.filter(function(e){return e.classificatie==='JA';});
-    var pct=aE.length>0?Math.round(jE.length/aE.length*100):0;
-    var aBD=0;aE.forEach(function(el){
-      var bds=BD?(BD[el.element]||[]):[];
-      var d=(n.disabledBDs&&n.disabledBDs[el.key])?n.disabledBDs[el.key]:[];
-      aBD+=bds.filter(function(b){return d.indexOf(b[0])<0;}).length;
-    });
+    // Gebruik dezelfde centrale getHerkomstTelling als de rest van het rapport, zodat
+    // duplicaten/leningen/vrije elementen ÉN bouwdelen consistent meetellen in de
+    // samenvattingstabel (El./Bd./% Kritisch) — eerder gebruikte de Bd.-telling hier nog
+    // de pure bibliotheeklijst, waardoor geleende/vrije bouwdelen hier gemist werden.
+    var hRow=getHerkomstTelling(n, bo);
+    var aE={length:hRow.elLib+hRow.elLeen+hRow.elVrij};
+    var pct=aE.length>0?Math.round(hRow.elJa/aE.length*100):0;
+    var aBD=hRow.bdLib+hRow.bdLeen+hRow.bdVrij;
 
     var nameLines=doc.splitTextToSize(n.boCode+' — '+n.label, 56);
     var pfLines  =doc.splitTextToSize(bo.primaire_functie||'', 50);
@@ -3021,12 +3193,12 @@ function generatePDF(){
       y+=15;
     }
 
+    // ÉÉN centrale telling voor dit beheerobject (zelfde bron als de cover-pagina),
+    // gebruikt voor zowel de element-KPI's hieronder als de nieuwe bouwdelen-herkomstregel.
+    var hBo=getHerkomstTelling(n, bo);
+    var jaE=hBo.elJa, opE=hBo.elOpt, neE=hBo.elNvt, cuE=hBo.elVrij;
     // 4 KPI blocks
     check(20);
-    var jaE=aEls.filter(function(e){return e.classificatie==='JA';}).length;
-    var opE=aEls.filter(function(e){return e.classificatie==='OPTIONEEL';}).length;
-    var neE=aEls.filter(function(e){return e.classificatie==='NEE';}).length;
-    var cuE=aEls.filter(function(e){return e.classificatie==='CUSTOM';}).length; // vrij toegevoegd, niet geclassificeerd
     var bw4=CW/4-2;
     // Bij vrij toegevoegde elementen tonen we 5 compactere KPI-blokken i.p.v. 4, zodat de
     // getallen nog steeds optellen tot 'Actief totaal' en niets stilletjes verdwijnt.
@@ -3040,7 +3212,31 @@ function generatePDF(){
        [neE,'N.V.T.',GREY],[aEls.length,'Actief totaal',NAVY]
       ].forEach(function(s,i){kpiBox(ML+i*(bw4+2.7),y,bw4,22,s[0],s[1],s[2]);});
     }
-    y+=26;
+    y+=24;
+
+    // Bouwdelen-herkomstregel: compacte, altijd-zichtbare regel direct onder de element-KPI's
+    // die in één oogopslag laat zien hoeveel van de bouwdelen van DIT beheerobject uit de
+    // standaardbibliotheek komen, hoeveel geleend zijn, en hoeveel vrij toegevoegd — zodat
+    // dit niet alleen op het cover-pagina-totaal te zien is, maar ook per beheerobject.
+    (function(){
+      var bdTotaalBo=hBo.bdLib+hBo.bdLeen+hBo.bdVrij;
+      if(bdTotaalBo===0) return;
+      check(7);
+      N(6.5);T(GREY);doc.text('Bouwdelen ('+bdTotaalBo+'):',ML,y);
+      var lx=ML+28;
+      var parts=[
+        {n:hBo.bdLib,  lbl:'bibliotheek', col:NAVY},
+        {n:hBo.bdLeen, lbl:'geleend',     col:[26,122,74]},
+        {n:hBo.bdVrij, lbl:'vrij',        col:[107,63,160]}
+      ].filter(function(p){ return p.n>0; });
+      parts.forEach(function(p,i){
+        F(p.col);doc.circle(lx+1,y-1.1,1.3,'F');
+        N(6.5);T(DARK);doc.text(p.n+' '+p.lbl,lx+4,y);
+        lx+=doc.getTextWidth(p.n+' '+p.lbl)+10;
+      });
+      y+=5;
+    })();
+    y+=2;
 
     // Notitie — toont nu de VOLLEDIGE tekst (meerdere regels indien nodig),
     // in plaats van alleen de eerste regel met de rest afgekapt.
@@ -3085,9 +3281,10 @@ function generatePDF(){
       (function(){
         var firstEl=els[0];
         if(!firstEl)return;
-        var firstBDs=BD?(BD[firstEl.element]||[]):[];
+        var firstLibBDs=BD?(BD[firstEl.element]||[]):[];
+        var firstBdInstances=getBouwdeelInstances(n, firstEl.key, firstLibBDs);
         var firstDbd=(n.disabledBDs&&n.disabledBDs[firstEl.key])?n.disabledBDs[firstEl.key]:[];
-        var firstABDs=firstBDs.filter(function(b){return firstDbd.indexOf(b[0])<0;});
+        var firstABDs=firstBdInstances.filter(function(b){return firstDbd.indexOf(b.key)<0;});
         var firstBdRows=firstABDs.length>0?Math.ceil(firstABDs.length/2):0;
         var firstRightH=firstBdRows>0?7+firstBdRows*4.8:7;
         var firstDisplayName=firstEl.label||firstEl.element;
@@ -3117,12 +3314,30 @@ function generatePDF(){
       y+=9;
 
       els.forEach(function(el){
-        // Gebruik el.key (instantie-sleutel) voor disabledBDs-lookup, consistent met de rest
-        // van de applicatie — el.element (de kale bibliotheeknaam) is voor duplicaten/leningen
-        // niet uniek genoeg en zou de verkeerde uitgeschakelde-bouwdelen-lijst kunnen raadplegen.
-        var bds=BD?(BD[el.element]||[]):[];
+        // Gebruik getBouwdeelInstances i.p.v. de pure bibliotheeklijst, zodat gedupliceerde,
+        // geleende en vrij toegevoegde bouwdelen BINNEN dit element ook in het PDF-rapport
+        // verschijnen — dit was de ontbrekende stap: elementen werden al wel instantie-bewust
+        // getoond, maar hun bouwdelen nog niet.
+        var libBds=BD?(BD[el.element]||[]):[];
+        var bdInstancesForEl=getBouwdeelInstances(n, el.key, libBds);
         var dbd=(n.disabledBDs&&n.disabledBDs[el.key])?n.disabledBDs[el.key]:[];
-        var aBDs=bds.filter(function(b){return dbd.indexOf(b[0])<0;});
+        var activeBdInstances=bdInstancesForEl.filter(function(b){return dbd.indexOf(b.key)<0;});
+        // Geleende/vrije bouwdelen VOORAAN sorteren in de namenlijst: bij elementen met veel
+        // bouwdelen wordt de naamlijst rechts afgekapt zodra de rij vol is (ruimtebeperking),
+        // en zonder deze sortering zouden net de nieuw toegevoegde items (die als laatste in
+        // de iteratie-volgorde komen) het eerst onzichtbaar worden. De teller telt nog steeds
+        // alles correct mee, maar dit zorgt dat de uitzonderingen ook visueel zichtbaar blijven.
+        activeBdInstances.sort(function(a,b){
+          var aSpecial=(a.isBorrowed||a.isCustom)?0:1, bSpecial=(b.isBorrowed||b.isCustom)?0:1;
+          return aSpecial-bSpecial;
+        });
+        // Tuple-vorm [label, cls, reden, instanceKey, herkomst] — instanceKey is nodig om
+        // componenten correct op te zoeken; herkomst ('leen'/'vrij'/'') drijft het kleine
+        // herkomst-merkteken naast elk bouwdeel, los van de classificatiekleur (die immers bij
+        // een GELEEND bouwdeel gewoon de overgenomen JA/OPT/N.V.T.-classificatie toont).
+        function bdHerkomstTag(b){ return (el.isBorrowed||b.isBorrowed) ? 'leen' : (el.isCustom||b.isCustom) ? 'vrij' : ''; }
+        var aBDs=activeBdInstances.map(function(b){return [b.label||b.base, b.cls, b.reden, b.key, bdHerkomstTag(b)];});
+        var bds=bdInstancesForEl.map(function(b){return [b.label||b.base, b.cls, b.reden, b.key, bdHerkomstTag(b)];}); // totaal incl. uitgeschakelde, voor de teller
         var reden;
         if(el.isCustom){
           // Vrij toegevoegd element: geen bibliotheek-FTA-redenering, toon de eigen toelichting
@@ -3211,10 +3426,21 @@ function generatePDF(){
           var bx=rxStart,by2=y+8.5,col=0;
           aBDs.forEach(function(b){
             if(by2>y+rowH-2)return;
-            var dc=b[1]==='J'?RED:b[1]==='O'?ORANGE:GREY;
+            // b is een [label, cls, reden, instanceKey, herkomst] tuple uit getBouwdeelInstances;
+            // cls kan ook 'CUSTOM' zijn (vrij toegevoegd bouwdeel) — die viel voorheen
+            // abusievelijk onder grijs/N.V.T.
+            var dc=b[1]==='J'?RED:b[1]==='O'?ORANGE:b[1]==='CUSTOM'?[107,63,160]:GREY;
+            // Herkomst-ring: een dun gekleurd randje om het classificatie-bolletje, los van de
+            // classificatiekleur zelf. Zo blijft in één oogopslag zichtbaar dat een bouwdeel
+            // geleend of vrij toegevoegd is, ook wanneer het (bij een lening) gewoon een normale
+            // JA/OPT/N.V.T.-classificatie heeft die er anders identiek uitziet als bibliotheek.
+            if(b[4]==='leen'){ S([26,122,74],0.6);doc.circle(bx+1.5,by2-1.2,1.9,'D'); }
+            else if(b[4]==='vrij'){ S([107,63,160],0.6);doc.circle(bx+1.5,by2-1.2,1.9,'D'); }
             F(dc);doc.circle(bx+1.5,by2-1.2,1.2,'F');
-            // Component count: small filled badge, font-safe (no unicode symbol)
-            var compKey=el.element+'||'+b[0];
+            // Component count: gebruik el.key+'||'+instanceKey (consistent met hoe componenten
+            // daadwerkelijk worden opgeslagen), niet de kale namen — anders worden componenten
+            // op gedupliceerde/geleende bouwdelen niet gevonden.
+            var compKey=el.key+'||'+(b[3]||b[0]);
             var compN=(n.components&&n.components[compKey])?n.components[compKey].length:0;
             var maxLen=compN>0?17:21;
             var nm=b[0].length>maxLen?b[0].slice(0,maxLen-1)+'\u2026':b[0];
@@ -4603,6 +4829,25 @@ function initElementPicker(){
 }
 
 /* Boot */
+// ── MOBIEL: voorkom dat de onderliggende pagina meescrolt achter het fullscreen detail-paneel ──
+// Op schermen ≤900px wordt het detail-paneel (zie CSS) een position:fixed fullscreen-overlay
+// zodra het open is. De onderliggende pagina (body) blijft echter zelf ook scrollbaar
+// (body{overflow:auto}, nodig voor de gestapelde boom/bibliotheek-kolommen wanneer het paneel
+// DICHT is) — zonder ingrijpen scrollt een vinger-swipe dan de ONZICHTBARE achterliggende
+// pagina i.p.v. het zichtbare paneel, wat zeer verwarrend gedrag oplevert. Een MutationObserver
+// op de 'closed'-class van het paneel is robuuster dan elke open/close-aanroep apart aanpassen
+// (er zijn meerdere plekken in de code die het paneel openen).
+(function(){
+  var panel = document.getElementById('detail-panel');
+  if(!panel) return;
+  function syncBodyScrollLock(){
+    var isOpen = !panel.classList.contains('closed');
+    document.body.classList.toggle('panel-open-lock', isOpen);
+  }
+  syncBodyScrollLock();
+  new MutationObserver(syncBodyScrollLock).observe(panel, { attributes:true, attributeFilter:['class'] });
+})();
+
 document.addEventListener('DOMContentLoaded', function(){
   initData();
   renderLib();
