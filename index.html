@@ -4295,16 +4295,19 @@ function generatePDF(){
     }
     y+=24;
 
-    // Bouwdelen-herkomstregel: compacte, altijd-zichtbare regel direct onder de element-KPI's
-    // die in één oogopslag laat zien hoeveel van de bouwdelen van DIT beheerobject uit de
-    // standaardbibliotheek komen, hoeveel geleend zijn, en hoeveel vrij toegevoegd — zodat
-    // dit niet alleen op het cover-pagina-totaal te zien is, maar ook per beheerobject.
+    // Bouwdelen-herkomstregel: compacte regel onder de element-KPI's met de herkomst van de
+    // bouwdelen van DIT beheerobject (standaardbibliotheek / geleend / vrij toegevoegd).
+    // Bewust 'van dit object' gelabeld zodat het niet wordt verward met (a) het herkomst-
+    // TOTAAL op de coverpagina en (b) het element-KPI 'Vrij toegevoegd' erboven, dat over
+    // elementen gaat i.p.v. bouwdelen. Iets extra lucht zodat de regel niet tegen de blokken plakt.
+    y+=3;
     (function(){
       var bdTotaalBo=hBo.bdLib+hBo.bdLeen+hBo.bdVrij;
       if(bdTotaalBo===0) return;
       check(7);
-      N(6.5);T(GREY);doc.text('Bouwdelen ('+bdTotaalBo+'):',ML,y);
-      var lx=ML+28;
+      var lbl='Bouwdelen van dit object ('+bdTotaalBo+'):';
+      N(6.5);T(GREY);doc.text(lbl,ML,y);
+      var lx=ML+doc.getTextWidth(lbl)+4; // dynamisch: voorkomt overlap met het langere label
       var parts=[
         {n:hBo.bdLib,  lbl:'bibliotheek', col:NAVY},
         {n:hBo.bdLeen, lbl:'geleend',     col:[26,122,74]},
