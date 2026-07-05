@@ -133,6 +133,15 @@ main{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column
 .photo-thumb.add-photo:hover{border-color:var(--acc);color:var(--acc);background:var(--asf)}
 .photo-del{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:3px;font-size:11px;padding:1px 5px;cursor:pointer;display:none;line-height:1.4}
 .photo-thumb:hover .photo-del{display:block}
+.file-list{margin-top:8px;display:flex;flex-direction:column;gap:5px}
+.file-chip{display:flex;align-items:center;gap:9px;padding:7px 8px;border:1px solid var(--bdr);border-radius:5px;background:var(--s2)}
+.file-ic{flex-shrink:0;width:30px;height:34px;border-radius:4px;background:var(--asf);color:var(--acc);display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:700;letter-spacing:.3px}
+.file-meta{flex:1;min-width:0}
+.file-name{font-size:12px;color:var(--th);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-sub{font-size:10px;color:var(--tm);margin-top:1px}
+.file-act{flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--tm);border-radius:4px;padding:4px 7px;font-size:14px;line-height:1}
+.file-act:hover{background:var(--asf);color:var(--acc)}
+.file-act.del:hover{background:var(--neb);color:var(--ne)}
 
 /* ELEMENTS IN DETAIL */
 .el-fbar2{display:flex;gap:5px;padding:8px 14px;border-bottom:1px solid var(--bdr);background:var(--s2);flex-wrap:wrap;align-items:center}
@@ -2335,7 +2344,7 @@ function makeBO(code){
     _addingCX:false, _renaming:false, _renameVal:'', _delConfirm:false,
     maximo:'', status:'actief', bouwjaar:'', levensduur:'',
     adres:'', stad:'', lat:'', lon:'', notitie:'',
-    photos:[], disabledEls:[], disabledBDs:{},
+    photos:[], files:[], disabledEls:[], disabledBDs:{},
     elNotes:{}, bdNotes:{}, components:{},
     extraEls:[], // [{base:'Pompinstallatie', key:'Pompinstallatie#2', label:'Pompinstallatie #2'}, ...]
     extraBds:{}  // { 'elKey': [{base:'Afsluiter', key:'Afsluiter#2', label:'Afsluiter #2'}, ...] }
@@ -2579,12 +2588,23 @@ function renderDetail(id){
   }).join('');
 
   var photos = (n.photos||[]);
+  var files  = (n.files||[]);
+  var PHOTO_MAX = 5, FILE_MAX = 10;
   var photoHtml = photos.map(function(src,i){
     return '<div class="photo-thumb"><img src="'+src+'"><button class="photo-del" data-photoid="'+id+'" data-idx="'+i+'">×</button></div>';
   }).join('');
-  if(photos.length < 5){
-    photoHtml += '<div class="photo-thumb add-photo" id="add-photo-btn-'+id+'"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Foto</span></div>';
+  if(photos.length < PHOTO_MAX || files.length < FILE_MAX){
+    photoHtml += '<div class="photo-thumb add-photo" id="add-photo-btn-'+id+'"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Bestand</span></div>';
   }
+  var fileHtml = files.map(function(f,i){
+    return '<div class="file-chip">'+
+      '<span class="file-ic">'+fileExt(f.name,f.type)+'</span>'+
+      '<div class="file-meta"><div class="file-name">'+esc(f.name||'bestand')+'</div>'+
+      '<div class="file-sub">'+fmtSize(f.size||0)+'</div></div>'+
+      '<button class="file-act open" data-fileid="'+id+'" data-idx="'+i+'" title="Openen / downloaden">\u2913</button>'+
+      '<button class="file-act del" data-fileid="'+id+'" data-idx="'+i+'" title="Verwijderen">\u00d7</button>'+
+    '</div>';
+  }).join('');
 
   var efTabs = [['all','Alle','a'],['JA','JA','ja'],['OPTIONEEL','Opt','op'],['NEE','NEE','ne']].map(function(x){
     return '<span class="eftab2'+(f===x[0]?' '+x[2]:'')+'" data-ef="'+x[0]+'" data-nid="'+id+'">'+x[1]+'</span>';
@@ -2628,8 +2648,9 @@ function renderDetail(id){
       '<div class="dp-field"><textarea id="dp-notitie-'+id+'" placeholder="Vrije notitie…">'+esc(n.notitie||'')+'</textarea></div>'+
       '<button class="fok" style="width:100%;margin-top:6px" id="dp-save-note-'+id+'">Opslaan</button>'+
     '</div>'+
-    '<div class="dp-sec"><div class="dp-sec-title">Foto\u2019s ('+photos.length+'/5)</div>'+
+    '<div class="dp-sec"><div class="dp-sec-title">Foto\u2019s & bijlagen ('+photos.length+'/5 foto\u2019s'+(files.length?' \u00b7 '+files.length+' bestand'+(files.length===1?'':'en'):'')+')</div>'+
       '<div class="photo-grid" id="photo-grid-'+id+'">'+photoHtml+'</div>'+
+      (fileHtml ? '<div class="file-list">'+fileHtml+'</div>' : '')+
     '</div>'+
     '<div class="dp-sec" style="padding:0;border:none">'+
       // Op mobiel/tablet (≤900px) toont het detail-paneel nu de RIJKE elementenlijst (met
@@ -2719,17 +2740,39 @@ function renderDetail(id){
     });
   }
 
-  // Wire photo add
+  // Wire foto/bestand toevoegen — accepteert afbeeldingen (als thumbnail) én documenten (als bijlage)
   var addBtn = document.getElementById('add-photo-btn-'+id);
   if(addBtn){
     addBtn.addEventListener('click', function(){
       var n2 = findNode(id); if(!n2) return;
-      if((n2.photos||[]).length>=5) return;
-      var fi = document.createElement('input'); fi.type='file'; fi.accept='image/*';
+      var fi = document.createElement('input'); fi.type='file';
+      fi.accept='image/*,application/pdf,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip';
       fi.onchange = function(e){
         var file = e.target.files[0]; if(!file) return;
+        var isImg = /^image\//.test(file.type);
+        // Groottecap: de localStorage-opslag van de browser is ~5 MB totaal; base64 is ~1,33x groter.
+        var CAP = 4 * 1024 * 1024;
+        if(file.size > CAP){
+          alert('Dit bestand is '+(file.size/1048576).toFixed(1)+' MB. Door de opslaglimiet van de browser (~5 MB in totaal) kunnen alleen bestanden tot 4 MB worden bewaard. Gebruik een kleiner of gecomprimeerd bestand.');
+          return;
+        }
+        if(isImg && (n2.photos||[]).length>=5){ alert('Maximaal 5 foto\u2019s per beheerobject.'); return; }
+        if(!isImg && (n2.files||[]).length>=10){ alert('Maximaal 10 bestanden per beheerobject.'); return; }
         var rdr = new FileReader();
-        rdr.onload = function(ev){ n2.photos=n2.photos||[]; n2.photos.push(ev.target.result); renderDetail(id); };
+        rdr.onload = function(ev){
+          var dataUrl = ev.target.result;
+          var full = 'De opslag zit vol (browserlimiet ~5 MB). Verwijder eerst andere foto\u2019s of bestanden en probeer het opnieuw.';
+          if(isImg){
+            n2.photos = n2.photos||[];
+            n2.photos.push(dataUrl);
+            if(!trySaveNow()){ n2.photos.pop(); alert(full); }
+          } else {
+            n2.files = n2.files||[];
+            n2.files.push({ name:file.name, type:file.type||'', size:file.size||0, data:dataUrl });
+            if(!trySaveNow()){ n2.files.pop(); alert(full); }
+          }
+          renderDetail(id);
+        };
         rdr.readAsDataURL(file);
       };
       fi.click();
@@ -2744,12 +2787,63 @@ function renderDetail(id){
       var idx  = parseInt(btn.dataset.idx);
       var n2 = findNode(nid2); if(!n2) return;
       n2.photos.splice(idx,1);
+      trySaveNow();
+      renderDetail(nid2);
+    });
+  });
+
+  // Wire bijlage openen/downloaden
+  document.querySelectorAll('.file-act.open').forEach(function(btn){
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      var n2 = findNode(btn.dataset.fileid); if(!n2 || !n2.files) return;
+      var f = n2.files[parseInt(btn.dataset.idx)]; if(!f) return;
+      var a = document.createElement('a');
+      a.href = f.data; a.download = f.name || 'bestand';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    });
+  });
+
+  // Wire bijlage verwijderen
+  document.querySelectorAll('.file-act.del').forEach(function(btn){
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      var nid2 = btn.dataset.fileid;
+      var n2 = findNode(nid2); if(!n2 || !n2.files) return;
+      n2.files.splice(parseInt(btn.dataset.idx),1);
+      trySaveNow();
       renderDetail(nid2);
     });
   });
 }
 
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+// ── Bijlagen: helpers ───────────────────────────────────────────
+function fmtSize(b){ b=b||0; if(b<1024) return b+' B'; if(b<1048576) return (b/1024).toFixed(0)+' KB'; return (b/1048576).toFixed(1)+' MB'; }
+function fileExt(name, type){
+  var m = /\.([a-z0-9]{1,5})$/i.exec(name||'');
+  var e = m ? m[1].toUpperCase() : '';
+  if(!e && type){
+    if(/pdf/.test(type)) e='PDF';
+    else if(/word|document/.test(type)) e='DOC';
+    else if(/sheet|excel/.test(type)) e='XLS';
+    else if(/^image\//.test(type)) e='IMG';
+  }
+  return e || 'BEST.';
+}
+// Slaat de tree meteen op (buiten de debounce om) en geeft terug of het lukte.
+// Retourneert false bij QuotaExceededError, zodat de aanroeper kan terugdraaien.
+function trySaveNow(){
+  try{
+    localStorage.setItem(LS_KEY, JSON.stringify({tree:tree, UID:UID, ts:Date.now()}));
+    if(typeof setAutosaveStatus==='function'){
+      var now = new Date().toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
+      setAutosaveStatus('saved','Opgeslagen '+now);
+    }
+    return true;
+  }catch(e){ return false; }
+}
 
 // ═══════════════════════════════════════════
 // DRAG
@@ -5159,6 +5253,10 @@ function deepCloneNode(node){
       clone.disabledBDs = dbd;
     } else if(k === 'photos'){
       clone.photos = (node.photos||[]).slice();
+    } else if(k === 'files'){
+      clone.files = (node.files||[]).map(function(f){
+        return { name:f.name, type:f.type, size:f.size, data:f.data };
+      });
     } else if(k === 'extraEls'){
       // Volledige kopie incl. lening-/custom-velden (anders verliest een gekloond BO
       // de 'geleend van'/'vrij toegevoegd' status van zijn elementen)
